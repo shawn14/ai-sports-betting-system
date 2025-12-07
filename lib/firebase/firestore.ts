@@ -150,7 +150,7 @@ export class FirestoreService {
       const predictions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
       // Sort in memory instead of in query
-      predictions.sort((a, b) => {
+      predictions.sort((a: any, b: any) => {
         const aTime = a.timestamp?.toDate?.() || new Date(0);
         const bTime = b.timestamp?.toDate?.() || new Date(0);
         return bTime.getTime() - aTime.getTime();

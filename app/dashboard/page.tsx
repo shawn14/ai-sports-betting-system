@@ -1,5 +1,7 @@
 'use client';
 
+import LoggedInHeader from '@/components/LoggedInHeader';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { NFLAPI } from '@/lib/api/nfl';
@@ -104,34 +106,16 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
-      {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-700">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
+      <LoggedInHeader />
+
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-4xl font-bold text-white">Live Line Movement Dashboard</h1>
-          <p className="text-slate-400 mt-2">
+          <h1 className="text-3xl font-bold text-white mb-2">Live Line Movement Dashboard</h1>
+          <p className="text-slate-400">
             Track sharp money, reverse line movement, and betting percentages in real-time
           </p>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="bg-slate-800 border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8 py-4">
-            <Link href="/" className="text-slate-400 hover:text-white transition pb-1">
-              Games
-            </Link>
-            <Link href="/predictions" className="text-slate-400 hover:text-white transition pb-1">
-              Predictions
-            </Link>
-            <Link href="/analytics" className="text-slate-400 hover:text-white transition pb-1">
-              Analytics
-            </Link>
-            <Link href="/dashboard" className="text-white font-semibold border-b-2 border-blue-500 pb-1">
-              Dashboard
-            </Link>
-          </nav>
         </div>
       </div>
 
@@ -376,6 +360,6 @@ export default function DashboardPage() {
           </>
         )}
       </div>
-    </main>
+    </div>
   );
 }

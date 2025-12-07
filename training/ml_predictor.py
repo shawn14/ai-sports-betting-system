@@ -83,13 +83,23 @@ class MLPredictor:
         }
 
     def _extract_features(self, game_data):
-        """Extract features in correct order"""
+        """Extract features in correct order (33 features for Phase 1)"""
         home = game_data['homeTeam']
         away = game_data['awayTeam']
         matchup = game_data['matchup']
         weather = game_data['weather']
 
+        # Calculate Phase 1: Last 3 games averages
+        home_last3 = home.get('last3Games', {})
+        away_last3 = away.get('last3Games', {})
+
+        home_last3_pf = sum(home_last3.get('pointsScored', [0,0,0])) / 3
+        home_last3_pa = sum(home_last3.get('pointsAllowed', [0,0,0])) / 3
+        away_last3_pf = sum(away_last3.get('pointsScored', [0,0,0])) / 3
+        away_last3_pa = sum(away_last3.get('pointsAllowed', [0,0,0])) / 3
+
         features = [
+            # Team stats (12 features)
             home['winPct'],
             home['ppg'],
             home['pag'],
@@ -104,16 +114,34 @@ class MLPredictor:
             away['yardsAllowedPerGame'],
             away['turnoverDiff'],
 
-            # Derived features
+            # Phase 1: Last 3 games (4 features)
+            home_last3_pf,
+            home_last3_pa,
+            away_last3_pf,
+            away_last3_pa,
+
+            # Phase 1: Rest days (3 features)
+            home.get('restDays', 7),
+            away.get('restDays', 7),
+            matchup.get('restDaysDiff', 0),
+
+            # Derived features (5 features)
             home['ppg'] - away['ppg'],  # ppg_differential
             away['pag'] - home['pag'],  # pag_differential (lower is better)
             home['winPct'] - away['winPct'],  # winPct_differential
             home['yardsPerGame'] - away['yardsPerGame'],  # yards_differential
             home['turnoverDiff'] - away['turnoverDiff'],  # turnover_differential
 
+            # Matchup flags (2 features)
             1 if matchup['isDivisional'] else 0,
             1 if matchup['isConference'] else 0,
 
+            # Phase 1: Prime time (3 features)
+            1 if matchup.get('isThursdayNight', False) else 0,
+            1 if matchup.get('isMondayNight', False) else 0,
+            1 if matchup.get('isSundayNight', False) else 0,
+
+            # Weather (4 features)
             weather['temperature'],
             weather['windSpeed'],
             weather['precipitation'],

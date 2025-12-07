@@ -42,6 +42,15 @@ def create_features_dataframe(data_points):
 
     records = []
     for game in data_points:
+        # Calculate Phase 1: Last 3 games averages
+        home_last3 = game['homeTeam'].get('last3Games', {})
+        away_last3 = game['awayTeam'].get('last3Games', {})
+
+        home_last3_pf = sum(home_last3.get('pointsScored', [0])) / max(len(home_last3.get('pointsScored', [0])), 1)
+        home_last3_pa = sum(home_last3.get('pointsAllowed', [0])) / max(len(home_last3.get('pointsAllowed', [0])), 1)
+        away_last3_pf = sum(away_last3.get('pointsScored', [0])) / max(len(away_last3.get('pointsScored', [0])), 1)
+        away_last3_pa = sum(away_last3.get('pointsAllowed', [0])) / max(len(away_last3.get('pointsAllowed', [0])), 1)
+
         # Extract all features into flat structure
         record = {
             'gameId': game['gameId'],
@@ -64,6 +73,17 @@ def create_features_dataframe(data_points):
             'away_yards_allowed_pg': game['awayTeam']['yardsAllowedPerGame'],
             'away_turnover_diff': game['awayTeam']['turnoverDiff'],
 
+            # Phase 1: Last 3 games features
+            'home_last3_ppf': home_last3_pf,
+            'home_last3_ppa': home_last3_pa,
+            'away_last3_ppf': away_last3_pf,
+            'away_last3_ppa': away_last3_pa,
+
+            # Phase 1: Rest days features
+            'home_rest_days': game['homeTeam'].get('restDays', 7),
+            'away_rest_days': game['awayTeam'].get('restDays', 7),
+            'rest_days_diff': game['matchup'].get('restDaysDiff', 0),
+
             # Derived features
             'ppg_differential': game['homeTeam']['ppg'] - game['awayTeam']['ppg'],
             'pag_differential': game['awayTeam']['pag'] - game['homeTeam']['pag'],  # Lower is better
@@ -75,19 +95,85 @@ def create_features_dataframe(data_points):
             'is_divisional': 1 if game['matchup']['isDivisional'] else 0,
             'is_conference': 1 if game['matchup']['isConference'] else 0,
 
+            # Phase 1: Prime time features
+            'is_thursday_night': 1 if game['matchup'].get('isThursdayNight', False) else 0,
+            'is_monday_night': 1 if game['matchup'].get('isMondayNight', False) else 0,
+            'is_sunday_night': 1 if game['matchup'].get('isSundayNight', False) else 0,
+
             # Weather features
             'temperature': game['weather']['temperature'],
             'wind_speed': game['weather']['windSpeed'],
             'precipitation': game['weather']['precipitation'],
             'is_dome': 1 if game['weather']['isDome'] else 0,
+        }
 
+        # Add EPA and advanced metrics if available
+        if 'advanced_metrics' in game:
+            adv = game['advanced_metrics']
+
+            # EPA metrics (8 features)
+            record['home_epa_per_play'] = adv['home']['epa_per_play']
+            record['away_epa_per_play'] = adv['away']['epa_per_play']
+            record['home_epa_allowed'] = adv['home']['epa_allowed_per_play']
+            record['away_epa_allowed'] = adv['away']['epa_allowed_per_play']
+            record['home_success_rate'] = adv['home']['success_rate']
+            record['away_success_rate'] = adv['away']['success_rate']
+            record['home_explosive_rate'] = adv['home']['explosive_rate']
+            record['away_explosive_rate'] = adv['away']['explosive_rate']
+
+            # QB metrics (2 features)
+            record['home_qb_epa'] = adv['home']['qb_epa']
+            record['away_qb_epa'] = adv['away']['qb_epa']
+
+            # Home/away splits (4 features)
+            record['home_home_record'] = adv['home']['home_record_pct']
+            record['home_away_record'] = adv['home']['away_record_pct']
+            record['away_home_record'] = adv['away']['home_record_pct']
+            record['away_away_record'] = adv['away']['away_record_pct']
+
+            # Strength of schedule (2 features)
+            record['home_sos'] = adv['home']['strength_of_schedule']
+            record['away_sos'] = adv['away']['strength_of_schedule']
+
+            # Derived EPA features (5 features)
+            record['epa_differential'] = record['home_epa_per_play'] - record['away_epa_per_play']
+            record['qb_epa_differential'] = record['home_qb_epa'] - record['away_qb_epa']
+            record['home_advantage_diff'] = record['home_home_record'] - record['away_away_record']
+            record['sos_differential'] = record['home_sos'] - record['away_sos']
+            record['success_rate_diff'] = record['home_success_rate'] - record['away_success_rate']
+        else:
+            # Default values if EPA data not available (early season games)
+            record['home_epa_per_play'] = 0.0
+            record['away_epa_per_play'] = 0.0
+            record['home_epa_allowed'] = 0.0
+            record['away_epa_allowed'] = 0.0
+            record['home_success_rate'] = 0.5
+            record['away_success_rate'] = 0.5
+            record['home_explosive_rate'] = 0.1
+            record['away_explosive_rate'] = 0.1
+            record['home_qb_epa'] = 0.0
+            record['away_qb_epa'] = 0.0
+            record['home_home_record'] = 0.5
+            record['home_away_record'] = 0.5
+            record['away_home_record'] = 0.5
+            record['away_away_record'] = 0.5
+            record['home_sos'] = 0.5
+            record['away_sos'] = 0.5
+            record['epa_differential'] = 0.0
+            record['qb_epa_differential'] = 0.0
+            record['home_advantage_diff'] = 0.0
+            record['sos_differential'] = 0.0
+            record['success_rate_diff'] = 0.0
+
+        # Target variables (outcomes)
+        record.update({
             # Target variables (outcomes)
             'actual_spread': game['outcome']['actualSpread'],  # home - away (negative = away won by more)
             'actual_total': game['outcome']['actualTotal'],    # home + away
             'home_score': game['outcome']['homeScore'],
             'away_score': game['outcome']['awayScore'],
             'home_won': 1 if game['outcome']['homeWon'] else 0,
-        }
+        })
 
         # Add betting lines if available
         if 'lines' in game and game['lines']:
@@ -110,12 +196,50 @@ def prepare_training_data(df):
     print("\nPreparing training data...")
 
     # Feature columns (everything except targets and metadata)
+    # Total: 54 features (33 original + 21 new EPA features)
     feature_cols = [
+        # Team stats (12 features)
         'home_winPct', 'home_ppg', 'home_pag', 'home_yards_pg', 'home_yards_allowed_pg', 'home_turnover_diff',
         'away_winPct', 'away_ppg', 'away_pag', 'away_yards_pg', 'away_yards_allowed_pg', 'away_turnover_diff',
+
+        # Phase 1: Last 3 games (4 features)
+        'home_last3_ppf', 'home_last3_ppa',
+        'away_last3_ppf', 'away_last3_ppa',
+
+        # Phase 1: Rest days (3 features)
+        'home_rest_days', 'away_rest_days', 'rest_days_diff',
+
+        # Derived features (5 features)
         'ppg_differential', 'pag_differential', 'winPct_differential', 'yards_differential', 'turnover_differential',
+
+        # Matchup flags (2 features)
         'is_divisional', 'is_conference',
-        'temperature', 'wind_speed', 'precipitation', 'is_dome'
+
+        # Phase 1: Prime time (3 features)
+        'is_thursday_night', 'is_monday_night', 'is_sunday_night',
+
+        # Weather (4 features)
+        'temperature', 'wind_speed', 'precipitation', 'is_dome',
+
+        # EPA metrics (8 features)
+        'home_epa_per_play', 'away_epa_per_play',
+        'home_epa_allowed', 'away_epa_allowed',
+        'home_success_rate', 'away_success_rate',
+        'home_explosive_rate', 'away_explosive_rate',
+
+        # QB metrics (2 features)
+        'home_qb_epa', 'away_qb_epa',
+
+        # Home/away splits (4 features)
+        'home_home_record', 'home_away_record',
+        'away_home_record', 'away_away_record',
+
+        # Strength of schedule (2 features)
+        'home_sos', 'away_sos',
+
+        # Derived EPA features (5 features)
+        'epa_differential', 'qb_epa_differential',
+        'home_advantage_diff', 'sos_differential', 'success_rate_diff'
     ]
 
     X = df[feature_cols].copy()
@@ -286,12 +410,16 @@ def calculate_ats_metrics(y_true_spread, y_pred_spread, spread_lines=None):
     total_bets = 0
     units_won = 0
 
-    for i in range(len(y_true_spread)):
+    # Convert to numpy arrays to avoid indexing issues
+    actual_spreads = y_true_spread.values if hasattr(y_true_spread, 'values') else y_true_spread
+    predicted_spreads = y_pred_spread if isinstance(y_pred_spread, np.ndarray) else y_pred_spread.values
+
+    for i in range(len(actual_spreads)):
         if spread_lines[i] == 0:
             continue  # Skip games without lines
 
-        actual = y_true_spread[i]
-        predicted = y_pred_spread[i]
+        actual = actual_spreads[i]
+        predicted = predicted_spreads[i]
         line = spread_lines[i]
 
         # Our pick based on model prediction vs line

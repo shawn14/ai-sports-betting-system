@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { NFLAPI } from '@/lib/api/nfl';
 import { OddsAPI } from '@/lib/api/odds';
 import { WeatherAPI } from '@/lib/api/weather';
@@ -10,6 +9,7 @@ import { GamePredictor } from '@/lib/models/predictor';
 import { FirestoreService } from '@/lib/firebase/firestore';
 import { Game, GamePrediction } from '@/types';
 import { format } from 'date-fns';
+import LoggedInHeader from '@/components/LoggedInHeader';
 
 export default function PredictionsPage() {
   const searchParams = useSearchParams();
@@ -129,19 +129,16 @@ export default function PredictionsPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
-      {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-700">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
+      <LoggedInHeader />
+
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-start justify-between">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-4xl font-bold text-white">Game Predictions</h1>
-                <span className="text-blue-400 text-sm font-semibold px-2 py-1 bg-blue-500/10 rounded">
-                  PredictionMatrix
-                </span>
-              </div>
-              <p className="text-slate-400 mt-2">
+              <h1 className="text-3xl font-bold text-white mb-2">Game Predictions</h1>
+              <p className="text-slate-400">
                 AI-powered predictions based on advanced statistical analysis
               </p>
               {lastUpdate && (
@@ -176,38 +173,6 @@ export default function PredictionsPage() {
               )}
             </button>
           </div>
-        </div>
-      </div>
-
-      {/* Navigation */}
-      <div className="bg-slate-800 border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8 py-4">
-            <Link
-              href="/"
-              className="text-slate-400 hover:text-white transition pb-1"
-            >
-              Games
-            </Link>
-            <Link
-              href="/predictions"
-              className="text-white font-semibold border-b-2 border-blue-500 pb-1"
-            >
-              Predictions
-            </Link>
-            <Link
-              href="/analytics"
-              className="text-slate-400 hover:text-white transition pb-1"
-            >
-              Analytics
-            </Link>
-            <Link
-              href="/dashboard"
-              className="text-slate-400 hover:text-white transition pb-1"
-            >
-              Dashboard
-            </Link>
-          </nav>
         </div>
       </div>
 
@@ -515,6 +480,6 @@ export default function PredictionsPage() {
           </p>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

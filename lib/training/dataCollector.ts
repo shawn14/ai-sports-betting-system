@@ -110,7 +110,8 @@ export class HistoricalDataCollector {
               homeStats,
               awayStats,
               season,
-              week
+              week,
+              teamSeasonStats  // Pass team history for Phase 1 features
             );
 
             this.trainingData.push(dataPoint);
@@ -208,7 +209,63 @@ export class HistoricalDataCollector {
       teamSeasonStats.set(key, teamData);
     }
 
-    teamData.games.push(game);
+    // Track game with date for rest day calculation
+    const isHome = game.homeTeam.id === teamId;
+    teamData.games.push({
+      ...game,
+      gameTime: game.gameTime,  // Track game date
+      score: isHome ? (game.homeScore || 0) : (game.awayScore || 0),
+      opponentScore: isHome ? (game.awayScore || 0) : (game.homeScore || 0),
+      won: isHome ? (game.homeScore || 0) > (game.awayScore || 0) : (game.awayScore || 0) > (game.homeScore || 0)
+    });
+  }
+
+  /**
+   * Calculate rest days between games
+   */
+  private calculateRestDays(teamGames: any[], currentGameTime: Date): number {
+    if (teamGames.length === 0) return 7; // Default for first game
+
+    const lastGame = teamGames[teamGames.length - 1];
+    const diffTime = currentGameTime.getTime() - new Date(lastGame.gameTime).getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    return diffDays;
+  }
+
+  /**
+   * Extract last 3 games performance
+   */
+  private getLast3GamesStats(teamGames: any[]): {
+    pointsScored: number[];
+    pointsAllowed: number[];
+    margins: number[];
+  } {
+    const last3 = teamGames.slice(-3);
+
+    return {
+      pointsScored: last3.map((g: any) => g.score || 0),
+      pointsAllowed: last3.map((g: any) => g.opponentScore || 0),
+      margins: last3.map((g: any) => (g.score || 0) - (g.opponentScore || 0))
+    };
+  }
+
+  /**
+   * Identify prime time games
+   */
+  private getPrimeTimeFlags(gameTime: Date): {
+    isThursdayNight: boolean;
+    isMondayNight: boolean;
+    isSundayNight: boolean;
+  } {
+    const dayOfWeek = gameTime.getDay(); // 0=Sun, 1=Mon, 4=Thu
+    const hour = gameTime.getHours();
+
+    return {
+      isThursdayNight: dayOfWeek === 4,
+      isMondayNight: dayOfWeek === 1 && hour >= 20,
+      isSundayNight: dayOfWeek === 0 && hour >= 20
+    };
   }
 
   /**
@@ -219,7 +276,8 @@ export class HistoricalDataCollector {
     homeStats: any,
     awayStats: any,
     season: number,
-    week: number
+    week: number,
+    teamSeasonStats?: Map<string, any>
   ): Promise<TrainingDataPoint> {
     // Calculate team features
     const homeGamesPlayed = homeStats.gamesPlayed || (homeStats.wins + homeStats.losses) || 1;
@@ -232,6 +290,26 @@ export class HistoricalDataCollector {
 
     const homeWinPct = homeGamesPlayed > 0 ? (homeStats.wins || 0) / homeGamesPlayed : 0;
     const awayWinPct = awayGamesPlayed > 0 ? (awayStats.wins || 0) / awayGamesPlayed : 0;
+
+    // NEW: Get team game history for Phase 1 features
+    const homeKey = `${game.homeTeam.id}-${season}`;
+    const awayKey = `${game.awayTeam.id}-${season}`;
+    const homeTeamData = teamSeasonStats?.get(homeKey);
+    const awayTeamData = teamSeasonStats?.get(awayKey);
+
+    const homeGames = homeTeamData?.games || [];
+    const awayGames = awayTeamData?.games || [];
+
+    // NEW: Calculate rest days
+    const homeRestDays = this.calculateRestDays(homeGames, game.gameTime);
+    const awayRestDays = this.calculateRestDays(awayGames, game.gameTime);
+
+    // NEW: Get last 3 games stats
+    const homeLast3 = this.getLast3GamesStats(homeGames);
+    const awayLast3 = this.getLast3GamesStats(awayGames);
+
+    // NEW: Get prime time flags
+    const primeTimeFlags = this.getPrimeTimeFlags(game.gameTime);
 
     // Get weather data (or use defaults for domes)
     let weather = {
@@ -270,7 +348,8 @@ export class HistoricalDataCollector {
         turnoverDiff: ((homeStats.takeaways || 0) - (homeStats.turnovers || 0)) / homeGamesPlayed,
         homeRecord: 0.5,  // Would need home/away split from detailed stats
         awayRecord: 0.5,
-        last3Games: [],   // Would need game-by-game history
+        last3Games: homeLast3,  // NEW: Last 3 games performance
+        restDays: homeRestDays,  // NEW: Rest days
         streak: 0         // Would calculate from game history
       },
 
@@ -285,14 +364,16 @@ export class HistoricalDataCollector {
         turnoverDiff: ((awayStats.takeaways || 0) - (awayStats.turnovers || 0)) / awayGamesPlayed,
         homeRecord: 0.5,
         awayRecord: 0.5,
-        last3Games: [],
+        last3Games: awayLast3,  // NEW: Last 3 games performance
+        restDays: awayRestDays,  // NEW: Rest days
         streak: 0
       },
 
       matchup: {
         isDivisional,
         isConference,
-        restDaysDiff: 0  // Would need game schedule data
+        restDaysDiff: homeRestDays - awayRestDays,  // NEW: Rest day differential
+        ...primeTimeFlags  // NEW: Thursday/Monday/Sunday night flags
       },
 
       weather,
@@ -340,10 +421,20 @@ export class HistoricalDataCollector {
    */
   private getFeatureList(): string[] {
     return [
+      // Team stats (12 features)
       'home_win_pct', 'home_ppg', 'home_pag', 'home_yards_pg', 'home_yards_allowed_pg', 'home_turnover_diff',
       'away_win_pct', 'away_ppg', 'away_pag', 'away_yards_pg', 'away_yards_allowed_pg', 'away_turnover_diff',
-      'is_divisional', 'is_conference', 'rest_days_diff',
+      // Phase 1: Last 3 games (4 features)
+      'home_last3_ppf', 'home_last3_ppa', 'away_last3_ppf', 'away_last3_ppa',
+      // Phase 1: Rest days (3 features)
+      'home_rest_days', 'away_rest_days', 'rest_days_diff',
+      // Matchup flags (2 features)
+      'is_divisional', 'is_conference',
+      // Phase 1: Prime time (3 features)
+      'is_thursday_night', 'is_monday_night', 'is_sunday_night',
+      // Weather (4 features)
       'temperature', 'wind_speed', 'precipitation', 'is_dome'
+      // Total: 23 + 10 = 33 features
     ];
   }
 

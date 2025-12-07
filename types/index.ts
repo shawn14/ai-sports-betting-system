@@ -203,7 +203,12 @@ export interface TrainingDataPoint {
     turnoverDiff: number;
     homeRecord: number;
     awayRecord: number;
-    last3Games: number[];  // Margins from last 3 games
+    last3Games: {          // Phase 1: Last 3 games performance
+      pointsScored: number[];
+      pointsAllowed: number[];
+      margins: number[];
+    };
+    restDays: number;      // Phase 1: Days of rest before this game
     streak: number;        // Current win/loss streak
   };
 
@@ -219,7 +224,12 @@ export interface TrainingDataPoint {
     turnoverDiff: number;
     homeRecord: number;
     awayRecord: number;
-    last3Games: number[];
+    last3Games: {          // Phase 1: Last 3 games performance
+      pointsScored: number[];
+      pointsAllowed: number[];
+      margins: number[];
+    };
+    restDays: number;      // Phase 1: Days of rest before this game
     streak: number;
   };
 
@@ -228,6 +238,9 @@ export interface TrainingDataPoint {
     isDivisional: boolean;
     isConference: boolean;
     restDaysDiff: number;  // Home rest - away rest
+    isThursdayNight: boolean;  // Phase 1: Thursday night game
+    isMondayNight: boolean;    // Phase 1: Monday night game
+    isSundayNight: boolean;    // Phase 1: Sunday night game
   };
 
   // Weather features

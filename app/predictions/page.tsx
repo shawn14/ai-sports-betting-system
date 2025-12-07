@@ -11,6 +11,9 @@ import { Game, GamePrediction } from '@/types';
 import { format } from 'date-fns';
 import LoggedInHeader from '@/components/LoggedInHeader';
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 export default function PredictionsPage() {
   const searchParams = useSearchParams();
   const [games, setGames] = useState<Game[]>([]);

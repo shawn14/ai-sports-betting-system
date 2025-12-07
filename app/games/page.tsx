@@ -46,7 +46,9 @@ export default function GamesPage() {
 
       // Load cached predictions from Firebase
       try {
+        console.log(`🔍 Querying Firebase for Season ${season}, Week ${week}`);
         const cached = await FirestoreService.getCachedPredictions(season, week);
+        console.log(`📊 Got ${cached.predictions.length} predictions, ${cached.games.length} games`);
         if (cached.predictions.length > 0) {
           const newPredictions = new Map<string, GamePrediction>();
           for (const pred of cached.predictions) {

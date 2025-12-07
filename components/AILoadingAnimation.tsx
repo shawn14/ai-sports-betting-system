@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Activity, Trophy, Zap, DollarSign, Target, TrendingUp, Eye,
   BarChart3, Brain, Cpu, Database
@@ -14,6 +15,21 @@ export default function AILoadingAnimation({
   subtitle = "Processing real-time data streams...",
   steps
 }: AILoadingAnimationProps) {
+  // Use client-side state for random numbers to avoid hydration errors
+  const [stats, setStats] = useState({
+    dataPoints: 5000,
+    modelsActive: 15,
+    confidence: 70
+  });
+
+  useEffect(() => {
+    // Generate random numbers only on client side
+    setStats({
+      dataPoints: Math.floor(Math.random() * 1000 + 5000),
+      modelsActive: Math.floor(Math.random() * 10 + 15),
+      confidence: Math.floor(Math.random() * 20 + 70)
+    });
+  }, []);
   const defaultSteps = [
     { label: 'Fetching NFL game data', icon: Trophy, delay: 0 },
     { label: 'Loading ML model predictions', icon: Zap, delay: 200 },
@@ -75,19 +91,19 @@ export default function AILoadingAnimation({
           <div className="bg-gradient-to-br from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-lg p-4">
             <div className="text-xs text-green-400 mb-1">Data Points</div>
             <div className="text-2xl font-black text-white font-mono animate-pulse">
-              {Math.floor(Math.random() * 1000 + 5000).toLocaleString()}
+              {stats.dataPoints.toLocaleString()}
             </div>
           </div>
           <div className="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-lg p-4">
             <div className="text-xs text-blue-400 mb-1">Models Active</div>
             <div className="text-2xl font-black text-white font-mono animate-pulse">
-              {Math.floor(Math.random() * 10 + 15)}
+              {stats.modelsActive}
             </div>
           </div>
           <div className="bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg p-4">
             <div className="text-xs text-purple-400 mb-1">Confidence %</div>
             <div className="text-2xl font-black text-white font-mono animate-pulse">
-              {Math.floor(Math.random() * 20 + 70)}%
+              {stats.confidence}%
             </div>
           </div>
         </div>

@@ -18,6 +18,7 @@ export default function GamesPage() {
   const [movements, setMovements] = useState<Map<string, LineMovement>>(new Map());
   const [sharpSignals, setSharpSignals] = useState<Map<string, SharpMoneyIndicator>>(new Map());
   const [bettingPercentages, setBettingPercentages] = useState<Map<string, BettingPercentages>>(new Map());
+  const [currentOdds, setCurrentOdds] = useState<Map<string, any>>(new Map());
   const [loading, setLoading] = useState(true);
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [tracker] = useState(() => new LineMovementTracker());
@@ -40,6 +41,7 @@ export default function GamesPage() {
       const newMovements = new Map<string, LineMovement>();
       const newSharpSignals = new Map<string, SharpMoneyIndicator>();
       const newPercentages = new Map<string, BettingPercentages>();
+      const newOdds = new Map<string, any>();
 
       for (const game of weekGames) {
         if (game.status !== 'scheduled') continue;
@@ -50,6 +52,9 @@ export default function GamesPage() {
         );
 
         if (gameOdds) {
+          // Store the raw odds data for display
+          newOdds.set(game.id, gameOdds);
+
           const lines = OddsAPI.transformToBettingLines(gameOdds);
           lines.forEach(line => tracker.trackLine(line));
 
@@ -67,6 +72,7 @@ export default function GamesPage() {
       setMovements(newMovements);
       setSharpSignals(newSharpSignals);
       setBettingPercentages(newPercentages);
+      setCurrentOdds(newOdds);
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -210,7 +216,14 @@ export default function GamesPage() {
                 const movement = movements.get(game.id);
                 const percentages = bettingPercentages.get(game.id);
                 const sharpSignal = sharpSignals.get(game.id);
+                const odds = currentOdds.get(game.id);
                 const isExpanded = selectedGame === game.id;
+
+                // Extract current spread from odds API
+                const currentSpread = odds?.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'spreads');
+                const homeSpreadValue = currentSpread?.outcomes?.find((o: any) =>
+                  o.name === game.homeTeam.name || o.name.includes(game.homeTeam.abbreviation)
+                )?.point;
 
                 return (
                   <div
@@ -268,23 +281,26 @@ export default function GamesPage() {
                       </div>
 
                       {/* Quick Stats Row */}
-                      {movement && (
-                        <div className="flex items-center gap-6 text-sm">
+                      <div className="flex items-center gap-6 text-sm">
+                        {homeSpreadValue !== undefined && (
                           <div className="flex items-center gap-2">
-                            <span className="text-slate-400">Spread:</span>
-                            <span className="font-mono font-semibold text-white">
-                              {movement.spread.opening > 0 ? '+' : ''}{movement.spread.opening}
-                              {Math.abs(movement.spread.movement) > 0.5 && (
-                                <span className={`ml-2 ${movement.spread.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                                  ({movement.spread.direction === 'up' ? '↑' : '↓'} {Math.abs(movement.spread.movement).toFixed(1)})
-                                </span>
-                              )}
+                            <span className="text-slate-400">Current Spread:</span>
+                            <span className="font-mono font-bold text-white text-lg">
+                              {game.homeTeam.abbreviation} {homeSpreadValue > 0 ? '+' : ''}{homeSpreadValue}
                             </span>
+                            {movement && Math.abs(movement.spread.movement) > 0.5 && (
+                              <span className={`ml-2 text-xs ${movement.spread.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
+                                ({movement.spread.direction === 'up' ? '↑' : '↓'} {Math.abs(movement.spread.movement).toFixed(1)})
+                              </span>
+                            )}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-400">Total:</span>
-                            <span className="font-mono font-semibold text-white">
-                              {movement.total.opening}
+                        )}
+                        {movement && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <span className="text-slate-400">Total:</span>
+                              <span className="font-mono font-semibold text-white">
+                                {movement.total.opening}
                               {Math.abs(movement.total.movement) > 0.5 && (
                                 <span className={`ml-2 ${movement.total.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
                                   ({movement.total.direction === 'up' ? '↑' : '↓'} {Math.abs(movement.total.movement).toFixed(1)})
@@ -292,16 +308,16 @@ export default function GamesPage() {
                               )}
                             </span>
                           </div>
-                          {percentages && (
-                            <div className="flex items-center gap-2">
-                              <DollarSign className="w-4 h-4 text-green-400" />
-                              <span className="text-slate-400">Public:</span>
-                              <span className="text-white font-semibold">{percentages.spread.homeTickets}% Home</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                            {percentages && (
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="w-4 h-4 text-green-400" />
+                                <span className="text-slate-400">Public:</span>
+                                <span className="text-white font-semibold">{percentages.spread.homeTickets}% Home</span>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
 
                     {/* Expanded Details */}
                     {isExpanded && (

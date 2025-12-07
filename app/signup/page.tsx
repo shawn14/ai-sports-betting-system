@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { BarChart3, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -63,14 +64,7 @@ export default function SignupPage() {
     <main className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <Link href="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-            <BarChart3 className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-white">
-            Prediction<span className="text-blue-400">Matrix</span>
-          </h1>
-        </Link>
+        <Logo href="/" className="justify-center mb-8" size="md" />
 
         {/* Signup Card */}
         <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8">

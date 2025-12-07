@@ -316,19 +316,37 @@ export default function GamesPage() {
                               </div>
                             </div>
 
-                            {/* Pick details */}
-                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700">
-                              <div className="flex items-center gap-2">
-                                <Target className="w-4 h-4 text-green-400" />
-                                <span className="text-sm font-bold text-green-400">
-                                  PICK: {prediction.predictedWinner === 'home' ? game.homeTeam.name : game.awayTeam.name}
-                                </span>
-                              </div>
-                              {homeSpreadValue !== undefined && (
-                                <div className="text-xs font-mono text-slate-400">
-                                  Spread: {game.homeTeam.abbreviation} {homeSpreadValue > 0 ? '+' : ''}{homeSpreadValue}
+                            {/* Pick details - Make it crystal clear */}
+                            <div className="mt-2 pt-2 border-t border-slate-700">
+                              <div className="flex items-center gap-2 mb-1">
+                                <div className="px-2 py-0.5 bg-green-600 text-white text-xs font-bold rounded">
+                                  SPREAD BET
                                 </div>
-                              )}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Target className="w-5 h-5 text-green-400" />
+                                  <div>
+                                    <div className="text-base font-black text-green-400">
+                                      {prediction.predictedWinner === 'home' ? game.homeTeam.abbreviation : game.awayTeam.abbreviation}
+                                      {homeSpreadValue !== undefined && (
+                                        <span className="ml-1">
+                                          {prediction.predictedWinner === 'home'
+                                            ? `${homeSpreadValue > 0 ? '+' : ''}${homeSpreadValue}`
+                                            : `${(-homeSpreadValue) > 0 ? '+' : ''}${(-homeSpreadValue)}`
+                                          }
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-green-300">
+                                      {prediction.predictedWinner === 'home' ? game.homeTeam.name : game.awayTeam.name} to cover the spread
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-xs text-slate-400 text-right">
+                                  Predicted: {prediction.predictedScore.home}-{prediction.predictedScore.away}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         );

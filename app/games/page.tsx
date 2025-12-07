@@ -28,7 +28,8 @@ export default function GamesPage() {
 
   useEffect(() => {
     loadDashboardData();
-    const interval = setInterval(loadDashboardData, 2 * 60 * 1000);
+    // Refresh every 1 minute for live score updates
+    const interval = setInterval(loadDashboardData, 1 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 

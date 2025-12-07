@@ -37,7 +37,8 @@ export default function GamesPage() {
       setLoading(true);
       const { season, week } = await NFLAPI.getCurrentSeasonWeek();
       const weekGames = await NFLAPI.getWeekGames(season, week);
-      setGames(weekGames.filter(g => g.status === 'scheduled'));
+      // Show all games (scheduled, in_progress, completed) - filter happens later if needed
+      setGames(weekGames);
 
       // Load cached predictions from Firebase
       try {
@@ -96,7 +97,8 @@ export default function GamesPage() {
       }
 
       for (const game of weekGames) {
-        if (game.status !== 'scheduled') continue;
+        // Process all games, not just scheduled ones
+        // if (game.status !== 'scheduled') continue;
 
         // Match by full team name (case insensitive)
         const gameOdds = oddsData.find((o: any) => {
@@ -131,7 +133,10 @@ export default function GamesPage() {
       setCurrentOdds(newOdds);
 
       console.log('Dashboard loaded:', {
-        gamesCount: weekGames.filter(g => g.status === 'scheduled').length,
+        totalGamesCount: weekGames.length,
+        scheduledGamesCount: weekGames.filter(g => g.status === 'scheduled').length,
+        inProgressGamesCount: weekGames.filter(g => g.status === 'in_progress').length,
+        completedGamesCount: weekGames.filter(g => g.status === 'completed').length,
         oddsCount: newOdds.size,
         movementsCount: newMovements.size,
         sampleOdds: newOdds.size > 0 ? Array.from(newOdds.entries())[0] : 'none'
@@ -351,7 +356,11 @@ export default function GamesPage() {
                   <div
                     key={game.id}
                     className={`bg-slate-800/50 backdrop-blur border rounded-xl overflow-hidden transition-all ${
-                      sharpSignal && (sharpSignal.confidence === 'very_high' || sharpSignal.confidence === 'high')
+                      game.status === 'in_progress'
+                        ? 'border-red-500/50 shadow-lg shadow-red-500/20'
+                        : game.status === 'completed'
+                        ? 'border-slate-600/30 opacity-70'
+                        : sharpSignal && (sharpSignal.confidence === 'very_high' || sharpSignal.confidence === 'high')
                         ? 'border-green-500/30 shadow-lg shadow-green-500/10'
                         : 'border-slate-700/50'
                     }`}
@@ -378,10 +387,13 @@ export default function GamesPage() {
                               </div>
                             )}
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <div className="text-base font-bold text-white">{game.awayTeam.name}</div>
                             <div className="text-xs text-slate-400">Away</div>
                           </div>
+                          {(game.status === 'in_progress' || game.status === 'completed') && (
+                            <div className="text-2xl font-black text-white">{game.awayScore}</div>
+                          )}
                         </div>
 
                         {/* VS + Spread */}
@@ -399,7 +411,10 @@ export default function GamesPage() {
 
                         {/* Home Team */}
                         <div className="flex items-center gap-3 flex-1 justify-end">
-                          <div className="text-right">
+                          {(game.status === 'in_progress' || game.status === 'completed') && (
+                            <div className="text-2xl font-black text-white">{game.homeScore}</div>
+                          )}
+                          <div className="text-right flex-1">
                             <div className="text-base font-bold text-white">{game.homeTeam.name}</div>
                             <div className="text-xs text-slate-400">Home</div>
                           </div>
@@ -422,6 +437,18 @@ export default function GamesPage() {
                       {/* Game Info Row - Compact */}
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-3 text-slate-400">
+                          {/* Game Status Badge */}
+                          {game.status === 'in_progress' && (
+                            <div className="flex items-center gap-1 bg-red-600/20 border border-red-500/50 text-red-400 px-2 py-1 rounded-full animate-pulse">
+                              <Activity className="w-3 h-3" />
+                              <span className="font-semibold">LIVE</span>
+                            </div>
+                          )}
+                          {game.status === 'completed' && (
+                            <div className="flex items-center gap-1 bg-slate-700/50 text-slate-400 px-2 py-1 rounded-full">
+                              <span className="font-semibold">FINAL</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3" />
                             <span>{format(game.gameTime, 'EEE, MMM d • h:mm a')}</span>

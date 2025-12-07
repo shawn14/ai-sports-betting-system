@@ -26,6 +26,7 @@ const COLLECTIONS = {
   BETS: 'bets',
   TRAINING_DATA: 'training_data',
   TRAINING_DATASETS: 'training_datasets',
+  ODDS_CACHE: 'odds_cache', // NEW: Cache odds data
 };
 
 export class FirestoreService {
@@ -540,6 +541,68 @@ export class FirestoreService {
     } catch (error) {
       console.error('Error getting training datasets:', error);
       return [];
+    }
+  }
+
+  /**
+   * Save odds cache to Firestore
+   * This allows pages to load odds from cache instead of hitting The Odds API every time
+   */
+  static async saveOddsCache(cacheDoc: {
+    season: number;
+    week: number;
+    odds: any[];
+    lastUpdate: Date;
+    expiresAt: Date;
+  }): Promise<void> {
+    try {
+      const cacheId = `${cacheDoc.season}_${cacheDoc.week}`;
+      const cacheRef = doc(db, COLLECTIONS.ODDS_CACHE, cacheId);
+
+      await setDoc(cacheRef, {
+        season: cacheDoc.season,
+        week: cacheDoc.week,
+        odds: cacheDoc.odds,
+        lastUpdate: Timestamp.fromDate(cacheDoc.lastUpdate),
+        expiresAt: Timestamp.fromDate(cacheDoc.expiresAt),
+      }, { merge: true });
+
+      console.log(`Saved odds cache for Season ${cacheDoc.season}, Week ${cacheDoc.week}`);
+    } catch (error) {
+      console.error('Error saving odds cache:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get cached odds data
+   * Returns null if cache is expired or doesn't exist
+   */
+  static async getCachedOdds(season: number, week: number): Promise<any[] | null> {
+    try {
+      const cacheId = `${season}_${week}`;
+      const cacheRef = doc(db, COLLECTIONS.ODDS_CACHE, cacheId);
+      const cacheDoc = await getDoc(cacheRef);
+
+      if (!cacheDoc.exists()) {
+        console.log(`No odds cache found for Season ${season}, Week ${week}`);
+        return null;
+      }
+
+      const data = cacheDoc.data();
+      const expiresAt = data.expiresAt.toDate();
+
+      // Check if cache is expired
+      if (new Date() > expiresAt) {
+        console.log(`Odds cache expired for Season ${season}, Week ${week}`);
+        return null;
+      }
+
+      console.log(`✅ Loaded cached odds for Season ${season}, Week ${week}`);
+      return data.odds;
+    } catch (error) {
+      console.error('Error getting cached odds:', error);
+      return null;
     }
   }
 }

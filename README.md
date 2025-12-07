@@ -1,6 +1,10 @@
-# AI Sports Betting System
+# PredictionMatrix
 
-A comprehensive AI-powered sports betting analysis system with machine learning predictions, edge detection, and performance tracking. Currently supports NFL with extensibility for other sports.
+**AI-Powered Sports Betting Analytics**
+
+A comprehensive AI-powered sports betting analysis system with machine learning predictions, edge detection, and performance tracking. Built with Next.js, XGBoost, and Firebase. Currently supports NFL with extensibility for other sports.
+
+🌐 **Website:** [predictionmatrix.com](https://predictionmatrix.com)
 
 ![Next.js](https://img.shields.io/badge/Next.js-14.1.0-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)

@@ -36,11 +36,13 @@ export default function Home() {
       {/* Header */}
       <div className="bg-slate-900 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-4xl font-bold text-white">
-            NFL Betting Analysis System
-          </h1>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-4xl font-bold text-white">
+              Prediction<span className="text-blue-400">Matrix</span>
+            </h1>
+          </div>
           <p className="text-slate-400 mt-2">
-            Statistical modeling and predictions for informed betting decisions
+            AI-powered sports betting analytics with machine learning predictions
           </p>
         </div>
       </div>

@@ -139,17 +139,115 @@ export class FirestoreService {
    */
   static async getPredictionsByWeek(season: number, week: number): Promise<any[]> {
     try {
+      // Simplified query - just filter by season and week, skip orderBy to avoid index requirement
       const q = query(
         collection(db, COLLECTIONS.PREDICTIONS),
         where('season', '==', season),
-        where('week', '==', week),
-        orderBy('timestamp', 'desc')
+        where('week', '==', week)
       );
 
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const predictions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+      // Sort in memory instead of in query
+      predictions.sort((a, b) => {
+        const aTime = a.timestamp?.toDate?.() || new Date(0);
+        const bTime = b.timestamp?.toDate?.() || new Date(0);
+        return bTime.getTime() - aTime.getTime();
+      });
+
+      console.log(`Found ${predictions.length} predictions for ${season} Week ${week}`);
+      return predictions;
     } catch (error) {
       console.error('Error getting predictions:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get cached predictions with games (for fast page loading)
+   * Returns the most recent prediction for each game in the current week
+   */
+  static async getCachedPredictions(season: number, week: number): Promise<{
+    predictions: any[];
+    games: any[];
+    lastUpdate: Date | null;
+  }> {
+    try {
+      // Get all predictions for the week
+      const predictions = await this.getPredictionsByWeek(season, week);
+
+      // Group by gameId and keep only the most recent
+      const latestPredictions = new Map();
+      for (const pred of predictions) {
+        const existing = latestPredictions.get(pred.gameId);
+        if (!existing || pred.timestamp.toDate() > existing.timestamp.toDate()) {
+          latestPredictions.set(pred.gameId, pred);
+        }
+      }
+
+      // Get games for these predictions
+      const gameIds = Array.from(latestPredictions.keys());
+      const games = await Promise.all(
+        gameIds.map(async (gameId) => {
+          const gameRef = doc(db, COLLECTIONS.GAMES, gameId);
+          const gameDoc = await getDoc(gameRef);
+          if (gameDoc.exists()) {
+            return {
+              id: gameDoc.id,
+              ...gameDoc.data(),
+              gameTime: gameDoc.data().gameTime.toDate(),
+            };
+          }
+          return null;
+        })
+      );
+
+      const validGames = games.filter(g => g !== null);
+
+      // Find most recent update time
+      const lastUpdate = predictions.length > 0
+        ? predictions[0].timestamp.toDate()
+        : null;
+
+      return {
+        predictions: Array.from(latestPredictions.values()).map(p => ({
+          ...p,
+          timestamp: p.timestamp.toDate()
+        })),
+        games: validGames,
+        lastUpdate,
+      };
+    } catch (error) {
+      console.error('Error getting cached predictions:', error);
+      return {
+        predictions: [],
+        games: [],
+        lastUpdate: null,
+      };
+    }
+  }
+
+  /**
+   * Get latest betting lines for a game
+   */
+  static async getLatestBettingLines(gameId: string): Promise<any[]> {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.BETTING_LINES),
+        where('gameId', '==', gameId),
+        orderBy('timestamp', 'desc'),
+        limit(10) // Get latest lines from different bookmakers
+      );
+
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp.toDate(),
+      }));
+    } catch (error) {
+      console.error('Error getting latest betting lines:', error);
       return [];
     }
   }

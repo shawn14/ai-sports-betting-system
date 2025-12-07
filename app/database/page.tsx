@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { FirestoreService } from '@/lib/firebase/firestore';
-import { Database, Trophy, TrendingUp, BarChart3, Trash2, RefreshCw } from 'lucide-react';
+import AILoadingAnimation from '@/components/AILoadingAnimation';
+import { Database, Trophy, TrendingUp, BarChart3, Trash2, RefreshCw, Activity, Eye } from 'lucide-react';
 
 export default function DatabasePage() {
   const [stats, setStats] = useState<any>(null);
@@ -116,10 +117,18 @@ export default function DatabasePage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="text-slate-400 mt-4">Loading database statistics...</p>
-          </div>
+          <AILoadingAnimation
+            title="DATABASE ENGINE ACTIVE"
+            subtitle="Querying prediction and performance data..."
+            steps={[
+              { label: 'Connecting to Firestore', icon: Database, delay: 0 },
+              { label: 'Loading cached predictions', icon: Activity, delay: 200 },
+              { label: 'Fetching performance results', icon: BarChart3, delay: 400 },
+              { label: 'Counting total records', icon: Trophy, delay: 600 },
+              { label: 'Analyzing data patterns', icon: Eye, delay: 800 },
+              { label: 'Compiling statistics', icon: TrendingUp, delay: 1000 },
+            ]}
+          />
         ) : (
           <>
             {/* Stats Cards */}

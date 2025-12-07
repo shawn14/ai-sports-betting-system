@@ -10,6 +10,8 @@ import { FirestoreService } from '@/lib/firebase/firestore';
 import { Game, GamePrediction } from '@/types';
 import { format } from 'date-fns';
 import LoggedInHeader from '@/components/LoggedInHeader';
+import AILoadingAnimation from '@/components/AILoadingAnimation';
+import { Brain, Database, Cpu, BarChart3 } from 'lucide-react';
 
 // Force dynamic rendering for this page
 export const dynamic = 'force-dynamic';
@@ -248,10 +250,18 @@ export default function PredictionsPage() {
       {/* Main Content - Compact */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {loading ? (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="text-slate-400 mt-4">Analyzing games and generating predictions...</p>
-          </div>
+          <AILoadingAnimation
+            title="PREDICTION ENGINE ACTIVE"
+            subtitle="Analyzing matchups and generating AI predictions..."
+            steps={[
+              { label: 'Loading game schedules', icon: Database, delay: 0 },
+              { label: 'Fetching current odds data', icon: BarChart3, delay: 200 },
+              { label: 'Running ML prediction models', icon: Brain, delay: 400 },
+              { label: 'Analyzing weather conditions', icon: Cpu, delay: 600 },
+              { label: 'Calculating confidence scores', icon: BarChart3, delay: 800 },
+              { label: 'Generating recommendations', icon: Brain, delay: 1000 },
+            ]}
+          />
         ) : (
           <div className="grid gap-3">
             {Array.from(predictions.entries()).map(([gameId, prediction]) => {

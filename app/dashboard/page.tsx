@@ -1,6 +1,7 @@
 'use client';
 
 import LoggedInHeader from '@/components/LoggedInHeader';
+import AILoadingAnimation from '@/components/AILoadingAnimation';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -9,7 +10,7 @@ import { OddsAPI } from '@/lib/api/odds';
 import { LineMovementTracker, LineMovement, SharpMoneyIndicator, BettingPercentages } from '@/lib/models/lineMovement';
 import { Game, BettingLine } from '@/types';
 import { format } from 'date-fns';
-import { TrendingUp, TrendingDown, AlertTriangle, Target, ArrowRight } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, Target, ArrowRight, Eye, DollarSign, Activity } from 'lucide-react';
 
 export default function DashboardPage() {
   const [games, setGames] = useState<Game[]>([]);
@@ -122,10 +123,18 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="text-slate-400 mt-4">Loading line movements...</p>
-          </div>
+          <AILoadingAnimation
+            title="LINE MOVEMENT TRACKER"
+            subtitle="Analyzing real-time betting market data..."
+            steps={[
+              { label: 'Fetching current betting lines', icon: DollarSign, delay: 0 },
+              { label: 'Tracking line movements', icon: TrendingUp, delay: 200 },
+              { label: 'Detecting sharp money signals', icon: Eye, delay: 400 },
+              { label: 'Analyzing public betting', icon: Activity, delay: 600 },
+              { label: 'Identifying betting opportunities', icon: Target, delay: 800 },
+              { label: 'Calculating market inefficiencies', icon: AlertTriangle, delay: 1000 },
+            ]}
+          />
         ) : (
           <>
             {/* Sharp Money Alerts */}

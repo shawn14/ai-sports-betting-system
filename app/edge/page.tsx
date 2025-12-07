@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { NFLAPI } from '@/lib/api/nfl';
 import { OddsAPI } from '@/lib/api/odds';
 import { GamePredictor } from '@/lib/models/predictor';
+import AILoadingAnimation from '@/components/AILoadingAnimation';
 import { Game, BettingLine } from '@/types';
 import { format } from 'date-fns';
-import { TrendingUp, Target, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { TrendingUp, Target, AlertTriangle, CheckCircle, XCircle, Brain, DollarSign, Activity } from 'lucide-react';
 
 interface EdgeAnalysis {
   game: Game;
@@ -241,10 +242,18 @@ export default function EdgeDetectionPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
         {loading ? (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="text-slate-400 mt-4">Analyzing edges...</p>
-          </div>
+          <AILoadingAnimation
+            title="EDGE FINDER ANALYZING"
+            subtitle="Identifying profitable betting opportunities..."
+            steps={[
+              { label: 'Loading ML predictions', icon: Brain, delay: 0 },
+              { label: 'Fetching Vegas betting lines', icon: DollarSign, delay: 200 },
+              { label: 'Calculating spread differences', icon: Activity, delay: 400 },
+              { label: 'Identifying betting edges', icon: Target, delay: 600 },
+              { label: 'Ranking opportunities', icon: TrendingUp, delay: 800 },
+              { label: 'Filtering high-value bets', icon: AlertTriangle, delay: 1000 },
+            ]}
+          />
         ) : (
           <>
             {/* Summary Stats */}

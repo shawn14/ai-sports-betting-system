@@ -6,8 +6,9 @@ import { NFLAPI } from '@/lib/api/nfl';
 import { GamePredictor } from '@/lib/models/predictor';
 import { PredictionAnalytics, PredictionResult } from '@/lib/models/analytics';
 import { FirestoreService } from '@/lib/firebase/firestore';
+import AILoadingAnimation from '@/components/AILoadingAnimation';
 import { format } from 'date-fns';
-import { Trophy, XCircle, TrendingUp, TrendingDown, BarChart3, Database } from 'lucide-react';
+import { Trophy, XCircle, TrendingUp, TrendingDown, BarChart3, Database, Brain, Activity } from 'lucide-react';
 
 export default function BacktestPage() {
   const [season, setSeason] = useState(2024);
@@ -195,10 +196,18 @@ export default function BacktestPage() {
         </div>
 
         {loading && (
-          <div className="text-center py-10">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="text-slate-400 mt-4">Running backtest... Analyzing {results.length} games so far</p>
-          </div>
+          <AILoadingAnimation
+            title="BACKTEST ENGINE RUNNING"
+            subtitle={`Analyzing historical games... ${results.length} processed so far`}
+            steps={[
+              { label: 'Loading historical game data', icon: Database, delay: 0 },
+              { label: 'Running ML predictions', icon: Brain, delay: 200 },
+              { label: 'Comparing to actual results', icon: BarChart3, delay: 400 },
+              { label: 'Calculating win rates', icon: Trophy, delay: 600 },
+              { label: 'Computing performance metrics', icon: Activity, delay: 800 },
+              { label: 'Generating backtest report', icon: TrendingUp, delay: 1000 },
+            ]}
+          />
         )}
 
         {/* Performance Summary */}

@@ -13,6 +13,7 @@ import {
   Activity, DollarSign, Eye
 } from 'lucide-react';
 import LoggedInHeader from '@/components/LoggedInHeader';
+import AILoadingAnimation from '@/components/AILoadingAnimation';
 
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
@@ -219,10 +220,7 @@ export default function GamesPage() {
       {/* Main Content - Compact */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {loading ? (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="text-slate-400 mt-4">Loading games...</p>
-          </div>
+          <AILoadingAnimation />
         ) : (
           <>
             {/* High Confidence Picks - Enhanced */}

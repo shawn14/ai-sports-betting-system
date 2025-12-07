@@ -1,6 +1,7 @@
 'use client';
 
 import LoggedInHeader from '@/components/LoggedInHeader';
+import AILoadingAnimation from '@/components/AILoadingAnimation';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -10,7 +11,7 @@ import { GamePredictor } from '@/lib/models/predictor';
 import { PredictionAnalytics, PredictionResult, ModelPerformance } from '@/lib/models/analytics';
 import { Game, BettingLine, GamePrediction } from '@/types';
 import { format } from 'date-fns';
-import { TrendingUp, TrendingDown, Target, Trophy, XCircle, DollarSign, Percent, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Target, Trophy, XCircle, DollarSign, Percent, BarChart3, Database, Brain, Cpu } from 'lucide-react';
 import { FirestoreService } from '@/lib/firebase/firestore';
 
 export default function AnalyticsPage() {
@@ -154,10 +155,18 @@ export default function AnalyticsPage() {
       {/* Main Content - Compact */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {loading ? (
-          <div className="text-center py-20">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            <p className="text-slate-400 mt-4">Analyzing prediction performance...</p>
-          </div>
+          <AILoadingAnimation
+            title="ANALYTICS ENGINE PROCESSING"
+            subtitle="Crunching historical performance data..."
+            steps={[
+              { label: 'Loading prediction history', icon: Database, delay: 0 },
+              { label: 'Calculating ATS performance', icon: BarChart3, delay: 200 },
+              { label: 'Computing ROI metrics', icon: DollarSign, delay: 400 },
+              { label: 'Analyzing win patterns', icon: Brain, delay: 600 },
+              { label: 'Measuring confidence accuracy', icon: Target, delay: 800 },
+              { label: 'Generating insights', icon: Cpu, delay: 1000 },
+            ]}
+          />
         ) : performance ? (
           <>
             {/* Historical Backtest Results - Compact */}

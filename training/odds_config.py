@@ -4,7 +4,7 @@ Configuration for Historical Odds Enrichment
 
 # The Odds API configuration
 ODDS_API_CONFIG = {
-    'api_key': '63e9e5682a42fb5568c8f3aa7f4ae11e',
+    'api_key': '6501c357d0e15af57c63948347e2ea5f',
     'base_url': 'https://api.the-odds-api.com/v4',
     'sport': 'americanfootball_nfl',
     'regions': 'us',
@@ -38,6 +38,7 @@ TEAM_ALIAS_MAP = {
 
 # NFL week 1 start dates by season (for date calculations)
 WEEK_START_DATES = {
+    2025: '2025-09-04',  # 2025 NFL season starts Thursday, Sept 4
     2024: '2024-09-05',
     2023: '2023-09-07',
     2022: '2022-09-08',

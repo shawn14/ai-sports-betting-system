@@ -1,0 +1,4864 @@
+{
+  "metadata": {
+    "generated_at": "2025-12-06T21:19:13.977714",
+    "test_games": 167,
+    "total_errors": 0,
+    "model_version": "xgboost_phase1_v1",
+    "data_type": "test_set_only"
+  },
+  "summary_stats": {
+    "total_games": 167,
+    "avg_spread_error": 11.63,
+    "avg_total_error": 12.09,
+    "winner_accuracy_pct": 58.08,
+    "avg_home_score_error": 8.31,
+    "avg_away_score_error": 8.71,
+    "winner_correct_count": 97
+  },
+  "predictions": [
+    {
+      "gameId": "401326367",
+      "season": 2021,
+      "week": 3,
+      "homeTeam": "Jacksonville Jaguars",
+      "awayTeam": "Arizona Cardinals",
+      "prediction": {
+        "predicted_spread": -2.4000000953674316,
+        "predicted_total": 53.099998474121094,
+        "predicted_home_score": 25.3,
+        "predicted_away_score": 27.7,
+        "predicted_winner": "away",
+        "model_confidence": 62.6
+      },
+      "actual": {
+        "homeScore": 19,
+        "awayScore": 31,
+        "actualSpread": -12,
+        "actualTotal": 50,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 9.6,
+        "total_error": 3.1,
+        "winner_correct": true,
+        "home_score_error": 6.3,
+        "away_score_error": 3.3
+      }
+    },
+    {
+      "gameId": "401326373",
+      "season": 2021,
+      "week": 3,
+      "homeTeam": "Denver Broncos",
+      "awayTeam": "New York Jets",
+      "prediction": {
+        "predicted_spread": 0.20000000298023224,
+        "predicted_total": 50.5,
+        "predicted_home_score": 25.4,
+        "predicted_away_score": 25.1,
+        "predicted_winner": "home",
+        "model_confidence": 55.5
+      },
+      "actual": {
+        "homeScore": 26,
+        "awayScore": 0,
+        "actualSpread": 26,
+        "actualTotal": 26,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 25.8,
+        "total_error": 24.5,
+        "winner_correct": true,
+        "home_score_error": 0.6,
+        "away_score_error": 25.1
+      }
+    },
+    {
+      "gameId": "401326374",
+      "season": 2021,
+      "week": 3,
+      "homeTeam": "Las Vegas Raiders",
+      "awayTeam": "Miami Dolphins",
+      "prediction": {
+        "predicted_spread": 7.900000095367432,
+        "predicted_total": 40.400001525878906,
+        "predicted_home_score": 24.1,
+        "predicted_away_score": 16.2,
+        "predicted_winner": "home",
+        "model_confidence": 72.0
+      },
+      "actual": {
+        "homeScore": 31,
+        "awayScore": 28,
+        "actualSpread": 3,
+        "actualTotal": 59,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 4.9,
+        "total_error": 18.6,
+        "winner_correct": true,
+        "home_score_error": 6.9,
+        "away_score_error": 11.8
+      }
+    },
+    {
+      "gameId": "401326375",
+      "season": 2021,
+      "week": 3,
+      "homeTeam": "Los Angeles Rams",
+      "awayTeam": "Tampa Bay Buccaneers",
+      "prediction": {
+        "predicted_spread": 7.099999904632568,
+        "predicted_total": 43.599998474121094,
+        "predicted_home_score": 25.3,
+        "predicted_away_score": 18.3,
+        "predicted_winner": "home",
+        "model_confidence": 67.2
+      },
+      "actual": {
+        "homeScore": 34,
+        "awayScore": 24,
+        "actualSpread": 10,
+        "actualTotal": 58,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 2.9,
+        "total_error": 14.4,
+        "winner_correct": true,
+        "home_score_error": 8.7,
+        "away_score_error": 5.7
+      }
+    },
+    {
+      "gameId": "401326376",
+      "season": 2021,
+      "week": 3,
+      "homeTeam": "Minnesota Vikings",
+      "awayTeam": "Seattle Seahawks",
+      "prediction": {
+        "predicted_spread": -8.5,
+        "predicted_total": 43.099998474121094,
+        "predicted_home_score": 17.3,
+        "predicted_away_score": 25.8,
+        "predicted_winner": "away",
+        "model_confidence": 70.8
+      },
+      "actual": {
+        "homeScore": 30,
+        "awayScore": 17,
+        "actualSpread": 13,
+        "actualTotal": 47,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 21.5,
+        "total_error": 3.9,
+        "winner_correct": false,
+        "home_score_error": 12.7,
+        "away_score_error": 8.8
+      }
+    },
+    {
+      "gameId": "401326377",
+      "season": 2021,
+      "week": 3,
+      "homeTeam": "San Francisco 49ers",
+      "awayTeam": "Green Bay Packers",
+      "prediction": {
+        "predicted_spread": 6.699999809265137,
+        "predicted_total": 37.599998474121094,
+        "predicted_home_score": 22.1,
+        "predicted_away_score": 15.4,
+        "predicted_winner": "home",
+        "model_confidence": 71.7
+      },
+      "actual": {
+        "homeScore": 28,
+        "awayScore": 30,
+        "actualSpread": -2,
+        "actualTotal": 58,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 8.7,
+        "total_error": 20.4,
+        "winner_correct": false,
+        "home_score_error": 5.9,
+        "away_score_error": 14.6
+      }
+    },
+    {
+      "gameId": "401326378",
+      "season": 2021,
+      "week": 3,
+      "homeTeam": "Dallas Cowboys",
+      "awayTeam": "Philadelphia Eagles",
+      "prediction": {
+        "predicted_spread": -0.0,
+        "predicted_total": 42.400001525878906,
+        "predicted_home_score": 21.2,
+        "predicted_away_score": 21.2,
+        "predicted_winner": "away",
+        "model_confidence": 52.4
+      },
+      "actual": {
+        "homeScore": 41,
+        "awayScore": 21,
+        "actualSpread": 20,
+        "actualTotal": 62,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 20.0,
+        "total_error": 19.6,
+        "winner_correct": false,
+        "home_score_error": 19.8,
+        "away_score_error": 0.2
+      }
+    },
+    {
+      "gameId": "401326379",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Cincinnati Bengals",
+      "awayTeam": "Jacksonville Jaguars",
+      "prediction": {
+        "predicted_spread": -2.9000000953674316,
+        "predicted_total": 46.20000076293945,
+        "predicted_home_score": 21.6,
+        "predicted_away_score": 24.5,
+        "predicted_winner": "away",
+        "model_confidence": 57.5
+      },
+      "actual": {
+        "homeScore": 24,
+        "awayScore": 21,
+        "actualSpread": 3,
+        "actualTotal": 45,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 5.9,
+        "total_error": 1.2,
+        "winner_correct": false,
+        "home_score_error": 2.4,
+        "away_score_error": 3.5
+      }
+    },
+    {
+      "gameId": "401326380",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Atlanta Falcons",
+      "awayTeam": "Washington",
+      "prediction": {
+        "predicted_spread": -7.300000190734863,
+        "predicted_total": 51.29999923706055,
+        "predicted_home_score": 22.0,
+        "predicted_away_score": 29.3,
+        "predicted_winner": "away",
+        "model_confidence": 72.0
+      },
+      "actual": {
+        "homeScore": 30,
+        "awayScore": 34,
+        "actualSpread": -4,
+        "actualTotal": 64,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 3.3,
+        "total_error": 12.7,
+        "winner_correct": true,
+        "home_score_error": 8.0,
+        "away_score_error": 4.7
+      }
+    },
+    {
+      "gameId": "401326381",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Buffalo Bills",
+      "awayTeam": "Houston Texans",
+      "prediction": {
+        "predicted_spread": 15.399999618530273,
+        "predicted_total": 48.70000076293945,
+        "predicted_home_score": 32.1,
+        "predicted_away_score": 16.7,
+        "predicted_winner": "home",
+        "model_confidence": 84.9
+      },
+      "actual": {
+        "homeScore": 40,
+        "awayScore": 0,
+        "actualSpread": 40,
+        "actualTotal": 40,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 24.6,
+        "total_error": 8.7,
+        "winner_correct": true,
+        "home_score_error": 7.9,
+        "away_score_error": 16.7
+      }
+    },
+    {
+      "gameId": "401326382",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Chicago Bears",
+      "awayTeam": "Detroit Lions",
+      "prediction": {
+        "predicted_spread": -2.700000047683716,
+        "predicted_total": 54.400001525878906,
+        "predicted_home_score": 25.9,
+        "predicted_away_score": 28.5,
+        "predicted_winner": "away",
+        "model_confidence": 64.5
+      },
+      "actual": {
+        "homeScore": 24,
+        "awayScore": 14,
+        "actualSpread": 10,
+        "actualTotal": 38,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 12.7,
+        "total_error": 16.4,
+        "winner_correct": false,
+        "home_score_error": 1.9,
+        "away_score_error": 14.5
+      }
+    },
+    {
+      "gameId": "401326383",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Dallas Cowboys",
+      "awayTeam": "Carolina Panthers",
+      "prediction": {
+        "predicted_spread": -1.899999976158142,
+        "predicted_total": 47.29999923706055,
+        "predicted_home_score": 22.7,
+        "predicted_away_score": 24.6,
+        "predicted_winner": "away",
+        "model_confidence": 56.4
+      },
+      "actual": {
+        "homeScore": 36,
+        "awayScore": 28,
+        "actualSpread": 8,
+        "actualTotal": 64,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 9.9,
+        "total_error": 16.7,
+        "winner_correct": false,
+        "home_score_error": 13.3,
+        "away_score_error": 3.4
+      }
+    },
+    {
+      "gameId": "401326384",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Miami Dolphins",
+      "awayTeam": "Indianapolis Colts",
+      "prediction": {
+        "predicted_spread": 1.100000023841858,
+        "predicted_total": 38.70000076293945,
+        "predicted_home_score": 19.9,
+        "predicted_away_score": 18.8,
+        "predicted_winner": "home",
+        "model_confidence": 58.1
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 27,
+        "actualSpread": -10,
+        "actualTotal": 44,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 11.1,
+        "total_error": 5.3,
+        "winner_correct": false,
+        "home_score_error": 2.9,
+        "away_score_error": 8.2
+      }
+    },
+    {
+      "gameId": "401326385",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Minnesota Vikings",
+      "awayTeam": "Cleveland Browns",
+      "prediction": {
+        "predicted_spread": -7.900000095367432,
+        "predicted_total": 51.70000076293945,
+        "predicted_home_score": 21.9,
+        "predicted_away_score": 29.8,
+        "predicted_winner": "away",
+        "model_confidence": 73.9
+      },
+      "actual": {
+        "homeScore": 7,
+        "awayScore": 14,
+        "actualSpread": -7,
+        "actualTotal": 21,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 0.9,
+        "total_error": 30.7,
+        "winner_correct": true,
+        "home_score_error": 14.9,
+        "away_score_error": 15.8
+      }
+    },
+    {
+      "gameId": "401326386",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "New Orleans Saints",
+      "awayTeam": "New York Giants",
+      "prediction": {
+        "predicted_spread": 12.300000190734863,
+        "predicted_total": 45.599998474121094,
+        "predicted_home_score": 28.9,
+        "predicted_away_score": 16.6,
+        "predicted_winner": "home",
+        "model_confidence": 78.1
+      },
+      "actual": {
+        "homeScore": 21,
+        "awayScore": 27,
+        "actualSpread": -6,
+        "actualTotal": 48,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 18.3,
+        "total_error": 2.4,
+        "winner_correct": false,
+        "home_score_error": 7.9,
+        "away_score_error": 10.4
+      }
+    },
+    {
+      "gameId": "401326387",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "New York Jets",
+      "awayTeam": "Tennessee Titans",
+      "prediction": {
+        "predicted_spread": -1.2000000476837158,
+        "predicted_total": 51.79999923706055,
+        "predicted_home_score": 25.3,
+        "predicted_away_score": 26.5,
+        "predicted_winner": "away",
+        "model_confidence": 58.9
+      },
+      "actual": {
+        "homeScore": 27,
+        "awayScore": 24,
+        "actualSpread": 3,
+        "actualTotal": 51,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 4.2,
+        "total_error": 0.8,
+        "winner_correct": false,
+        "home_score_error": 1.7,
+        "away_score_error": 2.5
+      }
+    },
+    {
+      "gameId": "401326388",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Philadelphia Eagles",
+      "awayTeam": "Kansas City Chiefs",
+      "prediction": {
+        "predicted_spread": 5.300000190734863,
+        "predicted_total": 35.20000076293945,
+        "predicted_home_score": 20.3,
+        "predicted_away_score": 15.0,
+        "predicted_winner": "home",
+        "model_confidence": 70.7
+      },
+      "actual": {
+        "homeScore": 30,
+        "awayScore": 42,
+        "actualSpread": -12,
+        "actualTotal": 72,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 17.3,
+        "total_error": 36.8,
+        "winner_correct": false,
+        "home_score_error": 9.7,
+        "away_score_error": 27.0
+      }
+    },
+    {
+      "gameId": "401326389",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Los Angeles Rams",
+      "awayTeam": "Arizona Cardinals",
+      "prediction": {
+        "predicted_spread": -12.399999618530273,
+        "predicted_total": 49.900001525878906,
+        "predicted_home_score": 18.8,
+        "predicted_away_score": 31.1,
+        "predicted_winner": "away",
+        "model_confidence": 82.2
+      },
+      "actual": {
+        "homeScore": 20,
+        "awayScore": 37,
+        "actualSpread": -17,
+        "actualTotal": 57,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 4.6,
+        "total_error": 7.1,
+        "winner_correct": true,
+        "home_score_error": 1.2,
+        "away_score_error": 5.9
+      }
+    },
+    {
+      "gameId": "401326390",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "San Francisco 49ers",
+      "awayTeam": "Seattle Seahawks",
+      "prediction": {
+        "predicted_spread": 18.600000381469727,
+        "predicted_total": 64.5,
+        "predicted_home_score": 41.5,
+        "predicted_away_score": 23.0,
+        "predicted_winner": "home",
+        "model_confidence": 95.0
+      },
+      "actual": {
+        "homeScore": 21,
+        "awayScore": 28,
+        "actualSpread": -7,
+        "actualTotal": 49,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 25.6,
+        "total_error": 15.5,
+        "winner_correct": false,
+        "home_score_error": 20.5,
+        "away_score_error": 5.0
+      }
+    },
+    {
+      "gameId": "401326391",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Denver Broncos",
+      "awayTeam": "Baltimore Ravens",
+      "prediction": {
+        "predicted_spread": -2.5,
+        "predicted_total": 46.29999923706055,
+        "predicted_home_score": 21.9,
+        "predicted_away_score": 24.4,
+        "predicted_winner": "away",
+        "model_confidence": 56.9
+      },
+      "actual": {
+        "homeScore": 7,
+        "awayScore": 23,
+        "actualSpread": -16,
+        "actualTotal": 30,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 13.5,
+        "total_error": 16.3,
+        "winner_correct": true,
+        "home_score_error": 14.9,
+        "away_score_error": 1.4
+      }
+    },
+    {
+      "gameId": "401326392",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Green Bay Packers",
+      "awayTeam": "Pittsburgh Steelers",
+      "prediction": {
+        "predicted_spread": 6.300000190734863,
+        "predicted_total": 43.70000076293945,
+        "predicted_home_score": 25.0,
+        "predicted_away_score": 18.7,
+        "predicted_winner": "home",
+        "model_confidence": 65.4
+      },
+      "actual": {
+        "homeScore": 27,
+        "awayScore": 17,
+        "actualSpread": 10,
+        "actualTotal": 44,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 3.7,
+        "total_error": 0.3,
+        "winner_correct": true,
+        "home_score_error": 2.0,
+        "away_score_error": 1.7
+      }
+    },
+    {
+      "gameId": "401326393",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "New England Patriots",
+      "awayTeam": "Tampa Bay Buccaneers",
+      "prediction": {
+        "predicted_spread": -7.599999904632568,
+        "predicted_total": 51.099998474121094,
+        "predicted_home_score": 21.7,
+        "predicted_away_score": 29.4,
+        "predicted_winner": "away",
+        "model_confidence": 72.7
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 19,
+        "actualSpread": -2,
+        "actualTotal": 36,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 5.6,
+        "total_error": 15.1,
+        "winner_correct": true,
+        "home_score_error": 4.7,
+        "away_score_error": 10.4
+      }
+    },
+    {
+      "gameId": "401326394",
+      "season": 2021,
+      "week": 4,
+      "homeTeam": "Los Angeles Chargers",
+      "awayTeam": "Las Vegas Raiders",
+      "prediction": {
+        "predicted_spread": -4.400000095367432,
+        "predicted_total": 54.400001525878906,
+        "predicted_home_score": 25.0,
+        "predicted_away_score": 29.4,
+        "predicted_winner": "away",
+        "model_confidence": 68.4
+      },
+      "actual": {
+        "homeScore": 28,
+        "awayScore": 14,
+        "actualSpread": 14,
+        "actualTotal": 42,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 18.4,
+        "total_error": 12.4,
+        "winner_correct": false,
+        "home_score_error": 3.0,
+        "away_score_error": 15.4
+      }
+    },
+    {
+      "gameId": "401326395",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Seattle Seahawks",
+      "awayTeam": "Los Angeles Rams",
+      "prediction": {
+        "predicted_spread": 0.20000000298023224,
+        "predicted_total": 58.400001525878906,
+        "predicted_home_score": 29.3,
+        "predicted_away_score": 29.1,
+        "predicted_winner": "home",
+        "model_confidence": 62.5
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 26,
+        "actualSpread": -9,
+        "actualTotal": 43,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 9.2,
+        "total_error": 15.4,
+        "winner_correct": false,
+        "home_score_error": 12.3,
+        "away_score_error": 3.1
+      }
+    },
+    {
+      "gameId": "401326324",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Atlanta Falcons",
+      "awayTeam": "New York Jets",
+      "prediction": {
+        "predicted_spread": -3.4000000953674316,
+        "predicted_total": 52.400001525878906,
+        "predicted_home_score": 24.5,
+        "predicted_away_score": 27.9,
+        "predicted_winner": "away",
+        "model_confidence": 64.2
+      },
+      "actual": {
+        "homeScore": 27,
+        "awayScore": 20,
+        "actualSpread": 7,
+        "actualTotal": 47,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 10.4,
+        "total_error": 5.4,
+        "winner_correct": false,
+        "home_score_error": 2.5,
+        "away_score_error": 7.9
+      }
+    },
+    {
+      "gameId": "401326397",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Cincinnati Bengals",
+      "awayTeam": "Green Bay Packers",
+      "prediction": {
+        "predicted_spread": 9.800000190734863,
+        "predicted_total": 35.400001525878906,
+        "predicted_home_score": 22.6,
+        "predicted_away_score": 12.8,
+        "predicted_winner": "home",
+        "model_confidence": 80.6
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 25,
+        "actualSpread": -3,
+        "actualTotal": 47,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 12.8,
+        "total_error": 11.6,
+        "winner_correct": false,
+        "home_score_error": 0.6,
+        "away_score_error": 12.2
+      }
+    },
+    {
+      "gameId": "401326400",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Minnesota Vikings",
+      "awayTeam": "Detroit Lions",
+      "prediction": {
+        "predicted_spread": -1.2000000476837158,
+        "predicted_total": 53.5,
+        "predicted_home_score": 26.2,
+        "predicted_away_score": 27.3,
+        "predicted_winner": "away",
+        "model_confidence": 60.3
+      },
+      "actual": {
+        "homeScore": 19,
+        "awayScore": 17,
+        "actualSpread": 2,
+        "actualTotal": 36,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 3.2,
+        "total_error": 17.5,
+        "winner_correct": false,
+        "home_score_error": 7.2,
+        "away_score_error": 10.3
+      }
+    },
+    {
+      "gameId": "401326401",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Pittsburgh Steelers",
+      "awayTeam": "Denver Broncos",
+      "prediction": {
+        "predicted_spread": -7.900000095367432,
+        "predicted_total": 36.29999923706055,
+        "predicted_home_score": 14.2,
+        "predicted_away_score": 22.1,
+        "predicted_winner": "away",
+        "model_confidence": 75.7
+      },
+      "actual": {
+        "homeScore": 27,
+        "awayScore": 19,
+        "actualSpread": 8,
+        "actualTotal": 46,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 15.9,
+        "total_error": 9.7,
+        "winner_correct": false,
+        "home_score_error": 12.8,
+        "away_score_error": 3.1
+      }
+    },
+    {
+      "gameId": "401326402",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Tampa Bay Buccaneers",
+      "awayTeam": "Miami Dolphins",
+      "prediction": {
+        "predicted_spread": 16.899999618530273,
+        "predicted_total": 51.0,
+        "predicted_home_score": 33.9,
+        "predicted_away_score": 17.1,
+        "predicted_winner": "home",
+        "model_confidence": 86.9
+      },
+      "actual": {
+        "homeScore": 45,
+        "awayScore": 17,
+        "actualSpread": 28,
+        "actualTotal": 62,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 11.1,
+        "total_error": 11.0,
+        "winner_correct": true,
+        "home_score_error": 11.1,
+        "away_score_error": 0.1
+      }
+    },
+    {
+      "gameId": "401326403",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Washington",
+      "awayTeam": "New Orleans Saints",
+      "prediction": {
+        "predicted_spread": -6.599999904632568,
+        "predicted_total": 32.5,
+        "predicted_home_score": 13.0,
+        "predicted_away_score": 19.6,
+        "predicted_winner": "away",
+        "model_confidence": 76.0
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 33,
+        "actualSpread": -11,
+        "actualTotal": 55,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 4.4,
+        "total_error": 22.5,
+        "winner_correct": true,
+        "home_score_error": 9.0,
+        "away_score_error": 13.4
+      }
+    },
+    {
+      "gameId": "401326396",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Carolina Panthers",
+      "awayTeam": "Philadelphia Eagles",
+      "prediction": {
+        "predicted_spread": 7.900000095367432,
+        "predicted_total": 41.20000076293945,
+        "predicted_home_score": 24.5,
+        "predicted_away_score": 16.6,
+        "predicted_winner": "home",
+        "model_confidence": 71.1
+      },
+      "actual": {
+        "homeScore": 18,
+        "awayScore": 21,
+        "actualSpread": -3,
+        "actualTotal": 39,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 10.9,
+        "total_error": 2.2,
+        "winner_correct": false,
+        "home_score_error": 6.5,
+        "away_score_error": 4.4
+      }
+    },
+    {
+      "gameId": "401326399",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Jacksonville Jaguars",
+      "awayTeam": "Tennessee Titans",
+      "prediction": {
+        "predicted_spread": -1.399999976158142,
+        "predicted_total": 34.5,
+        "predicted_home_score": 16.6,
+        "predicted_away_score": 17.9,
+        "predicted_winner": "away",
+        "model_confidence": 62.5
+      },
+      "actual": {
+        "homeScore": 19,
+        "awayScore": 37,
+        "actualSpread": -18,
+        "actualTotal": 56,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 16.6,
+        "total_error": 21.5,
+        "winner_correct": true,
+        "home_score_error": 2.4,
+        "away_score_error": 19.1
+      }
+    },
+    {
+      "gameId": "401326398",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Houston Texans",
+      "awayTeam": "New England Patriots",
+      "prediction": {
+        "predicted_spread": -4.5,
+        "predicted_total": 28.799999237060547,
+        "predicted_home_score": 12.1,
+        "predicted_away_score": 16.7,
+        "predicted_winner": "away",
+        "model_confidence": 73.7
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 25,
+        "actualSpread": -3,
+        "actualTotal": 47,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 1.5,
+        "total_error": 18.2,
+        "winner_correct": true,
+        "home_score_error": 9.9,
+        "away_score_error": 8.3
+      }
+    },
+    {
+      "gameId": "401326405",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Las Vegas Raiders",
+      "awayTeam": "Chicago Bears",
+      "prediction": {
+        "predicted_spread": 3.700000047683716,
+        "predicted_total": 45.79999923706055,
+        "predicted_home_score": 24.8,
+        "predicted_away_score": 21.0,
+        "predicted_winner": "home",
+        "model_confidence": 59.1
+      },
+      "actual": {
+        "homeScore": 9,
+        "awayScore": 20,
+        "actualSpread": -11,
+        "actualTotal": 29,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 14.7,
+        "total_error": 16.8,
+        "winner_correct": false,
+        "home_score_error": 15.8,
+        "away_score_error": 1.0
+      }
+    },
+    {
+      "gameId": "401326404",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Los Angeles Chargers",
+      "awayTeam": "Cleveland Browns",
+      "prediction": {
+        "predicted_spread": 1.600000023841858,
+        "predicted_total": 46.099998474121094,
+        "predicted_home_score": 23.9,
+        "predicted_away_score": 22.2,
+        "predicted_winner": "home",
+        "model_confidence": 54.6
+      },
+      "actual": {
+        "homeScore": 47,
+        "awayScore": 42,
+        "actualSpread": 5,
+        "actualTotal": 89,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 3.4,
+        "total_error": 42.9,
+        "winner_correct": true,
+        "home_score_error": 23.1,
+        "away_score_error": 19.8
+      }
+    },
+    {
+      "gameId": "401326407",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Dallas Cowboys",
+      "awayTeam": "New York Giants",
+      "prediction": {
+        "predicted_spread": 16.899999618530273,
+        "predicted_total": 52.099998474121094,
+        "predicted_home_score": 34.5,
+        "predicted_away_score": 17.6,
+        "predicted_winner": "home",
+        "model_confidence": 87.9
+      },
+      "actual": {
+        "homeScore": 44,
+        "awayScore": 20,
+        "actualSpread": 24,
+        "actualTotal": 64,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 7.1,
+        "total_error": 11.9,
+        "winner_correct": true,
+        "home_score_error": 9.5,
+        "away_score_error": 2.4
+      }
+    },
+    {
+      "gameId": "401326406",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Arizona Cardinals",
+      "awayTeam": "San Francisco 49ers",
+      "prediction": {
+        "predicted_spread": 8.300000190734863,
+        "predicted_total": 54.900001525878906,
+        "predicted_home_score": 31.6,
+        "predicted_away_score": 23.3,
+        "predicted_winner": "home",
+        "model_confidence": 77.5
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 10,
+        "actualSpread": 7,
+        "actualTotal": 27,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 1.3,
+        "total_error": 27.9,
+        "winner_correct": true,
+        "home_score_error": 14.6,
+        "away_score_error": 13.3
+      }
+    },
+    {
+      "gameId": "401326408",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Kansas City Chiefs",
+      "awayTeam": "Buffalo Bills",
+      "prediction": {
+        "predicted_spread": -5.0,
+        "predicted_total": 43.79999923706055,
+        "predicted_home_score": 19.4,
+        "predicted_away_score": 24.4,
+        "predicted_winner": "away",
+        "model_confidence": 62.4
+      },
+      "actual": {
+        "homeScore": 20,
+        "awayScore": 38,
+        "actualSpread": -18,
+        "actualTotal": 58,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 13.0,
+        "total_error": 14.2,
+        "winner_correct": true,
+        "home_score_error": 0.6,
+        "away_score_error": 13.6
+      }
+    },
+    {
+      "gameId": "401326409",
+      "season": 2021,
+      "week": 5,
+      "homeTeam": "Baltimore Ravens",
+      "awayTeam": "Indianapolis Colts",
+      "prediction": {
+        "predicted_spread": 3.5,
+        "predicted_total": 46.20000076293945,
+        "predicted_home_score": 24.8,
+        "predicted_away_score": 21.3,
+        "predicted_winner": "home",
+        "model_confidence": 59.0
+      },
+      "actual": {
+        "homeScore": 31,
+        "awayScore": 25,
+        "actualSpread": 6,
+        "actualTotal": 56,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 2.5,
+        "total_error": 9.8,
+        "winner_correct": true,
+        "home_score_error": 6.2,
+        "away_score_error": 3.7
+      }
+    },
+    {
+      "gameId": "401326410",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Philadelphia Eagles",
+      "awayTeam": "Tampa Bay Buccaneers",
+      "prediction": {
+        "predicted_spread": -2.0,
+        "predicted_total": 51.5,
+        "predicted_home_score": 24.8,
+        "predicted_away_score": 26.8,
+        "predicted_winner": "away",
+        "model_confidence": 60.3
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 28,
+        "actualSpread": -6,
+        "actualTotal": 50,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 4.0,
+        "total_error": 1.5,
+        "winner_correct": true,
+        "home_score_error": 2.8,
+        "away_score_error": 1.2
+      }
+    },
+    {
+      "gameId": "401326325",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Jacksonville Jaguars",
+      "awayTeam": "Miami Dolphins",
+      "prediction": {
+        "predicted_spread": -3.200000047683716,
+        "predicted_total": 34.70000076293945,
+        "predicted_home_score": 15.7,
+        "predicted_away_score": 18.9,
+        "predicted_winner": "away",
+        "model_confidence": 66.4
+      },
+      "actual": {
+        "homeScore": 23,
+        "awayScore": 20,
+        "actualSpread": 3,
+        "actualTotal": 43,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 6.2,
+        "total_error": 8.3,
+        "winner_correct": false,
+        "home_score_error": 7.3,
+        "away_score_error": 1.1
+      }
+    },
+    {
+      "gameId": "401326413",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Chicago Bears",
+      "awayTeam": "Green Bay Packers",
+      "prediction": {
+        "predicted_spread": -12.100000381469727,
+        "predicted_total": 38.5,
+        "predicted_home_score": 13.2,
+        "predicted_away_score": 25.3,
+        "predicted_winner": "away",
+        "model_confidence": 83.1
+      },
+      "actual": {
+        "homeScore": 14,
+        "awayScore": 24,
+        "actualSpread": -10,
+        "actualTotal": 38,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 2.1,
+        "total_error": 0.5,
+        "winner_correct": true,
+        "home_score_error": 0.8,
+        "away_score_error": 1.3
+      }
+    },
+    {
+      "gameId": "401326414",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Detroit Lions",
+      "awayTeam": "Cincinnati Bengals",
+      "prediction": {
+        "predicted_spread": -10.199999809265137,
+        "predicted_total": 48.099998474121094,
+        "predicted_home_score": 19.0,
+        "predicted_away_score": 29.2,
+        "predicted_winner": "away",
+        "model_confidence": 75.8
+      },
+      "actual": {
+        "homeScore": 11,
+        "awayScore": 34,
+        "actualSpread": -23,
+        "actualTotal": 45,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 12.8,
+        "total_error": 3.1,
+        "winner_correct": true,
+        "home_score_error": 8.0,
+        "away_score_error": 4.8
+      }
+    },
+    {
+      "gameId": "401326415",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Indianapolis Colts",
+      "awayTeam": "Houston Texans",
+      "prediction": {
+        "predicted_spread": 2.0999999046325684,
+        "predicted_total": 48.0,
+        "predicted_home_score": 25.1,
+        "predicted_away_score": 22.9,
+        "predicted_winner": "home",
+        "model_confidence": 57.5
+      },
+      "actual": {
+        "homeScore": 31,
+        "awayScore": 3,
+        "actualSpread": 28,
+        "actualTotal": 34,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 25.9,
+        "total_error": 14.0,
+        "winner_correct": true,
+        "home_score_error": 5.9,
+        "away_score_error": 19.9
+      }
+    },
+    {
+      "gameId": "401326416",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "New York Giants",
+      "awayTeam": "Los Angeles Rams",
+      "prediction": {
+        "predicted_spread": -4.699999809265137,
+        "predicted_total": 38.5,
+        "predicted_home_score": 16.9,
+        "predicted_away_score": 21.6,
+        "predicted_winner": "away",
+        "model_confidence": 66.5
+      },
+      "actual": {
+        "homeScore": 11,
+        "awayScore": 38,
+        "actualSpread": -27,
+        "actualTotal": 49,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 22.3,
+        "total_error": 10.5,
+        "winner_correct": true,
+        "home_score_error": 5.9,
+        "away_score_error": 16.4
+      }
+    },
+    {
+      "gameId": "401326417",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Washington",
+      "awayTeam": "Kansas City Chiefs",
+      "prediction": {
+        "predicted_spread": -5.0,
+        "predicted_total": 42.599998474121094,
+        "predicted_home_score": 18.8,
+        "predicted_away_score": 23.8,
+        "predicted_winner": "away",
+        "model_confidence": 63.4
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 31,
+        "actualSpread": -18,
+        "actualTotal": 44,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 13.0,
+        "total_error": 1.4,
+        "winner_correct": true,
+        "home_score_error": 5.8,
+        "away_score_error": 7.2
+      }
+    },
+    {
+      "gameId": "401326412",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Carolina Panthers",
+      "awayTeam": "Minnesota Vikings",
+      "prediction": {
+        "predicted_spread": 5.300000190734863,
+        "predicted_total": 43.0,
+        "predicted_home_score": 24.2,
+        "predicted_away_score": 18.8,
+        "predicted_winner": "home",
+        "model_confidence": 63.8
+      },
+      "actual": {
+        "homeScore": 28,
+        "awayScore": 34,
+        "actualSpread": -6,
+        "actualTotal": 62,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 11.3,
+        "total_error": 19.0,
+        "winner_correct": false,
+        "home_score_error": 3.8,
+        "away_score_error": 15.2
+      }
+    },
+    {
+      "gameId": "401326411",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Baltimore Ravens",
+      "awayTeam": "Los Angeles Chargers",
+      "prediction": {
+        "predicted_spread": -5.5,
+        "predicted_total": 54.599998474121094,
+        "predicted_home_score": 24.5,
+        "predicted_away_score": 30.1,
+        "predicted_winner": "away",
+        "model_confidence": 71.1
+      },
+      "actual": {
+        "homeScore": 34,
+        "awayScore": 6,
+        "actualSpread": 28,
+        "actualTotal": 40,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 33.5,
+        "total_error": 14.6,
+        "winner_correct": false,
+        "home_score_error": 9.5,
+        "away_score_error": 24.1
+      }
+    },
+    {
+      "gameId": "401326418",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Cleveland Browns",
+      "awayTeam": "Arizona Cardinals",
+      "prediction": {
+        "predicted_spread": -5.800000190734863,
+        "predicted_total": 59.29999923706055,
+        "predicted_home_score": 26.7,
+        "predicted_away_score": 32.6,
+        "predicted_winner": "away",
+        "model_confidence": 76.0
+      },
+      "actual": {
+        "homeScore": 14,
+        "awayScore": 37,
+        "actualSpread": -23,
+        "actualTotal": 51,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 17.2,
+        "total_error": 8.3,
+        "winner_correct": true,
+        "home_score_error": 12.7,
+        "away_score_error": 4.4
+      }
+    },
+    {
+      "gameId": "401326419",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Denver Broncos",
+      "awayTeam": "Las Vegas Raiders",
+      "prediction": {
+        "predicted_spread": 7.699999809265137,
+        "predicted_total": 47.70000076293945,
+        "predicted_home_score": 27.7,
+        "predicted_away_score": 20.0,
+        "predicted_winner": "home",
+        "model_confidence": 69.7
+      },
+      "actual": {
+        "homeScore": 24,
+        "awayScore": 34,
+        "actualSpread": -10,
+        "actualTotal": 58,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 17.7,
+        "total_error": 10.3,
+        "winner_correct": false,
+        "home_score_error": 3.7,
+        "away_score_error": 14.0
+      }
+    },
+    {
+      "gameId": "401326420",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "New England Patriots",
+      "awayTeam": "Dallas Cowboys",
+      "prediction": {
+        "predicted_spread": -2.299999952316284,
+        "predicted_total": 50.5,
+        "predicted_home_score": 24.1,
+        "predicted_away_score": 26.4,
+        "predicted_winner": "away",
+        "model_confidence": 60.1
+      },
+      "actual": {
+        "homeScore": 29,
+        "awayScore": 35,
+        "actualSpread": -6,
+        "actualTotal": 64,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 3.7,
+        "total_error": 13.5,
+        "winner_correct": true,
+        "home_score_error": 4.9,
+        "away_score_error": 8.6
+      }
+    },
+    {
+      "gameId": "401326421",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Pittsburgh Steelers",
+      "awayTeam": "Seattle Seahawks",
+      "prediction": {
+        "predicted_spread": 7.5,
+        "predicted_total": 45.5,
+        "predicted_home_score": 26.5,
+        "predicted_away_score": 19.0,
+        "predicted_winner": "home",
+        "model_confidence": 67.2
+      },
+      "actual": {
+        "homeScore": 23,
+        "awayScore": 20,
+        "actualSpread": 3,
+        "actualTotal": 43,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 4.5,
+        "total_error": 2.5,
+        "winner_correct": true,
+        "home_score_error": 3.5,
+        "away_score_error": 1.0
+      }
+    },
+    {
+      "gameId": "401326422",
+      "season": 2021,
+      "week": 6,
+      "homeTeam": "Tennessee Titans",
+      "awayTeam": "Buffalo Bills",
+      "prediction": {
+        "predicted_spread": 2.0,
+        "predicted_total": 45.099998474121094,
+        "predicted_home_score": 23.6,
+        "predicted_away_score": 21.5,
+        "predicted_winner": "home",
+        "model_confidence": 54.7
+      },
+      "actual": {
+        "homeScore": 34,
+        "awayScore": 31,
+        "actualSpread": 3,
+        "actualTotal": 65,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 1.0,
+        "total_error": 19.9,
+        "winner_correct": true,
+        "home_score_error": 10.4,
+        "away_score_error": 9.5
+      }
+    },
+    {
+      "gameId": "401326423",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Cleveland Browns",
+      "awayTeam": "Denver Broncos",
+      "prediction": {
+        "predicted_spread": -3.4000000953674316,
+        "predicted_total": 50.400001525878906,
+        "predicted_home_score": 23.5,
+        "predicted_away_score": 26.9,
+        "predicted_winner": "away",
+        "model_confidence": 62.5
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 14,
+        "actualSpread": 3,
+        "actualTotal": 31,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 6.4,
+        "total_error": 19.4,
+        "winner_correct": false,
+        "home_score_error": 6.5,
+        "away_score_error": 12.9
+      }
+    },
+    {
+      "gameId": "401326425",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Green Bay Packers",
+      "awayTeam": "Washington",
+      "prediction": {
+        "predicted_spread": 9.800000190734863,
+        "predicted_total": 45.599998474121094,
+        "predicted_home_score": 27.7,
+        "predicted_away_score": 17.9,
+        "predicted_winner": "home",
+        "model_confidence": 72.5
+      },
+      "actual": {
+        "homeScore": 24,
+        "awayScore": 10,
+        "actualSpread": 14,
+        "actualTotal": 34,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 4.2,
+        "total_error": 11.6,
+        "winner_correct": true,
+        "home_score_error": 3.7,
+        "away_score_error": 7.9
+      }
+    },
+    {
+      "gameId": "401326429",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Tennessee Titans",
+      "awayTeam": "Kansas City Chiefs",
+      "prediction": {
+        "predicted_spread": -8.0,
+        "predicted_total": 53.5,
+        "predicted_home_score": 22.8,
+        "predicted_away_score": 30.7,
+        "predicted_winner": "away",
+        "model_confidence": 75.5
+      },
+      "actual": {
+        "homeScore": 27,
+        "awayScore": 3,
+        "actualSpread": 24,
+        "actualTotal": 30,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 32.0,
+        "total_error": 23.5,
+        "winner_correct": false,
+        "home_score_error": 4.2,
+        "away_score_error": 27.7
+      }
+    },
+    {
+      "gameId": "401326426",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Miami Dolphins",
+      "awayTeam": "Atlanta Falcons",
+      "prediction": {
+        "predicted_spread": -6.300000190734863,
+        "predicted_total": 35.29999923706055,
+        "predicted_home_score": 14.5,
+        "predicted_away_score": 20.8,
+        "predicted_winner": "away",
+        "model_confidence": 72.8
+      },
+      "actual": {
+        "homeScore": 28,
+        "awayScore": 30,
+        "actualSpread": -2,
+        "actualTotal": 58,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 4.3,
+        "total_error": 22.7,
+        "winner_correct": true,
+        "home_score_error": 13.5,
+        "away_score_error": 9.2
+      }
+    },
+    {
+      "gameId": "401326427",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "New England Patriots",
+      "awayTeam": "New York Jets",
+      "prediction": {
+        "predicted_spread": 0.0,
+        "predicted_total": 44.900001525878906,
+        "predicted_home_score": 22.4,
+        "predicted_away_score": 22.4,
+        "predicted_winner": "home",
+        "model_confidence": 50.1
+      },
+      "actual": {
+        "homeScore": 54,
+        "awayScore": 13,
+        "actualSpread": 41,
+        "actualTotal": 67,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 41.0,
+        "total_error": 22.1,
+        "winner_correct": true,
+        "home_score_error": 31.6,
+        "away_score_error": 9.4
+      }
+    },
+    {
+      "gameId": "401326428",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "New York Giants",
+      "awayTeam": "Carolina Panthers",
+      "prediction": {
+        "predicted_spread": 0.20000000298023224,
+        "predicted_total": 42.099998474121094,
+        "predicted_home_score": 21.1,
+        "predicted_away_score": 21.0,
+        "predicted_winner": "home",
+        "model_confidence": 53.0
+      },
+      "actual": {
+        "homeScore": 25,
+        "awayScore": 3,
+        "actualSpread": 22,
+        "actualTotal": 28,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 21.8,
+        "total_error": 14.1,
+        "winner_correct": true,
+        "home_score_error": 3.9,
+        "away_score_error": 18.0
+      }
+    },
+    {
+      "gameId": "401326424",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Baltimore Ravens",
+      "awayTeam": "Cincinnati Bengals",
+      "prediction": {
+        "predicted_spread": -9.100000381469727,
+        "predicted_total": 49.5,
+        "predicted_home_score": 20.2,
+        "predicted_away_score": 29.3,
+        "predicted_winner": "away",
+        "model_confidence": 74.5
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 41,
+        "actualSpread": -24,
+        "actualTotal": 58,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 14.9,
+        "total_error": 8.5,
+        "winner_correct": true,
+        "home_score_error": 3.2,
+        "away_score_error": 11.7
+      }
+    },
+    {
+      "gameId": "401326431",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Las Vegas Raiders",
+      "awayTeam": "Philadelphia Eagles",
+      "prediction": {
+        "predicted_spread": -3.700000047683716,
+        "predicted_total": 46.79999923706055,
+        "predicted_home_score": 21.5,
+        "predicted_away_score": 25.3,
+        "predicted_winner": "away",
+        "model_confidence": 60.1
+      },
+      "actual": {
+        "homeScore": 33,
+        "awayScore": 22,
+        "actualSpread": 11,
+        "actualTotal": 55,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 14.7,
+        "total_error": 8.2,
+        "winner_correct": false,
+        "home_score_error": 11.5,
+        "away_score_error": 3.3
+      }
+    },
+    {
+      "gameId": "401326430",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Los Angeles Rams",
+      "awayTeam": "Detroit Lions",
+      "prediction": {
+        "predicted_spread": 27.799999237060547,
+        "predicted_total": 59.20000076293945,
+        "predicted_home_score": 43.5,
+        "predicted_away_score": 15.7,
+        "predicted_winner": "home",
+        "model_confidence": 94.3
+      },
+      "actual": {
+        "homeScore": 28,
+        "awayScore": 19,
+        "actualSpread": 9,
+        "actualTotal": 47,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 18.8,
+        "total_error": 12.2,
+        "winner_correct": true,
+        "home_score_error": 15.5,
+        "away_score_error": 3.3
+      }
+    },
+    {
+      "gameId": "401326432",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Arizona Cardinals",
+      "awayTeam": "Houston Texans",
+      "prediction": {
+        "predicted_spread": 18.600000381469727,
+        "predicted_total": 57.900001525878906,
+        "predicted_home_score": 38.3,
+        "predicted_away_score": 19.6,
+        "predicted_winner": "home",
+        "model_confidence": 93.1
+      },
+      "actual": {
+        "homeScore": 31,
+        "awayScore": 5,
+        "actualSpread": 26,
+        "actualTotal": 36,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 7.4,
+        "total_error": 21.9,
+        "winner_correct": true,
+        "home_score_error": 7.3,
+        "away_score_error": 14.6
+      }
+    },
+    {
+      "gameId": "401326433",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Tampa Bay Buccaneers",
+      "awayTeam": "Chicago Bears",
+      "prediction": {
+        "predicted_spread": 9.399999618530273,
+        "predicted_total": 51.599998474121094,
+        "predicted_home_score": 30.5,
+        "predicted_away_score": 21.1,
+        "predicted_winner": "home",
+        "model_confidence": 77.0
+      },
+      "actual": {
+        "homeScore": 38,
+        "awayScore": 3,
+        "actualSpread": 35,
+        "actualTotal": 41,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 25.6,
+        "total_error": 10.6,
+        "winner_correct": true,
+        "home_score_error": 7.5,
+        "away_score_error": 18.1
+      }
+    },
+    {
+      "gameId": "401326434",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "San Francisco 49ers",
+      "awayTeam": "Indianapolis Colts",
+      "prediction": {
+        "predicted_spread": -3.5999999046325684,
+        "predicted_total": 42.5,
+        "predicted_home_score": 19.4,
+        "predicted_away_score": 23.0,
+        "predicted_winner": "away",
+        "model_confidence": 60.3
+      },
+      "actual": {
+        "homeScore": 18,
+        "awayScore": 30,
+        "actualSpread": -12,
+        "actualTotal": 48,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 8.4,
+        "total_error": 5.5,
+        "winner_correct": true,
+        "home_score_error": 1.4,
+        "away_score_error": 7.0
+      }
+    },
+    {
+      "gameId": "401326435",
+      "season": 2021,
+      "week": 7,
+      "homeTeam": "Seattle Seahawks",
+      "awayTeam": "New Orleans Saints",
+      "prediction": {
+        "predicted_spread": -7.400000095367432,
+        "predicted_total": 53.5,
+        "predicted_home_score": 23.1,
+        "predicted_away_score": 30.4,
+        "predicted_winner": "away",
+        "model_confidence": 74.2
+      },
+      "actual": {
+        "homeScore": 10,
+        "awayScore": 13,
+        "actualSpread": -3,
+        "actualTotal": 23,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 4.4,
+        "total_error": 30.5,
+        "winner_correct": true,
+        "home_score_error": 13.1,
+        "away_score_error": 17.4
+      }
+    },
+    {
+      "gameId": "401326436",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Arizona Cardinals",
+      "awayTeam": "Green Bay Packers",
+      "prediction": {
+        "predicted_spread": 5.0,
+        "predicted_total": 55.79999923706055,
+        "predicted_home_score": 30.4,
+        "predicted_away_score": 25.4,
+        "predicted_winner": "home",
+        "model_confidence": 70.9
+      },
+      "actual": {
+        "homeScore": 21,
+        "awayScore": 24,
+        "actualSpread": -3,
+        "actualTotal": 45,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 8.0,
+        "total_error": 10.8,
+        "winner_correct": false,
+        "home_score_error": 9.4,
+        "away_score_error": 1.4
+      }
+    },
+    {
+      "gameId": "401326437",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Atlanta Falcons",
+      "awayTeam": "Carolina Panthers",
+      "prediction": {
+        "predicted_spread": 0.10000000149011612,
+        "predicted_total": 47.79999923706055,
+        "predicted_home_score": 24.0,
+        "predicted_away_score": 23.8,
+        "predicted_winner": "home",
+        "model_confidence": 52.8
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 19,
+        "actualSpread": -6,
+        "actualTotal": 32,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 6.1,
+        "total_error": 15.8,
+        "winner_correct": false,
+        "home_score_error": 11.0,
+        "away_score_error": 4.8
+      }
+    },
+    {
+      "gameId": "401326438",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Buffalo Bills",
+      "awayTeam": "Miami Dolphins",
+      "prediction": {
+        "predicted_spread": 20.700000762939453,
+        "predicted_total": 36.29999923706055,
+        "predicted_home_score": 28.5,
+        "predicted_away_score": 7.8,
+        "predicted_winner": "home",
+        "model_confidence": 89.4
+      },
+      "actual": {
+        "homeScore": 26,
+        "awayScore": 11,
+        "actualSpread": 15,
+        "actualTotal": 37,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 5.7,
+        "total_error": 0.7,
+        "winner_correct": true,
+        "home_score_error": 2.5,
+        "away_score_error": 3.2
+      }
+    },
+    {
+      "gameId": "401326439",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Chicago Bears",
+      "awayTeam": "San Francisco 49ers",
+      "prediction": {
+        "predicted_spread": -3.5,
+        "predicted_total": 40.79999923706055,
+        "predicted_home_score": 18.6,
+        "predicted_away_score": 22.1,
+        "predicted_winner": "away",
+        "model_confidence": 61.7
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 33,
+        "actualSpread": -11,
+        "actualTotal": 55,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 7.5,
+        "total_error": 14.2,
+        "winner_correct": true,
+        "home_score_error": 3.4,
+        "away_score_error": 10.9
+      }
+    },
+    {
+      "gameId": "401326440",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Cleveland Browns",
+      "awayTeam": "Pittsburgh Steelers",
+      "prediction": {
+        "predicted_spread": -3.5999999046325684,
+        "predicted_total": 46.599998474121094,
+        "predicted_home_score": 21.5,
+        "predicted_away_score": 25.1,
+        "predicted_winner": "away",
+        "model_confidence": 59.5
+      },
+      "actual": {
+        "homeScore": 10,
+        "awayScore": 15,
+        "actualSpread": -5,
+        "actualTotal": 25,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 1.4,
+        "total_error": 21.6,
+        "winner_correct": true,
+        "home_score_error": 11.5,
+        "away_score_error": 10.1
+      }
+    },
+    {
+      "gameId": "401326441",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Detroit Lions",
+      "awayTeam": "Philadelphia Eagles",
+      "prediction": {
+        "predicted_spread": -11.800000190734863,
+        "predicted_total": 48.900001525878906,
+        "predicted_home_score": 18.5,
+        "predicted_away_score": 30.4,
+        "predicted_winner": "away",
+        "model_confidence": 80.1
+      },
+      "actual": {
+        "homeScore": 6,
+        "awayScore": 44,
+        "actualSpread": -38,
+        "actualTotal": 50,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 26.2,
+        "total_error": 1.1,
+        "winner_correct": true,
+        "home_score_error": 12.5,
+        "away_score_error": 13.6
+      }
+    },
+    {
+      "gameId": "401326443",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Indianapolis Colts",
+      "awayTeam": "Tennessee Titans",
+      "prediction": {
+        "predicted_spread": -6.199999809265137,
+        "predicted_total": 46.0,
+        "predicted_home_score": 19.9,
+        "predicted_away_score": 26.1,
+        "predicted_winner": "away",
+        "model_confidence": 64.7
+      },
+      "actual": {
+        "homeScore": 31,
+        "awayScore": 34,
+        "actualSpread": -3,
+        "actualTotal": 65,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 3.2,
+        "total_error": 19.0,
+        "winner_correct": true,
+        "home_score_error": 11.1,
+        "away_score_error": 7.9
+      }
+    },
+    {
+      "gameId": "401326444",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "New York Jets",
+      "awayTeam": "Cincinnati Bengals",
+      "prediction": {
+        "predicted_spread": -4.5,
+        "predicted_total": 31.899999618530273,
+        "predicted_home_score": 13.7,
+        "predicted_away_score": 18.2,
+        "predicted_winner": "away",
+        "model_confidence": 72.0
+      },
+      "actual": {
+        "homeScore": 34,
+        "awayScore": 31,
+        "actualSpread": 3,
+        "actualTotal": 65,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 7.5,
+        "total_error": 33.1,
+        "winner_correct": false,
+        "home_score_error": 20.3,
+        "away_score_error": 12.8
+      }
+    },
+    {
+      "gameId": "401326442",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Houston Texans",
+      "awayTeam": "Los Angeles Rams",
+      "prediction": {
+        "predicted_spread": -13.199999809265137,
+        "predicted_total": 47.099998474121094,
+        "predicted_home_score": 16.9,
+        "predicted_away_score": 30.1,
+        "predicted_winner": "away",
+        "model_confidence": 81.6
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 38,
+        "actualSpread": -16,
+        "actualTotal": 60,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 2.8,
+        "total_error": 12.9,
+        "winner_correct": true,
+        "home_score_error": 5.1,
+        "away_score_error": 7.9
+      }
+    },
+    {
+      "gameId": "401326445",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Los Angeles Chargers",
+      "awayTeam": "New England Patriots",
+      "prediction": {
+        "predicted_spread": -5.400000095367432,
+        "predicted_total": 50.20000076293945,
+        "predicted_home_score": 22.4,
+        "predicted_away_score": 27.8,
+        "predicted_winner": "away",
+        "model_confidence": 66.8
+      },
+      "actual": {
+        "homeScore": 24,
+        "awayScore": 27,
+        "actualSpread": -3,
+        "actualTotal": 51,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 2.4,
+        "total_error": 0.8,
+        "winner_correct": true,
+        "home_score_error": 1.6,
+        "away_score_error": 0.8
+      }
+    },
+    {
+      "gameId": "401326446",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Seattle Seahawks",
+      "awayTeam": "Jacksonville Jaguars",
+      "prediction": {
+        "predicted_spread": 11.100000381469727,
+        "predicted_total": 37.29999923706055,
+        "predicted_home_score": 24.2,
+        "predicted_away_score": 13.1,
+        "predicted_winner": "home",
+        "model_confidence": 81.9
+      },
+      "actual": {
+        "homeScore": 31,
+        "awayScore": 7,
+        "actualSpread": 24,
+        "actualTotal": 38,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 12.9,
+        "total_error": 0.7,
+        "winner_correct": true,
+        "home_score_error": 6.8,
+        "away_score_error": 6.1
+      }
+    },
+    {
+      "gameId": "401326447",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Denver Broncos",
+      "awayTeam": "Washington",
+      "prediction": {
+        "predicted_spread": 2.799999952316284,
+        "predicted_total": 43.099998474121094,
+        "predicted_home_score": 22.9,
+        "predicted_away_score": 20.1,
+        "predicted_winner": "home",
+        "model_confidence": 58.0
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 10,
+        "actualSpread": 7,
+        "actualTotal": 27,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 4.2,
+        "total_error": 16.1,
+        "winner_correct": true,
+        "home_score_error": 5.9,
+        "away_score_error": 10.1
+      }
+    },
+    {
+      "gameId": "401326448",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "New Orleans Saints",
+      "awayTeam": "Tampa Bay Buccaneers",
+      "prediction": {
+        "predicted_spread": -6.5,
+        "predicted_total": 45.099998474121094,
+        "predicted_home_score": 19.3,
+        "predicted_away_score": 25.8,
+        "predicted_winner": "away",
+        "model_confidence": 64.7
+      },
+      "actual": {
+        "homeScore": 36,
+        "awayScore": 27,
+        "actualSpread": 9,
+        "actualTotal": 63,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 15.5,
+        "total_error": 17.9,
+        "winner_correct": false,
+        "home_score_error": 16.7,
+        "away_score_error": 1.2
+      }
+    },
+    {
+      "gameId": "401326449",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Minnesota Vikings",
+      "awayTeam": "Dallas Cowboys",
+      "prediction": {
+        "predicted_spread": -2.4000000953674316,
+        "predicted_total": 32.900001525878906,
+        "predicted_home_score": 15.2,
+        "predicted_away_score": 17.6,
+        "predicted_winner": "away",
+        "model_confidence": 66.3
+      },
+      "actual": {
+        "homeScore": 16,
+        "awayScore": 20,
+        "actualSpread": -4,
+        "actualTotal": 36,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 1.6,
+        "total_error": 3.1,
+        "winner_correct": true,
+        "home_score_error": 0.8,
+        "away_score_error": 2.4
+      }
+    },
+    {
+      "gameId": "401326450",
+      "season": 2021,
+      "week": 8,
+      "homeTeam": "Kansas City Chiefs",
+      "awayTeam": "New York Giants",
+      "prediction": {
+        "predicted_spread": 8.300000190734863,
+        "predicted_total": 49.5,
+        "predicted_home_score": 28.9,
+        "predicted_away_score": 20.6,
+        "predicted_winner": "home",
+        "model_confidence": 72.8
+      },
+      "actual": {
+        "homeScore": 20,
+        "awayScore": 17,
+        "actualSpread": 3,
+        "actualTotal": 37,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 5.3,
+        "total_error": 12.5,
+        "winner_correct": true,
+        "home_score_error": 8.9,
+        "away_score_error": 3.6
+      }
+    },
+    {
+      "gameId": "401326451",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Indianapolis Colts",
+      "awayTeam": "New York Jets",
+      "prediction": {
+        "predicted_spread": 11.600000381469727,
+        "predicted_total": 52.79999923706055,
+        "predicted_home_score": 32.2,
+        "predicted_away_score": 20.6,
+        "predicted_winner": "home",
+        "model_confidence": 83.0
+      },
+      "actual": {
+        "homeScore": 45,
+        "awayScore": 30,
+        "actualSpread": 15,
+        "actualTotal": 75,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 3.4,
+        "total_error": 22.2,
+        "winner_correct": true,
+        "home_score_error": 12.8,
+        "away_score_error": 9.4
+      }
+    },
+    {
+      "gameId": "401326454",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Cincinnati Bengals",
+      "awayTeam": "Cleveland Browns",
+      "prediction": {
+        "predicted_spread": 2.5,
+        "predicted_total": 54.5,
+        "predicted_home_score": 28.5,
+        "predicted_away_score": 26.0,
+        "predicted_winner": "home",
+        "model_confidence": 64.0
+      },
+      "actual": {
+        "homeScore": 16,
+        "awayScore": 41,
+        "actualSpread": -25,
+        "actualTotal": 57,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 27.5,
+        "total_error": 2.5,
+        "winner_correct": false,
+        "home_score_error": 12.5,
+        "away_score_error": 15.0
+      }
+    },
+    {
+      "gameId": "401326455",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Dallas Cowboys",
+      "awayTeam": "Denver Broncos",
+      "prediction": {
+        "predicted_spread": 5.400000095367432,
+        "predicted_total": 41.599998474121094,
+        "predicted_home_score": 23.5,
+        "predicted_away_score": 18.1,
+        "predicted_winner": "home",
+        "model_confidence": 65.1
+      },
+      "actual": {
+        "homeScore": 16,
+        "awayScore": 30,
+        "actualSpread": -14,
+        "actualTotal": 46,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 19.4,
+        "total_error": 4.4,
+        "winner_correct": false,
+        "home_score_error": 7.5,
+        "away_score_error": 11.9
+      }
+    },
+    {
+      "gameId": "401326457",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Miami Dolphins",
+      "awayTeam": "Houston Texans",
+      "prediction": {
+        "predicted_spread": -0.4000000059604645,
+        "predicted_total": 22.0,
+        "predicted_home_score": 10.8,
+        "predicted_away_score": 11.2,
+        "predicted_winner": "away",
+        "model_confidence": 64.3
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 9,
+        "actualSpread": 8,
+        "actualTotal": 26,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 8.4,
+        "total_error": 4.0,
+        "winner_correct": false,
+        "home_score_error": 6.2,
+        "away_score_error": 2.2
+      }
+    },
+    {
+      "gameId": "401326458",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "New Orleans Saints",
+      "awayTeam": "Atlanta Falcons",
+      "prediction": {
+        "predicted_spread": 6.0,
+        "predicted_total": 48.599998474121094,
+        "predicted_home_score": 27.3,
+        "predicted_away_score": 21.3,
+        "predicted_winner": "home",
+        "model_confidence": 66.8
+      },
+      "actual": {
+        "homeScore": 25,
+        "awayScore": 27,
+        "actualSpread": -2,
+        "actualTotal": 52,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 8.0,
+        "total_error": 3.4,
+        "winner_correct": false,
+        "home_score_error": 2.3,
+        "away_score_error": 5.7
+      }
+    },
+    {
+      "gameId": "401326459",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "New York Giants",
+      "awayTeam": "Las Vegas Raiders",
+      "prediction": {
+        "predicted_spread": -1.2999999523162842,
+        "predicted_total": 33.70000076293945,
+        "predicted_home_score": 16.2,
+        "predicted_away_score": 17.5,
+        "predicted_winner": "away",
+        "model_confidence": 63.0
+      },
+      "actual": {
+        "homeScore": 23,
+        "awayScore": 16,
+        "actualSpread": 7,
+        "actualTotal": 39,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 8.3,
+        "total_error": 5.3,
+        "winner_correct": false,
+        "home_score_error": 6.8,
+        "away_score_error": 1.5
+      }
+    },
+    {
+      "gameId": "401326453",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Carolina Panthers",
+      "awayTeam": "New England Patriots",
+      "prediction": {
+        "predicted_spread": 2.200000047683716,
+        "predicted_total": 43.29999923706055,
+        "predicted_home_score": 22.7,
+        "predicted_away_score": 20.5,
+        "predicted_winner": "home",
+        "model_confidence": 56.5
+      },
+      "actual": {
+        "homeScore": 6,
+        "awayScore": 24,
+        "actualSpread": -18,
+        "actualTotal": 30,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 20.2,
+        "total_error": 13.3,
+        "winner_correct": false,
+        "home_score_error": 16.7,
+        "away_score_error": 3.5
+      }
+    },
+    {
+      "gameId": "401326456",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Jacksonville Jaguars",
+      "awayTeam": "Buffalo Bills",
+      "prediction": {
+        "predicted_spread": -1.600000023841858,
+        "predicted_total": 45.900001525878906,
+        "predicted_home_score": 22.2,
+        "predicted_away_score": 23.7,
+        "predicted_winner": "away",
+        "model_confidence": 54.3
+      },
+      "actual": {
+        "homeScore": 9,
+        "awayScore": 6,
+        "actualSpread": 3,
+        "actualTotal": 15,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 4.6,
+        "total_error": 30.9,
+        "winner_correct": false,
+        "home_score_error": 13.2,
+        "away_score_error": 17.7
+      }
+    },
+    {
+      "gameId": "401326452",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Baltimore Ravens",
+      "awayTeam": "Minnesota Vikings",
+      "prediction": {
+        "predicted_spread": 1.100000023841858,
+        "predicted_total": 62.099998474121094,
+        "predicted_home_score": 31.6,
+        "predicted_away_score": 30.5,
+        "predicted_winner": "home",
+        "model_confidence": 66.0
+      },
+      "actual": {
+        "homeScore": 34,
+        "awayScore": 31,
+        "actualSpread": 3,
+        "actualTotal": 65,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 1.9,
+        "total_error": 2.9,
+        "winner_correct": true,
+        "home_score_error": 2.4,
+        "away_score_error": 0.5
+      }
+    },
+    {
+      "gameId": "401326460",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Philadelphia Eagles",
+      "awayTeam": "Los Angeles Chargers",
+      "prediction": {
+        "predicted_spread": -3.0999999046325684,
+        "predicted_total": 47.70000076293945,
+        "predicted_home_score": 22.3,
+        "predicted_away_score": 25.4,
+        "predicted_winner": "away",
+        "model_confidence": 59.5
+      },
+      "actual": {
+        "homeScore": 24,
+        "awayScore": 27,
+        "actualSpread": -3,
+        "actualTotal": 51,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 0.1,
+        "total_error": 3.3,
+        "winner_correct": true,
+        "home_score_error": 1.7,
+        "away_score_error": 1.6
+      }
+    },
+    {
+      "gameId": "401326461",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Kansas City Chiefs",
+      "awayTeam": "Green Bay Packers",
+      "prediction": {
+        "predicted_spread": -5.699999809265137,
+        "predicted_total": 42.599998474121094,
+        "predicted_home_score": 18.4,
+        "predicted_away_score": 24.2,
+        "predicted_winner": "away",
+        "model_confidence": 65.1
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 7,
+        "actualSpread": 6,
+        "actualTotal": 20,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 11.7,
+        "total_error": 22.6,
+        "winner_correct": false,
+        "home_score_error": 5.4,
+        "away_score_error": 17.2
+      }
+    },
+    {
+      "gameId": "401326462",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "San Francisco 49ers",
+      "awayTeam": "Arizona Cardinals",
+      "prediction": {
+        "predicted_spread": -1.2000000476837158,
+        "predicted_total": 41.79999923706055,
+        "predicted_home_score": 20.3,
+        "predicted_away_score": 21.5,
+        "predicted_winner": "away",
+        "model_confidence": 55.5
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 31,
+        "actualSpread": -14,
+        "actualTotal": 48,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 12.8,
+        "total_error": 6.2,
+        "winner_correct": true,
+        "home_score_error": 3.3,
+        "away_score_error": 9.5
+      }
+    },
+    {
+      "gameId": "401326463",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Los Angeles Rams",
+      "awayTeam": "Tennessee Titans",
+      "prediction": {
+        "predicted_spread": 9.100000381469727,
+        "predicted_total": 46.0,
+        "predicted_home_score": 27.6,
+        "predicted_away_score": 18.5,
+        "predicted_winner": "home",
+        "model_confidence": 71.3
+      },
+      "actual": {
+        "homeScore": 16,
+        "awayScore": 28,
+        "actualSpread": -12,
+        "actualTotal": 44,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 21.1,
+        "total_error": 2.0,
+        "winner_correct": false,
+        "home_score_error": 11.6,
+        "away_score_error": 9.5
+      }
+    },
+    {
+      "gameId": "401326464",
+      "season": 2021,
+      "week": 9,
+      "homeTeam": "Pittsburgh Steelers",
+      "awayTeam": "Chicago Bears",
+      "prediction": {
+        "predicted_spread": 3.299999952316284,
+        "predicted_total": 41.5,
+        "predicted_home_score": 22.4,
+        "predicted_away_score": 19.1,
+        "predicted_winner": "home",
+        "model_confidence": 60.6
+      },
+      "actual": {
+        "homeScore": 29,
+        "awayScore": 27,
+        "actualSpread": 2,
+        "actualTotal": 56,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 1.3,
+        "total_error": 14.5,
+        "winner_correct": true,
+        "home_score_error": 6.6,
+        "away_score_error": 7.9
+      }
+    },
+    {
+      "gameId": "401326465",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Miami Dolphins",
+      "awayTeam": "Baltimore Ravens",
+      "prediction": {
+        "predicted_spread": 1.100000023841858,
+        "predicted_total": 40.29999923706055,
+        "predicted_home_score": 20.7,
+        "predicted_away_score": 19.6,
+        "predicted_winner": "home",
+        "model_confidence": 56.7
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 10,
+        "actualSpread": 12,
+        "actualTotal": 32,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 10.9,
+        "total_error": 8.3,
+        "winner_correct": true,
+        "home_score_error": 1.3,
+        "away_score_error": 9.6
+      }
+    },
+    {
+      "gameId": "401326466",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Dallas Cowboys",
+      "awayTeam": "Atlanta Falcons",
+      "prediction": {
+        "predicted_spread": 9.0,
+        "predicted_total": 53.599998474121094,
+        "predicted_home_score": 31.3,
+        "predicted_away_score": 22.3,
+        "predicted_winner": "home",
+        "model_confidence": 78.1
+      },
+      "actual": {
+        "homeScore": 43,
+        "awayScore": 3,
+        "actualSpread": 40,
+        "actualTotal": 46,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 31.0,
+        "total_error": 7.6,
+        "winner_correct": true,
+        "home_score_error": 11.7,
+        "away_score_error": 19.3
+      }
+    },
+    {
+      "gameId": "401326471",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Tennessee Titans",
+      "awayTeam": "New Orleans Saints",
+      "prediction": {
+        "predicted_spread": -5.0,
+        "predicted_total": 50.20000076293945,
+        "predicted_home_score": 22.6,
+        "predicted_away_score": 27.6,
+        "predicted_winner": "away",
+        "model_confidence": 65.9
+      },
+      "actual": {
+        "homeScore": 23,
+        "awayScore": 21,
+        "actualSpread": 2,
+        "actualTotal": 44,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 7.0,
+        "total_error": 6.2,
+        "winner_correct": false,
+        "home_score_error": 0.4,
+        "away_score_error": 6.6
+      }
+    },
+    {
+      "gameId": "401326467",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Indianapolis Colts",
+      "awayTeam": "Jacksonville Jaguars",
+      "prediction": {
+        "predicted_spread": 14.800000190734863,
+        "predicted_total": 49.900001525878906,
+        "predicted_home_score": 32.3,
+        "predicted_away_score": 17.5,
+        "predicted_winner": "home",
+        "model_confidence": 85.9
+      },
+      "actual": {
+        "homeScore": 23,
+        "awayScore": 17,
+        "actualSpread": 6,
+        "actualTotal": 40,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 8.8,
+        "total_error": 9.9,
+        "winner_correct": true,
+        "home_score_error": 9.3,
+        "away_score_error": 0.5
+      }
+    },
+    {
+      "gameId": "401326468",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "New England Patriots",
+      "awayTeam": "Cleveland Browns",
+      "prediction": {
+        "predicted_spread": 6.699999809265137,
+        "predicted_total": 53.0,
+        "predicted_home_score": 29.8,
+        "predicted_away_score": 23.2,
+        "predicted_winner": "home",
+        "model_confidence": 72.3
+      },
+      "actual": {
+        "homeScore": 45,
+        "awayScore": 7,
+        "actualSpread": 38,
+        "actualTotal": 52,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 31.3,
+        "total_error": 1.0,
+        "winner_correct": true,
+        "home_score_error": 15.2,
+        "away_score_error": 16.2
+      }
+    },
+    {
+      "gameId": "401326469",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "New York Jets",
+      "awayTeam": "Buffalo Bills",
+      "prediction": {
+        "predicted_spread": -21.299999237060547,
+        "predicted_total": 49.20000076293945,
+        "predicted_home_score": 14.0,
+        "predicted_away_score": 35.3,
+        "predicted_winner": "away",
+        "model_confidence": 85.3
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 45,
+        "actualSpread": -28,
+        "actualTotal": 62,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 6.7,
+        "total_error": 12.8,
+        "winner_correct": true,
+        "home_score_error": 3.0,
+        "away_score_error": 9.7
+      }
+    },
+    {
+      "gameId": "401326470",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Pittsburgh Steelers",
+      "awayTeam": "Detroit Lions",
+      "prediction": {
+        "predicted_spread": -4.900000095367432,
+        "predicted_total": 55.900001525878906,
+        "predicted_home_score": 25.5,
+        "predicted_away_score": 30.4,
+        "predicted_winner": "away",
+        "model_confidence": 70.8
+      },
+      "actual": {
+        "homeScore": 16,
+        "awayScore": 16,
+        "actualSpread": 0,
+        "actualTotal": 32,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 4.9,
+        "total_error": 23.9,
+        "winner_correct": true,
+        "home_score_error": 9.5,
+        "away_score_error": 14.4
+      }
+    },
+    {
+      "gameId": "401326472",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Washington",
+      "awayTeam": "Tampa Bay Buccaneers",
+      "prediction": {
+        "predicted_spread": -7.900000095367432,
+        "predicted_total": 36.5,
+        "predicted_home_score": 14.3,
+        "predicted_away_score": 22.2,
+        "predicted_winner": "away",
+        "model_confidence": 75.4
+      },
+      "actual": {
+        "homeScore": 29,
+        "awayScore": 19,
+        "actualSpread": 10,
+        "actualTotal": 48,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 17.9,
+        "total_error": 11.5,
+        "winner_correct": false,
+        "home_score_error": 14.7,
+        "away_score_error": 3.2
+      }
+    },
+    {
+      "gameId": "401326473",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Arizona Cardinals",
+      "awayTeam": "Carolina Panthers",
+      "prediction": {
+        "predicted_spread": 6.400000095367432,
+        "predicted_total": 46.79999923706055,
+        "predicted_home_score": 26.6,
+        "predicted_away_score": 20.2,
+        "predicted_winner": "home",
+        "model_confidence": 66.0
+      },
+      "actual": {
+        "homeScore": 10,
+        "awayScore": 34,
+        "actualSpread": -24,
+        "actualTotal": 44,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 30.4,
+        "total_error": 2.8,
+        "winner_correct": false,
+        "home_score_error": 16.6,
+        "away_score_error": 13.8
+      }
+    },
+    {
+      "gameId": "401326474",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Los Angeles Chargers",
+      "awayTeam": "Minnesota Vikings",
+      "prediction": {
+        "predicted_spread": 7.900000095367432,
+        "predicted_total": 47.20000076293945,
+        "predicted_home_score": 27.5,
+        "predicted_away_score": 19.7,
+        "predicted_winner": "home",
+        "model_confidence": 69.7
+      },
+      "actual": {
+        "homeScore": 20,
+        "awayScore": 27,
+        "actualSpread": -7,
+        "actualTotal": 47,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 14.9,
+        "total_error": 0.2,
+        "winner_correct": false,
+        "home_score_error": 7.5,
+        "away_score_error": 7.3
+      }
+    },
+    {
+      "gameId": "401326475",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Denver Broncos",
+      "awayTeam": "Philadelphia Eagles",
+      "prediction": {
+        "predicted_spread": 3.0999999046325684,
+        "predicted_total": 35.79999923706055,
+        "predicted_home_score": 19.4,
+        "predicted_away_score": 16.4,
+        "predicted_winner": "home",
+        "model_confidence": 65.2
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 30,
+        "actualSpread": -17,
+        "actualTotal": 43,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 20.1,
+        "total_error": 7.2,
+        "winner_correct": false,
+        "home_score_error": 6.4,
+        "away_score_error": 13.6
+      }
+    },
+    {
+      "gameId": "401326476",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Green Bay Packers",
+      "awayTeam": "Seattle Seahawks",
+      "prediction": {
+        "predicted_spread": 2.200000047683716,
+        "predicted_total": 36.70000076293945,
+        "predicted_home_score": 19.5,
+        "predicted_away_score": 17.3,
+        "predicted_winner": "home",
+        "model_confidence": 62.4
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 0,
+        "actualSpread": 17,
+        "actualTotal": 17,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 14.8,
+        "total_error": 19.7,
+        "winner_correct": true,
+        "home_score_error": 2.5,
+        "away_score_error": 17.3
+      }
+    },
+    {
+      "gameId": "401326477",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "Las Vegas Raiders",
+      "awayTeam": "Kansas City Chiefs",
+      "prediction": {
+        "predicted_spread": 0.6000000238418579,
+        "predicted_total": 43.29999923706055,
+        "predicted_home_score": 22.0,
+        "predicted_away_score": 21.3,
+        "predicted_winner": "home",
+        "model_confidence": 52.9
+      },
+      "actual": {
+        "homeScore": 14,
+        "awayScore": 41,
+        "actualSpread": -27,
+        "actualTotal": 55,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 27.6,
+        "total_error": 11.7,
+        "winner_correct": false,
+        "home_score_error": 8.0,
+        "away_score_error": 19.7
+      }
+    },
+    {
+      "gameId": "401326478",
+      "season": 2021,
+      "week": 10,
+      "homeTeam": "San Francisco 49ers",
+      "awayTeam": "Los Angeles Rams",
+      "prediction": {
+        "predicted_spread": -3.299999952316284,
+        "predicted_total": 53.70000076293945,
+        "predicted_home_score": 25.2,
+        "predicted_away_score": 28.5,
+        "predicted_winner": "away",
+        "model_confidence": 65.3
+      },
+      "actual": {
+        "homeScore": 31,
+        "awayScore": 10,
+        "actualSpread": 21,
+        "actualTotal": 41,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 24.3,
+        "total_error": 12.7,
+        "winner_correct": false,
+        "home_score_error": 5.8,
+        "away_score_error": 18.5
+      }
+    },
+    {
+      "gameId": "401326479",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Atlanta Falcons",
+      "awayTeam": "New England Patriots",
+      "prediction": {
+        "predicted_spread": -10.0,
+        "predicted_total": 42.5,
+        "predicted_home_score": 16.3,
+        "predicted_away_score": 26.3,
+        "predicted_winner": "away",
+        "model_confidence": 74.6
+      },
+      "actual": {
+        "homeScore": 0,
+        "awayScore": 25,
+        "actualSpread": -25,
+        "actualTotal": 25,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 15.0,
+        "total_error": 17.5,
+        "winner_correct": true,
+        "home_score_error": 16.3,
+        "away_score_error": 1.3
+      }
+    },
+    {
+      "gameId": "401326480",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Buffalo Bills",
+      "awayTeam": "Indianapolis Colts",
+      "prediction": {
+        "predicted_spread": 8.600000381469727,
+        "predicted_total": 58.79999923706055,
+        "predicted_home_score": 33.7,
+        "predicted_away_score": 25.1,
+        "predicted_winner": "home",
+        "model_confidence": 81.7
+      },
+      "actual": {
+        "homeScore": 15,
+        "awayScore": 41,
+        "actualSpread": -26,
+        "actualTotal": 56,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 34.6,
+        "total_error": 2.8,
+        "winner_correct": false,
+        "home_score_error": 18.7,
+        "away_score_error": 15.9
+      }
+    },
+    {
+      "gameId": "401326482",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Chicago Bears",
+      "awayTeam": "Baltimore Ravens",
+      "prediction": {
+        "predicted_spread": -2.700000047683716,
+        "predicted_total": 33.599998474121094,
+        "predicted_home_score": 15.4,
+        "predicted_away_score": 18.1,
+        "predicted_winner": "away",
+        "model_confidence": 66.4
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 16,
+        "actualSpread": -3,
+        "actualTotal": 29,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 0.3,
+        "total_error": 4.6,
+        "winner_correct": true,
+        "home_score_error": 2.4,
+        "away_score_error": 2.1
+      }
+    },
+    {
+      "gameId": "401326483",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Cleveland Browns",
+      "awayTeam": "Detroit Lions",
+      "prediction": {
+        "predicted_spread": -8.0,
+        "predicted_total": 49.79999923706055,
+        "predicted_home_score": 20.9,
+        "predicted_away_score": 28.9,
+        "predicted_winner": "away",
+        "model_confidence": 72.3
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 10,
+        "actualSpread": 3,
+        "actualTotal": 23,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 11.0,
+        "total_error": 26.8,
+        "winner_correct": false,
+        "home_score_error": 7.9,
+        "away_score_error": 18.9
+      }
+    },
+    {
+      "gameId": "401326488",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Tennessee Titans",
+      "awayTeam": "Houston Texans",
+      "prediction": {
+        "predicted_spread": 0.10000000149011612,
+        "predicted_total": 53.900001525878906,
+        "predicted_home_score": 27.0,
+        "predicted_away_score": 26.9,
+        "predicted_winner": "home",
+        "model_confidence": 58.3
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 22,
+        "actualSpread": -9,
+        "actualTotal": 35,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 9.1,
+        "total_error": 18.9,
+        "winner_correct": false,
+        "home_score_error": 14.0,
+        "away_score_error": 4.9
+      }
+    },
+    {
+      "gameId": "401326485",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Minnesota Vikings",
+      "awayTeam": "Green Bay Packers",
+      "prediction": {
+        "predicted_spread": -5.800000190734863,
+        "predicted_total": 53.400001525878906,
+        "predicted_home_score": 23.8,
+        "predicted_away_score": 29.6,
+        "predicted_winner": "away",
+        "model_confidence": 70.6
+      },
+      "actual": {
+        "homeScore": 34,
+        "awayScore": 31,
+        "actualSpread": 3,
+        "actualTotal": 65,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 8.8,
+        "total_error": 11.6,
+        "winner_correct": false,
+        "home_score_error": 10.2,
+        "away_score_error": 1.4
+      }
+    },
+    {
+      "gameId": "401326486",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "New York Jets",
+      "awayTeam": "Miami Dolphins",
+      "prediction": {
+        "predicted_spread": -4.5,
+        "predicted_total": 29.200000762939453,
+        "predicted_home_score": 12.3,
+        "predicted_away_score": 16.9,
+        "predicted_winner": "away",
+        "model_confidence": 73.7
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 24,
+        "actualSpread": -7,
+        "actualTotal": 41,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 2.5,
+        "total_error": 11.8,
+        "winner_correct": true,
+        "home_score_error": 4.7,
+        "away_score_error": 7.1
+      }
+    },
+    {
+      "gameId": "401326487",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Philadelphia Eagles",
+      "awayTeam": "New Orleans Saints",
+      "prediction": {
+        "predicted_spread": -7.800000190734863,
+        "predicted_total": 47.29999923706055,
+        "predicted_home_score": 19.8,
+        "predicted_away_score": 27.5,
+        "predicted_winner": "away",
+        "model_confidence": 69.5
+      },
+      "actual": {
+        "homeScore": 40,
+        "awayScore": 29,
+        "actualSpread": 11,
+        "actualTotal": 69,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 18.8,
+        "total_error": 21.7,
+        "winner_correct": false,
+        "home_score_error": 20.2,
+        "away_score_error": 1.5
+      }
+    },
+    {
+      "gameId": "401326481",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Carolina Panthers",
+      "awayTeam": "Washington",
+      "prediction": {
+        "predicted_spread": 0.20000000298023224,
+        "predicted_total": 34.599998474121094,
+        "predicted_home_score": 17.4,
+        "predicted_away_score": 17.2,
+        "predicted_winner": "home",
+        "model_confidence": 59.7
+      },
+      "actual": {
+        "homeScore": 21,
+        "awayScore": 27,
+        "actualSpread": -6,
+        "actualTotal": 48,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 6.2,
+        "total_error": 13.4,
+        "winner_correct": false,
+        "home_score_error": 3.6,
+        "away_score_error": 9.8
+      }
+    },
+    {
+      "gameId": "401326484",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Jacksonville Jaguars",
+      "awayTeam": "San Francisco 49ers",
+      "prediction": {
+        "predicted_spread": -7.599999904632568,
+        "predicted_total": 39.5,
+        "predicted_home_score": 16.0,
+        "predicted_away_score": 23.6,
+        "predicted_winner": "away",
+        "model_confidence": 72.0
+      },
+      "actual": {
+        "homeScore": 10,
+        "awayScore": 30,
+        "actualSpread": -20,
+        "actualTotal": 40,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 12.4,
+        "total_error": 0.5,
+        "winner_correct": true,
+        "home_score_error": 6.0,
+        "away_score_error": 6.4
+      }
+    },
+    {
+      "gameId": "401326489",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Las Vegas Raiders",
+      "awayTeam": "Cincinnati Bengals",
+      "prediction": {
+        "predicted_spread": -1.899999976158142,
+        "predicted_total": 52.5,
+        "predicted_home_score": 25.3,
+        "predicted_away_score": 27.2,
+        "predicted_winner": "away",
+        "model_confidence": 61.1
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 32,
+        "actualSpread": -19,
+        "actualTotal": 45,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 17.1,
+        "total_error": 7.5,
+        "winner_correct": true,
+        "home_score_error": 12.3,
+        "away_score_error": 4.8
+      }
+    },
+    {
+      "gameId": "401326490",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Kansas City Chiefs",
+      "awayTeam": "Dallas Cowboys",
+      "prediction": {
+        "predicted_spread": -9.600000381469727,
+        "predicted_total": 43.599998474121094,
+        "predicted_home_score": 17.0,
+        "predicted_away_score": 26.6,
+        "predicted_winner": "away",
+        "model_confidence": 72.9
+      },
+      "actual": {
+        "homeScore": 19,
+        "awayScore": 9,
+        "actualSpread": 10,
+        "actualTotal": 28,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 19.6,
+        "total_error": 15.6,
+        "winner_correct": false,
+        "home_score_error": 2.0,
+        "away_score_error": 17.6
+      }
+    },
+    {
+      "gameId": "401326491",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Seattle Seahawks",
+      "awayTeam": "Arizona Cardinals",
+      "prediction": {
+        "predicted_spread": 1.2000000476837158,
+        "predicted_total": 39.900001525878906,
+        "predicted_home_score": 20.5,
+        "predicted_away_score": 19.3,
+        "predicted_winner": "home",
+        "model_confidence": 57.3
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 23,
+        "actualSpread": -10,
+        "actualTotal": 36,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 11.2,
+        "total_error": 3.9,
+        "winner_correct": false,
+        "home_score_error": 7.5,
+        "away_score_error": 3.7
+      }
+    },
+    {
+      "gameId": "401326492",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Los Angeles Chargers",
+      "awayTeam": "Pittsburgh Steelers",
+      "prediction": {
+        "predicted_spread": 2.799999952316284,
+        "predicted_total": 47.5,
+        "predicted_home_score": 25.1,
+        "predicted_away_score": 22.3,
+        "predicted_winner": "home",
+        "model_confidence": 58.6
+      },
+      "actual": {
+        "homeScore": 41,
+        "awayScore": 37,
+        "actualSpread": 4,
+        "actualTotal": 78,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 1.2,
+        "total_error": 30.5,
+        "winner_correct": true,
+        "home_score_error": 15.9,
+        "away_score_error": 14.7
+      }
+    },
+    {
+      "gameId": "401326493",
+      "season": 2021,
+      "week": 11,
+      "homeTeam": "Tampa Bay Buccaneers",
+      "awayTeam": "New York Giants",
+      "prediction": {
+        "predicted_spread": 7.199999809265137,
+        "predicted_total": 46.5,
+        "predicted_home_score": 26.8,
+        "predicted_away_score": 19.6,
+        "predicted_winner": "home",
+        "model_confidence": 67.4
+      },
+      "actual": {
+        "homeScore": 30,
+        "awayScore": 10,
+        "actualSpread": 20,
+        "actualTotal": 40,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 12.8,
+        "total_error": 6.5,
+        "winner_correct": true,
+        "home_score_error": 3.2,
+        "away_score_error": 9.6
+      }
+    },
+    {
+      "gameId": "401326494",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Detroit Lions",
+      "awayTeam": "Chicago Bears",
+      "prediction": {
+        "predicted_spread": 1.399999976158142,
+        "predicted_total": 46.900001525878906,
+        "predicted_home_score": 24.1,
+        "predicted_away_score": 22.7,
+        "predicted_winner": "home",
+        "model_confidence": 54.8
+      },
+      "actual": {
+        "homeScore": 14,
+        "awayScore": 16,
+        "actualSpread": -2,
+        "actualTotal": 30,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 3.4,
+        "total_error": 16.9,
+        "winner_correct": false,
+        "home_score_error": 10.1,
+        "away_score_error": 6.7
+      }
+    },
+    {
+      "gameId": "401326495",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Dallas Cowboys",
+      "awayTeam": "Las Vegas Raiders",
+      "prediction": {
+        "predicted_spread": 7.300000190734863,
+        "predicted_total": 45.599998474121094,
+        "predicted_home_score": 26.5,
+        "predicted_away_score": 19.1,
+        "predicted_winner": "home",
+        "model_confidence": 67.1
+      },
+      "actual": {
+        "homeScore": 33,
+        "awayScore": 36,
+        "actualSpread": -3,
+        "actualTotal": 69,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 10.3,
+        "total_error": 23.4,
+        "winner_correct": false,
+        "home_score_error": 6.5,
+        "away_score_error": 16.9
+      }
+    },
+    {
+      "gameId": "401326496",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "New Orleans Saints",
+      "awayTeam": "Buffalo Bills",
+      "prediction": {
+        "predicted_spread": -5.300000190734863,
+        "predicted_total": 54.599998474121094,
+        "predicted_home_score": 24.7,
+        "predicted_away_score": 30.0,
+        "predicted_winner": "away",
+        "model_confidence": 70.7
+      },
+      "actual": {
+        "homeScore": 6,
+        "awayScore": 31,
+        "actualSpread": -25,
+        "actualTotal": 37,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 19.7,
+        "total_error": 17.6,
+        "winner_correct": true,
+        "home_score_error": 18.7,
+        "away_score_error": 1.0
+      }
+    },
+    {
+      "gameId": "401326497",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Cincinnati Bengals",
+      "awayTeam": "Pittsburgh Steelers",
+      "prediction": {
+        "predicted_spread": 3.0,
+        "predicted_total": 52.0,
+        "predicted_home_score": 27.5,
+        "predicted_away_score": 24.5,
+        "predicted_winner": "home",
+        "model_confidence": 63.0
+      },
+      "actual": {
+        "homeScore": 41,
+        "awayScore": 10,
+        "actualSpread": 31,
+        "actualTotal": 51,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 28.0,
+        "total_error": 1.0,
+        "winner_correct": true,
+        "home_score_error": 13.5,
+        "away_score_error": 14.5
+      }
+    },
+    {
+      "gameId": "401326499",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Indianapolis Colts",
+      "awayTeam": "Tampa Bay Buccaneers",
+      "prediction": {
+        "predicted_spread": -7.300000190734863,
+        "predicted_total": 56.29999923706055,
+        "predicted_home_score": 24.5,
+        "predicted_away_score": 31.8,
+        "predicted_winner": "away",
+        "model_confidence": 76.6
+      },
+      "actual": {
+        "homeScore": 31,
+        "awayScore": 38,
+        "actualSpread": -7,
+        "actualTotal": 69,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 0.3,
+        "total_error": 12.7,
+        "winner_correct": true,
+        "home_score_error": 6.5,
+        "away_score_error": 6.2
+      }
+    },
+    {
+      "gameId": "401326501",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Miami Dolphins",
+      "awayTeam": "Carolina Panthers",
+      "prediction": {
+        "predicted_spread": -3.5,
+        "predicted_total": 33.29999923706055,
+        "predicted_home_score": 14.9,
+        "predicted_away_score": 18.4,
+        "predicted_winner": "away",
+        "model_confidence": 68.3
+      },
+      "actual": {
+        "homeScore": 33,
+        "awayScore": 10,
+        "actualSpread": 23,
+        "actualTotal": 43,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 26.5,
+        "total_error": 9.7,
+        "winner_correct": false,
+        "home_score_error": 18.1,
+        "away_score_error": 8.4
+      }
+    },
+    {
+      "gameId": "401326502",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "New England Patriots",
+      "awayTeam": "Tennessee Titans",
+      "prediction": {
+        "predicted_spread": 6.900000095367432,
+        "predicted_total": 48.70000076293945,
+        "predicted_home_score": 27.8,
+        "predicted_away_score": 20.9,
+        "predicted_winner": "home",
+        "model_confidence": 68.9
+      },
+      "actual": {
+        "homeScore": 36,
+        "awayScore": 13,
+        "actualSpread": 23,
+        "actualTotal": 49,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 16.1,
+        "total_error": 0.3,
+        "winner_correct": true,
+        "home_score_error": 8.2,
+        "away_score_error": 7.9
+      }
+    },
+    {
+      "gameId": "401326503",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "New York Giants",
+      "awayTeam": "Philadelphia Eagles",
+      "prediction": {
+        "predicted_spread": 5.300000190734863,
+        "predicted_total": 40.29999923706055,
+        "predicted_home_score": 22.8,
+        "predicted_away_score": 17.5,
+        "predicted_winner": "home",
+        "model_confidence": 66.1
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 7,
+        "actualSpread": 6,
+        "actualTotal": 20,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 0.7,
+        "total_error": 20.3,
+        "winner_correct": true,
+        "home_score_error": 9.8,
+        "away_score_error": 10.5
+      }
+    },
+    {
+      "gameId": "401326500",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Jacksonville Jaguars",
+      "awayTeam": "Atlanta Falcons",
+      "prediction": {
+        "predicted_spread": -9.300000190734863,
+        "predicted_total": 39.900001525878906,
+        "predicted_home_score": 15.3,
+        "predicted_away_score": 24.6,
+        "predicted_winner": "away",
+        "model_confidence": 75.6
+      },
+      "actual": {
+        "homeScore": 14,
+        "awayScore": 21,
+        "actualSpread": -7,
+        "actualTotal": 35,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 2.3,
+        "total_error": 4.9,
+        "winner_correct": true,
+        "home_score_error": 1.3,
+        "away_score_error": 3.6
+      }
+    },
+    {
+      "gameId": "401326498",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Houston Texans",
+      "awayTeam": "New York Jets",
+      "prediction": {
+        "predicted_spread": -0.10000000149011612,
+        "predicted_total": 39.599998474121094,
+        "predicted_home_score": 19.7,
+        "predicted_away_score": 19.8,
+        "predicted_winner": "away",
+        "model_confidence": 55.1
+      },
+      "actual": {
+        "homeScore": 14,
+        "awayScore": 21,
+        "actualSpread": -7,
+        "actualTotal": 35,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 6.9,
+        "total_error": 4.6,
+        "winner_correct": true,
+        "home_score_error": 5.7,
+        "away_score_error": 1.2
+      }
+    },
+    {
+      "gameId": "401326504",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Denver Broncos",
+      "awayTeam": "Los Angeles Chargers",
+      "prediction": {
+        "predicted_spread": -3.5,
+        "predicted_total": 42.79999923706055,
+        "predicted_home_score": 19.7,
+        "predicted_away_score": 23.1,
+        "predicted_winner": "away",
+        "model_confidence": 59.8
+      },
+      "actual": {
+        "homeScore": 28,
+        "awayScore": 13,
+        "actualSpread": 15,
+        "actualTotal": 41,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 18.5,
+        "total_error": 1.8,
+        "winner_correct": false,
+        "home_score_error": 8.3,
+        "away_score_error": 10.1
+      }
+    },
+    {
+      "gameId": "401326505",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Green Bay Packers",
+      "awayTeam": "Los Angeles Rams",
+      "prediction": {
+        "predicted_spread": -0.5,
+        "predicted_total": 48.20000076293945,
+        "predicted_home_score": 23.8,
+        "predicted_away_score": 24.4,
+        "predicted_winner": "away",
+        "model_confidence": 54.1
+      },
+      "actual": {
+        "homeScore": 36,
+        "awayScore": 28,
+        "actualSpread": 8,
+        "actualTotal": 64,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 8.5,
+        "total_error": 15.8,
+        "winner_correct": false,
+        "home_score_error": 12.2,
+        "away_score_error": 3.6
+      }
+    },
+    {
+      "gameId": "401326506",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "San Francisco 49ers",
+      "awayTeam": "Minnesota Vikings",
+      "prediction": {
+        "predicted_spread": -6.5,
+        "predicted_total": 45.29999923706055,
+        "predicted_home_score": 19.4,
+        "predicted_away_score": 25.9,
+        "predicted_winner": "away",
+        "model_confidence": 64.9
+      },
+      "actual": {
+        "homeScore": 34,
+        "awayScore": 26,
+        "actualSpread": 8,
+        "actualTotal": 60,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 14.5,
+        "total_error": 14.7,
+        "winner_correct": false,
+        "home_score_error": 14.6,
+        "away_score_error": 0.1
+      }
+    },
+    {
+      "gameId": "401326507",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Baltimore Ravens",
+      "awayTeam": "Cleveland Browns",
+      "prediction": {
+        "predicted_spread": 3.0999999046325684,
+        "predicted_total": 48.79999923706055,
+        "predicted_home_score": 26.0,
+        "predicted_away_score": 22.8,
+        "predicted_winner": "home",
+        "model_confidence": 60.5
+      },
+      "actual": {
+        "homeScore": 16,
+        "awayScore": 10,
+        "actualSpread": 6,
+        "actualTotal": 26,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 2.9,
+        "total_error": 22.8,
+        "winner_correct": true,
+        "home_score_error": 10.0,
+        "away_score_error": 12.8
+      }
+    },
+    {
+      "gameId": "401326508",
+      "season": 2021,
+      "week": 12,
+      "homeTeam": "Washington",
+      "awayTeam": "Seattle Seahawks",
+      "prediction": {
+        "predicted_spread": 10.600000381469727,
+        "predicted_total": 44.400001525878906,
+        "predicted_home_score": 27.5,
+        "predicted_away_score": 16.9,
+        "predicted_winner": "home",
+        "model_confidence": 74.4
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 15,
+        "actualSpread": 2,
+        "actualTotal": 32,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 8.6,
+        "total_error": 12.4,
+        "winner_correct": true,
+        "home_score_error": 10.5,
+        "away_score_error": 1.9
+      }
+    },
+    {
+      "gameId": "401326509",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "New Orleans Saints",
+      "awayTeam": "Dallas Cowboys",
+      "prediction": {
+        "predicted_spread": -7.800000190734863,
+        "predicted_total": 61.099998474121094,
+        "predicted_home_score": 26.6,
+        "predicted_away_score": 34.4,
+        "predicted_winner": "away",
+        "model_confidence": 81.1
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 27,
+        "actualSpread": -10,
+        "actualTotal": 44,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 2.2,
+        "total_error": 17.1,
+        "winner_correct": true,
+        "home_score_error": 9.6,
+        "away_score_error": 7.4
+      }
+    },
+    {
+      "gameId": "401326510",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Atlanta Falcons",
+      "awayTeam": "Tampa Bay Buccaneers",
+      "prediction": {
+        "predicted_spread": -10.5,
+        "predicted_total": 47.70000076293945,
+        "predicted_home_score": 18.6,
+        "predicted_away_score": 29.1,
+        "predicted_winner": "away",
+        "model_confidence": 76.0
+      },
+      "actual": {
+        "homeScore": 17,
+        "awayScore": 30,
+        "actualSpread": -13,
+        "actualTotal": 47,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 2.5,
+        "total_error": 0.7,
+        "winner_correct": true,
+        "home_score_error": 1.6,
+        "away_score_error": 0.9
+      }
+    },
+    {
+      "gameId": "401326511",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Chicago Bears",
+      "awayTeam": "Arizona Cardinals",
+      "prediction": {
+        "predicted_spread": -5.599999904632568,
+        "predicted_total": 36.900001525878906,
+        "predicted_home_score": 15.6,
+        "predicted_away_score": 21.2,
+        "predicted_winner": "away",
+        "model_confidence": 69.9
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 33,
+        "actualSpread": -11,
+        "actualTotal": 55,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 5.4,
+        "total_error": 18.1,
+        "winner_correct": true,
+        "home_score_error": 6.4,
+        "away_score_error": 11.8
+      }
+    },
+    {
+      "gameId": "401326512",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Cincinnati Bengals",
+      "awayTeam": "Los Angeles Chargers",
+      "prediction": {
+        "predicted_spread": 11.800000190734863,
+        "predicted_total": 56.599998474121094,
+        "predicted_home_score": 34.2,
+        "predicted_away_score": 22.4,
+        "predicted_winner": "home",
+        "model_confidence": 87.0
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 41,
+        "actualSpread": -19,
+        "actualTotal": 63,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 30.8,
+        "total_error": 6.4,
+        "winner_correct": false,
+        "home_score_error": 12.2,
+        "away_score_error": 18.6
+      }
+    },
+    {
+      "gameId": "401326513",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Detroit Lions",
+      "awayTeam": "Minnesota Vikings",
+      "prediction": {
+        "predicted_spread": 1.600000023841858,
+        "predicted_total": 47.0,
+        "predicted_home_score": 24.3,
+        "predicted_away_score": 22.7,
+        "predicted_winner": "home",
+        "model_confidence": 55.4
+      },
+      "actual": {
+        "homeScore": 29,
+        "awayScore": 27,
+        "actualSpread": 2,
+        "actualTotal": 56,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 0.4,
+        "total_error": 9.0,
+        "winner_correct": true,
+        "home_score_error": 4.7,
+        "away_score_error": 4.3
+      }
+    },
+    {
+      "gameId": "401326516",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Miami Dolphins",
+      "awayTeam": "New York Giants",
+      "prediction": {
+        "predicted_spread": 8.100000381469727,
+        "predicted_total": 31.299999237060547,
+        "predicted_home_score": 19.7,
+        "predicted_away_score": 11.6,
+        "predicted_winner": "home",
+        "model_confidence": 80.6
+      },
+      "actual": {
+        "homeScore": 20,
+        "awayScore": 9,
+        "actualSpread": 11,
+        "actualTotal": 29,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 2.9,
+        "total_error": 2.3,
+        "winner_correct": true,
+        "home_score_error": 0.3,
+        "away_score_error": 2.6
+      }
+    },
+    {
+      "gameId": "401326517",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "New York Jets",
+      "awayTeam": "Philadelphia Eagles",
+      "prediction": {
+        "predicted_spread": -7.400000095367432,
+        "predicted_total": 42.29999923706055,
+        "predicted_home_score": 17.4,
+        "predicted_away_score": 24.8,
+        "predicted_winner": "away",
+        "model_confidence": 69.1
+      },
+      "actual": {
+        "homeScore": 18,
+        "awayScore": 33,
+        "actualSpread": -15,
+        "actualTotal": 51,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 7.6,
+        "total_error": 8.7,
+        "winner_correct": true,
+        "home_score_error": 0.6,
+        "away_score_error": 8.2
+      }
+    },
+    {
+      "gameId": "401326514",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Houston Texans",
+      "awayTeam": "Indianapolis Colts",
+      "prediction": {
+        "predicted_spread": -4.400000095367432,
+        "predicted_total": 50.599998474121094,
+        "predicted_home_score": 23.1,
+        "predicted_away_score": 27.5,
+        "predicted_winner": "away",
+        "model_confidence": 64.9
+      },
+      "actual": {
+        "homeScore": 0,
+        "awayScore": 31,
+        "actualSpread": -31,
+        "actualTotal": 31,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 26.6,
+        "total_error": 19.6,
+        "winner_correct": true,
+        "home_score_error": 23.1,
+        "away_score_error": 3.5
+      }
+    },
+    {
+      "gameId": "401326518",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Las Vegas Raiders",
+      "awayTeam": "Washington",
+      "prediction": {
+        "predicted_spread": -3.5999999046325684,
+        "predicted_total": 39.900001525878906,
+        "predicted_home_score": 18.1,
+        "predicted_away_score": 21.8,
+        "predicted_winner": "away",
+        "model_confidence": 62.8
+      },
+      "actual": {
+        "homeScore": 15,
+        "awayScore": 17,
+        "actualSpread": -2,
+        "actualTotal": 32,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 1.6,
+        "total_error": 7.9,
+        "winner_correct": true,
+        "home_score_error": 3.1,
+        "away_score_error": 4.8
+      }
+    },
+    {
+      "gameId": "401326519",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Los Angeles Rams",
+      "awayTeam": "Jacksonville Jaguars",
+      "prediction": {
+        "predicted_spread": 10.600000381469727,
+        "predicted_total": 47.900001525878906,
+        "predicted_home_score": 29.2,
+        "predicted_away_score": 18.6,
+        "predicted_winner": "home",
+        "model_confidence": 76.4
+      },
+      "actual": {
+        "homeScore": 37,
+        "awayScore": 7,
+        "actualSpread": 30,
+        "actualTotal": 44,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 19.4,
+        "total_error": 3.9,
+        "winner_correct": true,
+        "home_score_error": 7.8,
+        "away_score_error": 11.6
+      }
+    },
+    {
+      "gameId": "401326520",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Pittsburgh Steelers",
+      "awayTeam": "Baltimore Ravens",
+      "prediction": {
+        "predicted_spread": -5.400000095367432,
+        "predicted_total": 44.099998474121094,
+        "predicted_home_score": 19.4,
+        "predicted_away_score": 24.7,
+        "predicted_winner": "away",
+        "model_confidence": 62.9
+      },
+      "actual": {
+        "homeScore": 20,
+        "awayScore": 19,
+        "actualSpread": 1,
+        "actualTotal": 39,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 6.4,
+        "total_error": 5.1,
+        "winner_correct": false,
+        "home_score_error": 0.6,
+        "away_score_error": 5.7
+      }
+    },
+    {
+      "gameId": "401326521",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Seattle Seahawks",
+      "awayTeam": "San Francisco 49ers",
+      "prediction": {
+        "predicted_spread": -0.4000000059604645,
+        "predicted_total": 41.5,
+        "predicted_home_score": 20.6,
+        "predicted_away_score": 21.0,
+        "predicted_winner": "away",
+        "model_confidence": 54.0
+      },
+      "actual": {
+        "homeScore": 30,
+        "awayScore": 23,
+        "actualSpread": 7,
+        "actualTotal": 53,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 7.4,
+        "total_error": 11.5,
+        "winner_correct": false,
+        "home_score_error": 9.4,
+        "away_score_error": 2.0
+      }
+    },
+    {
+      "gameId": "401326515",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Kansas City Chiefs",
+      "awayTeam": "Denver Broncos",
+      "prediction": {
+        "predicted_spread": -4.900000095367432,
+        "predicted_total": 48.599998474121094,
+        "predicted_home_score": 21.8,
+        "predicted_away_score": 26.7,
+        "predicted_winner": "away",
+        "model_confidence": 64.3
+      },
+      "actual": {
+        "homeScore": 22,
+        "awayScore": 9,
+        "actualSpread": 13,
+        "actualTotal": 31,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 17.9,
+        "total_error": 17.6,
+        "winner_correct": false,
+        "home_score_error": 0.2,
+        "away_score_error": 17.7
+      }
+    },
+    {
+      "gameId": "401326522",
+      "season": 2021,
+      "week": 13,
+      "homeTeam": "Buffalo Bills",
+      "awayTeam": "New England Patriots",
+      "prediction": {
+        "predicted_spread": -1.600000023841858,
+        "predicted_total": 48.70000076293945,
+        "predicted_home_score": 23.6,
+        "predicted_away_score": 25.2,
+        "predicted_winner": "away",
+        "model_confidence": 57.0
+      },
+      "actual": {
+        "homeScore": 10,
+        "awayScore": 14,
+        "actualSpread": -4,
+        "actualTotal": 24,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 2.4,
+        "total_error": 24.7,
+        "winner_correct": true,
+        "home_score_error": 13.6,
+        "away_score_error": 11.2
+      }
+    },
+    {
+      "gameId": "401326523",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Minnesota Vikings",
+      "awayTeam": "Pittsburgh Steelers",
+      "prediction": {
+        "predicted_spread": -4.400000095367432,
+        "predicted_total": 64.80000305175781,
+        "predicted_home_score": 30.2,
+        "predicted_away_score": 34.6,
+        "predicted_winner": "away",
+        "model_confidence": 73.5
+      },
+      "actual": {
+        "homeScore": 36,
+        "awayScore": 28,
+        "actualSpread": 8,
+        "actualTotal": 64,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 12.4,
+        "total_error": 0.8,
+        "winner_correct": false,
+        "home_score_error": 5.8,
+        "away_score_error": 6.6
+      }
+    },
+    {
+      "gameId": "401326526",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Cleveland Browns",
+      "awayTeam": "Baltimore Ravens",
+      "prediction": {
+        "predicted_spread": -6.599999904632568,
+        "predicted_total": 33.70000076293945,
+        "predicted_home_score": 13.6,
+        "predicted_away_score": 20.1,
+        "predicted_winner": "away",
+        "model_confidence": 75.0
+      },
+      "actual": {
+        "homeScore": 24,
+        "awayScore": 22,
+        "actualSpread": 2,
+        "actualTotal": 46,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 8.6,
+        "total_error": 12.3,
+        "winner_correct": false,
+        "home_score_error": 10.4,
+        "away_score_error": 1.9
+      }
+    },
+    {
+      "gameId": "401326530",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Tennessee Titans",
+      "awayTeam": "Jacksonville Jaguars",
+      "prediction": {
+        "predicted_spread": 2.299999952316284,
+        "predicted_total": 37.400001525878906,
+        "predicted_home_score": 19.9,
+        "predicted_away_score": 17.6,
+        "predicted_winner": "home",
+        "model_confidence": 62.0
+      },
+      "actual": {
+        "homeScore": 20,
+        "awayScore": 0,
+        "actualSpread": 20,
+        "actualTotal": 20,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 17.7,
+        "total_error": 17.4,
+        "winner_correct": true,
+        "home_score_error": 0.1,
+        "away_score_error": 17.6
+      }
+    },
+    {
+      "gameId": "401326528",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Kansas City Chiefs",
+      "awayTeam": "Las Vegas Raiders",
+      "prediction": {
+        "predicted_spread": -2.5,
+        "predicted_total": 41.5,
+        "predicted_home_score": 19.5,
+        "predicted_away_score": 22.0,
+        "predicted_winner": "away",
+        "model_confidence": 58.7
+      },
+      "actual": {
+        "homeScore": 48,
+        "awayScore": 9,
+        "actualSpread": 39,
+        "actualTotal": 57,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 41.5,
+        "total_error": 15.5,
+        "winner_correct": false,
+        "home_score_error": 28.5,
+        "away_score_error": 13.0
+      }
+    },
+    {
+      "gameId": "401326529",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "New York Jets",
+      "awayTeam": "New Orleans Saints",
+      "prediction": {
+        "predicted_spread": -8.399999618530273,
+        "predicted_total": 45.5,
+        "predicted_home_score": 18.6,
+        "predicted_away_score": 27.0,
+        "predicted_winner": "away",
+        "model_confidence": 69.3
+      },
+      "actual": {
+        "homeScore": 9,
+        "awayScore": 30,
+        "actualSpread": -21,
+        "actualTotal": 39,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 12.6,
+        "total_error": 6.5,
+        "winner_correct": true,
+        "home_score_error": 9.6,
+        "away_score_error": 3.0
+      }
+    },
+    {
+      "gameId": "401326531",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Washington",
+      "awayTeam": "Dallas Cowboys",
+      "prediction": {
+        "predicted_spread": 0.30000001192092896,
+        "predicted_total": 44.29999923706055,
+        "predicted_home_score": 22.3,
+        "predicted_away_score": 22.0,
+        "predicted_winner": "home",
+        "model_confidence": 51.3
+      },
+      "actual": {
+        "homeScore": 20,
+        "awayScore": 27,
+        "actualSpread": -7,
+        "actualTotal": 47,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 7.3,
+        "total_error": 2.7,
+        "winner_correct": false,
+        "home_score_error": 2.3,
+        "away_score_error": 5.0
+      }
+    },
+    {
+      "gameId": "401326524",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Carolina Panthers",
+      "awayTeam": "Atlanta Falcons",
+      "prediction": {
+        "predicted_spread": 2.4000000953674316,
+        "predicted_total": 29.0,
+        "predicted_home_score": 15.7,
+        "predicted_away_score": 13.3,
+        "predicted_winner": "home",
+        "model_confidence": 68.9
+      },
+      "actual": {
+        "homeScore": 21,
+        "awayScore": 29,
+        "actualSpread": -8,
+        "actualTotal": 50,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 10.4,
+        "total_error": 21.0,
+        "winner_correct": false,
+        "home_score_error": 5.3,
+        "away_score_error": 15.7
+      }
+    },
+    {
+      "gameId": "401326527",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Houston Texans",
+      "awayTeam": "Seattle Seahawks",
+      "prediction": {
+        "predicted_spread": -4.599999904632568,
+        "predicted_total": 48.0,
+        "predicted_home_score": 21.7,
+        "predicted_away_score": 26.3,
+        "predicted_winner": "away",
+        "model_confidence": 62.9
+      },
+      "actual": {
+        "homeScore": 13,
+        "awayScore": 33,
+        "actualSpread": -20,
+        "actualTotal": 46,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 15.4,
+        "total_error": 2.0,
+        "winner_correct": true,
+        "home_score_error": 8.7,
+        "away_score_error": 6.7
+      }
+    },
+    {
+      "gameId": "401326532",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Denver Broncos",
+      "awayTeam": "Detroit Lions",
+      "prediction": {
+        "predicted_spread": 10.100000381469727,
+        "predicted_total": 32.20000076293945,
+        "predicted_home_score": 21.1,
+        "predicted_away_score": 11.1,
+        "predicted_winner": "home",
+        "model_confidence": 84.2
+      },
+      "actual": {
+        "homeScore": 38,
+        "awayScore": 10,
+        "actualSpread": 28,
+        "actualTotal": 48,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 17.9,
+        "total_error": 15.8,
+        "winner_correct": true,
+        "home_score_error": 16.9,
+        "away_score_error": 1.1
+      }
+    },
+    {
+      "gameId": "401326533",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Los Angeles Chargers",
+      "awayTeam": "New York Giants",
+      "prediction": {
+        "predicted_spread": 13.5,
+        "predicted_total": 53.20000076293945,
+        "predicted_home_score": 33.4,
+        "predicted_away_score": 19.9,
+        "predicted_winner": "home",
+        "model_confidence": 87.8
+      },
+      "actual": {
+        "homeScore": 37,
+        "awayScore": 21,
+        "actualSpread": 16,
+        "actualTotal": 58,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 2.5,
+        "total_error": 4.8,
+        "winner_correct": true,
+        "home_score_error": 3.6,
+        "away_score_error": 1.1
+      }
+    },
+    {
+      "gameId": "401326525",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Cincinnati Bengals",
+      "awayTeam": "San Francisco 49ers",
+      "prediction": {
+        "predicted_spread": 8.100000381469727,
+        "predicted_total": 50.5,
+        "predicted_home_score": 29.3,
+        "predicted_away_score": 21.2,
+        "predicted_winner": "home",
+        "model_confidence": 73.1
+      },
+      "actual": {
+        "homeScore": 23,
+        "awayScore": 26,
+        "actualSpread": -3,
+        "actualTotal": 49,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 11.1,
+        "total_error": 1.5,
+        "winner_correct": false,
+        "home_score_error": 6.3,
+        "away_score_error": 4.8
+      }
+    },
+    {
+      "gameId": "401326534",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Tampa Bay Buccaneers",
+      "awayTeam": "Buffalo Bills",
+      "prediction": {
+        "predicted_spread": 8.600000381469727,
+        "predicted_total": 52.900001525878906,
+        "predicted_home_score": 30.8,
+        "predicted_away_score": 22.2,
+        "predicted_winner": "home",
+        "model_confidence": 76.5
+      },
+      "actual": {
+        "homeScore": 33,
+        "awayScore": 27,
+        "actualSpread": 6,
+        "actualTotal": 60,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 2.6,
+        "total_error": 7.1,
+        "winner_correct": true,
+        "home_score_error": 2.2,
+        "away_score_error": 4.8
+      }
+    },
+    {
+      "gameId": "401326535",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Green Bay Packers",
+      "awayTeam": "Chicago Bears",
+      "prediction": {
+        "predicted_spread": 14.399999618530273,
+        "predicted_total": 44.29999923706055,
+        "predicted_home_score": 29.3,
+        "predicted_away_score": 15.0,
+        "predicted_winner": "home",
+        "model_confidence": 82.2
+      },
+      "actual": {
+        "homeScore": 45,
+        "awayScore": 30,
+        "actualSpread": 15,
+        "actualTotal": 75,
+        "homeWon": true
+      },
+      "accuracy": {
+        "spread_error": 0.6,
+        "total_error": 30.7,
+        "winner_correct": true,
+        "home_score_error": 15.7,
+        "away_score_error": 15.0
+      }
+    },
+    {
+      "gameId": "401326536",
+      "season": 2021,
+      "week": 14,
+      "homeTeam": "Arizona Cardinals",
+      "awayTeam": "Los Angeles Rams",
+      "prediction": {
+        "predicted_spread": -6.599999904632568,
+        "predicted_total": 49.79999923706055,
+        "predicted_home_score": 21.6,
+        "predicted_away_score": 28.2,
+        "predicted_winner": "away",
+        "model_confidence": 69.1
+      },
+      "actual": {
+        "homeScore": 23,
+        "awayScore": 30,
+        "actualSpread": -7,
+        "actualTotal": 53,
+        "homeWon": false
+      },
+      "accuracy": {
+        "spread_error": 0.4,
+        "total_error": 3.2,
+        "winner_correct": true,
+        "home_score_error": 1.4,
+        "away_score_error": 1.8
+      }
+    }
+  ],
+  "errors": []
+}

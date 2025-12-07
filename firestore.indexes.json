@@ -1,0 +1,51 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "predictions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "season",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "week",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "predictions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "season",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "week",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "games",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "season",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "week",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

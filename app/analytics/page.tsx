@@ -421,11 +421,14 @@ export default function AnalyticsPage() {
                     <div className="mt-3 pt-3 border-t border-slate-700 flex items-center justify-between text-xs">
                       <div className="flex items-center space-x-3">
                         <span className={result.outcomes.spreadCovered ? 'text-green-400' : 'text-red-400'}>
-                          Spread: {result.outcomes.spreadCovered ? '✓' : '✗'}
+                          Spread: {result.closingLine?.spread.home
+                            ? `${result.game.homeTeam.abbreviation} ${result.closingLine.spread.home > 0 ? '+' : ''}${result.closingLine.spread.home.toFixed(1)} ${result.outcomes.spreadCovered ? '✓' : '✗'}`
+                            : result.outcomes.spreadCovered ? '✓' : '✗'
+                          }
                         </span>
                         <span className="text-slate-500">|</span>
                         <span className="text-slate-400">
-                          Total: {result.actualScore.home + result.actualScore.away}
+                          Total: {result.closingLine?.total.line.toFixed(1)} → {result.actualScore.home + result.actualScore.away}
                           ({result.outcomes.totalOver ? 'Over' : 'Under'})
                         </span>
                       </div>

@@ -55,7 +55,9 @@ export class FirestoreService {
    */
   static async savePrediction(prediction: GamePrediction): Promise<void> {
     try {
-      const predictionId = `${prediction.gameId}_${Date.now()}`;
+      // Use gameId as document ID to prevent duplicates
+      // This will UPDATE the existing prediction instead of creating a new one
+      const predictionId = prediction.gameId;
       const predictionRef = doc(db, COLLECTIONS.PREDICTIONS, predictionId);
 
       await setDoc(predictionRef, {

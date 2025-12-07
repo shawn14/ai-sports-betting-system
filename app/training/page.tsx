@@ -366,7 +366,7 @@ export default function TrainingPage() {
             <ol className="text-slate-300 space-y-2 text-sm list-decimal list-inside">
               <li>Select which seasons you want to collect (2022-2024 recommended for 800+ games)</li>
               <li>Choose the week range (weeks 1-14 have most stable data)</li>
-              <li>Click "Start Collection" to fetch all historical games with team stats</li>
+              <li>Click &quot;Start Collection&quot; to fetch all historical games with team stats</li>
               <li>Wait for data collection to complete (may take several minutes due to API rate limits)</li>
               <li>Review the dataset summary and sample data</li>
               <li>Export to JSON for Python training scripts or save to Firebase for later use</li>

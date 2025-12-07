@@ -191,7 +191,7 @@ export default function LandingPage() {
               </div>
               <h4 className="text-xl font-bold text-white mb-3">Against The Spread (ATS)</h4>
               <p className="text-slate-400 leading-relaxed">
-                We don't just predict winners - we beat Vegas spreads. Our models find value where oddsmakers make mistakes.
+                We don&apos;t just predict winners - we beat Vegas spreads. Our models find value where oddsmakers make mistakes.
               </p>
               <ul className="mt-4 space-y-2">
                 <li className="flex items-center gap-2 text-sm text-slate-300">
@@ -266,7 +266,7 @@ export default function LandingPage() {
               Choose your plan
             </h3>
             <p className="text-xl text-slate-400">
-              Start free, upgrade when you're ready
+              Start free, upgrade when you&apos;re ready
             </p>
           </div>
 

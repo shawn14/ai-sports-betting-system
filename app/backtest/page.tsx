@@ -343,7 +343,7 @@ export default function BacktestPage() {
             <ol className="text-slate-300 space-y-2 text-sm list-decimal list-inside">
               <li>Select a season (2024, 2023, or 2022)</li>
               <li>Choose which weeks to analyze (e.g., weeks 1-10)</li>
-              <li>Click "Run Backtest" to analyze all completed games</li>
+              <li>Click &quot;Run Backtest&quot; to analyze all completed games</li>
               <li>Review prediction accuracy, ATS record, and profit/loss</li>
               <li>Examine individual game results to see where the model was right/wrong</li>
             </ol>

@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { NFLAPI } from '@/lib/api/nfl';
 import { OddsAPI } from '@/lib/api/odds';
 import { LineMovementTracker, LineMovement, SharpMoneyIndicator, BettingPercentages } from '@/lib/models/lineMovement';
-import { Game } from '@/types';
+import { FirestoreService } from '@/lib/firebase/firestore';
+import { Game, GamePrediction } from '@/types';
 import { format } from 'date-fns';
 import {
   TrendingUp, TrendingDown, AlertTriangle, Target, ArrowRight,
@@ -19,6 +20,7 @@ export default function GamesPage() {
   const [sharpSignals, setSharpSignals] = useState<Map<string, SharpMoneyIndicator>>(new Map());
   const [bettingPercentages, setBettingPercentages] = useState<Map<string, BettingPercentages>>(new Map());
   const [currentOdds, setCurrentOdds] = useState<Map<string, any>>(new Map());
+  const [predictions, setPredictions] = useState<Map<string, GamePrediction>>(new Map());
   const [loading, setLoading] = useState(true);
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [tracker] = useState(() => new LineMovementTracker());
@@ -36,20 +38,73 @@ export default function GamesPage() {
       const weekGames = await NFLAPI.getWeekGames(season, week);
       setGames(weekGames.filter(g => g.status === 'scheduled'));
 
-      const oddsData = await OddsAPI.getNFLOdds();
+      // Load cached predictions from Firebase
+      try {
+        const cached = await FirestoreService.getCachedPredictions(season, week);
+        if (cached.predictions.length > 0) {
+          const newPredictions = new Map<string, GamePrediction>();
+          for (const pred of cached.predictions) {
+            const game = cached.games.find(g => g.id === pred.gameId);
+            if (game) {
+              newPredictions.set(pred.gameId, {
+                gameId: pred.gameId,
+                game: game,
+                predictedWinner: pred.predictedWinner,
+                confidence: pred.confidence,
+                predictedScore: pred.predictedScore,
+                factors: pred.factors,
+                edgeAnalysis: pred.edgeAnalysis,
+                recommendation: pred.recommendation,
+              });
+            }
+          }
+          setPredictions(newPredictions);
+          console.log(`✅ Loaded ${newPredictions.size} predictions for high confidence count`);
+        }
+      } catch (error) {
+        console.error('Failed to load predictions:', error);
+        // Continue without predictions
+      }
+
+      let oddsData: any[] = [];
+      try {
+        oddsData = await OddsAPI.getNFLOdds();
+        console.log('Fetched odds for', oddsData.length, 'games');
+      } catch (error) {
+        console.error('Failed to fetch odds - spreads will not be displayed:', error);
+        // Continue without odds data
+      }
 
       const newMovements = new Map<string, LineMovement>();
       const newSharpSignals = new Map<string, SharpMoneyIndicator>();
       const newPercentages = new Map<string, BettingPercentages>();
       const newOdds = new Map<string, any>();
 
+      // Debug: Log first game and first odds entry for comparison
+      if (weekGames.length > 0 && oddsData.length > 0) {
+        console.log('First game:', {
+          homeTeam: weekGames[0].homeTeam.name,
+          awayTeam: weekGames[0].awayTeam.name,
+          homeAbbr: weekGames[0].homeTeam.abbreviation,
+          awayAbbr: weekGames[0].awayTeam.abbreviation
+        });
+        console.log('First odds entry:', {
+          home_team: oddsData[0].home_team,
+          away_team: oddsData[0].away_team
+        });
+      }
+
       for (const game of weekGames) {
         if (game.status !== 'scheduled') continue;
 
-        const gameOdds = oddsData.find((o: any) =>
-          o.home_team?.includes(game.homeTeam.abbreviation) ||
-          o.away_team?.includes(game.awayTeam.abbreviation)
-        );
+        // Match by full team name (case insensitive)
+        const gameOdds = oddsData.find((o: any) => {
+          const homeMatch = o.home_team?.toLowerCase().includes(game.homeTeam.name.toLowerCase()) ||
+                          game.homeTeam.name.toLowerCase().includes(o.home_team?.toLowerCase());
+          const awayMatch = o.away_team?.toLowerCase().includes(game.awayTeam.name.toLowerCase()) ||
+                          game.awayTeam.name.toLowerCase().includes(o.away_team?.toLowerCase());
+          return homeMatch && awayMatch;
+        });
 
         if (gameOdds) {
           // Store the raw odds data for display
@@ -73,11 +128,32 @@ export default function GamesPage() {
       setSharpSignals(newSharpSignals);
       setBettingPercentages(newPercentages);
       setCurrentOdds(newOdds);
+
+      console.log('Dashboard loaded:', {
+        gamesCount: weekGames.filter(g => g.status === 'scheduled').length,
+        oddsCount: newOdds.size,
+        movementsCount: newMovements.size,
+        sampleOdds: newOdds.size > 0 ? Array.from(newOdds.entries())[0] : 'none'
+      });
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get team logo URL from ESPN
+  const getTeamLogo = (teamAbbr: string) => {
+    const espnTeamIds: Record<string, string> = {
+      'ARI': '22', 'ATL': '1', 'BAL': '33', 'BUF': '2', 'CAR': '29', 'CHI': '3',
+      'CIN': '4', 'CLE': '5', 'DAL': '6', 'DEN': '7', 'DET': '8', 'GB': '9',
+      'HOU': '34', 'IND': '11', 'JAX': '30', 'KC': '12', 'LV': '13', 'LAC': '24',
+      'LAR': '14', 'MIA': '15', 'MIN': '16', 'NE': '17', 'NO': '18', 'NYG': '19',
+      'NYJ': '20', 'PHI': '21', 'PIT': '23', 'SF': '25', 'SEA': '26', 'TB': '27',
+      'TEN': '10', 'WAS': '28'
+    };
+    const teamId = espnTeamIds[teamAbbr];
+    return teamId ? `https://a.espncdn.com/i/teamlogos/nfl/500/${teamId}.png` : null;
   };
 
   const getConfidenceColor = (confidence: string) => {
@@ -107,40 +183,41 @@ export default function GamesPage() {
     );
   };
 
-  const highConfidenceGames = Array.from(sharpSignals.entries())
-    .filter(([_, signal]) => signal.confidence === 'very_high' || signal.confidence === 'high')
+  // Count high confidence predictions from ML model
+  const highConfidenceGames = Array.from(predictions.values())
+    .filter(pred => pred.confidence >= 75) // High confidence is 75%+
     .length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
       <LoggedInHeader />
 
-      {/* Hero Stats Bar */}
+      {/* Hero Stats Bar - Compact */}
       <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-slate-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="grid grid-cols-4 gap-3">
             <div className="text-center">
-              <div className="text-3xl font-bold text-white mb-1">{games.length}</div>
-              <div className="text-sm text-slate-400">Games This Week</div>
+              <div className="text-xl font-bold text-white">{games.length}</div>
+              <div className="text-xs text-slate-400">Games</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-400 mb-1">{highConfidenceGames}</div>
-              <div className="text-sm text-slate-400">High Confidence</div>
+              <div className="text-xl font-bold text-green-400">{highConfidenceGames}</div>
+              <div className="text-xs text-slate-400">High Confidence</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-400 mb-1">58.1%</div>
-              <div className="text-sm text-slate-400">Win Rate</div>
+              <div className="text-xl font-bold text-blue-400">58.1%</div>
+              <div className="text-xs text-slate-400">Win Rate</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-400 mb-1">+11.9%</div>
-              <div className="text-sm text-slate-400">ROI</div>
+              <div className="text-xl font-bold text-purple-400">+11.9%</div>
+              <div className="text-xs text-slate-400">ROI</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content - Compact */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {loading ? (
           <div className="text-center py-20">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -148,70 +225,101 @@ export default function GamesPage() {
           </div>
         ) : (
           <>
-            {/* High Confidence Alerts */}
+            {/* High Confidence Picks - Enhanced */}
             {highConfidenceGames > 0 && (
-              <div className="mb-8 bg-gradient-to-r from-red-900/30 to-orange-900/30 border border-red-700/50 rounded-xl p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-red-500/20 rounded-lg">
-                    <Flame className="text-red-400 w-6 h-6" />
+              <div className="mb-4 relative overflow-hidden">
+                {/* Animated background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-green-600/20 via-emerald-600/20 to-green-600/20 animate-pulse"></div>
+                <div className="relative bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-2 border-green-500/50 rounded-xl p-4 shadow-lg shadow-green-500/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-green-500/20 rounded-lg animate-pulse">
+                        <Flame className="text-green-400 w-6 h-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-black text-white flex items-center gap-2">
+                          🔥 HOT PICKS
+                          <span className="text-xs font-normal text-green-300 bg-green-500/20 px-2 py-1 rounded-full">
+                            HIGH CONFIDENCE
+                          </span>
+                        </h2>
+                        <p className="text-xs text-green-300">AI Model Confidence ≥75%</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-3xl font-black text-green-400">{highConfidenceGames}</div>
+                      <div className="text-xs text-green-300">Pick{highConfidenceGames > 1 ? 's' : ''}</div>
+                    </div>
                   </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-white">🔥 Hot Picks Alert</h2>
-                    <p className="text-slate-400 text-sm">Sharp money detected on {highConfidenceGames} game{highConfidenceGames > 1 ? 's' : ''}</p>
-                  </div>
-                </div>
-                <div className="grid gap-4">
-                  {Array.from(sharpSignals.entries())
-                    .filter(([_, signal]) => signal.confidence === 'very_high' || signal.confidence === 'high')
-                    .map(([gameId, signal]) => {
-                      const game = games.find(g => g.id === gameId);
-                      if (!game) return null;
 
-                      return (
-                        <div key={gameId} className="bg-slate-800/50 backdrop-blur rounded-lg p-4 border border-slate-700/50">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-4">
-                              <div className="text-center">
-                                <div className="text-sm text-slate-400">Away</div>
-                                <div className="text-lg font-bold text-white">{game.awayTeam.abbreviation}</div>
+                  <div className="grid gap-3">
+                    {Array.from(predictions.values())
+                      .filter(pred => pred.confidence >= 75)
+                      .map((prediction) => {
+                        const game = prediction.game;
+                        const odds = currentOdds.get(game.id);
+                        const currentSpread = odds?.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'spreads');
+                        const homeSpreadValue = currentSpread?.outcomes?.find((o: any) =>
+                          o.name === game.homeTeam.name || o.name.includes(game.homeTeam.abbreviation)
+                        )?.point;
+
+                        return (
+                          <div key={game.id} className="bg-slate-800/80 backdrop-blur border border-green-500/30 rounded-lg p-3 hover:border-green-400/50 transition">
+                            <div className="flex items-center justify-between mb-2">
+                              {/* Team matchup with logos */}
+                              <div className="flex items-center gap-3 flex-1">
+                                <div className="w-10 h-10 flex-shrink-0">
+                                  {getTeamLogo(game.awayTeam.abbreviation) ? (
+                                    <img
+                                      src={getTeamLogo(game.awayTeam.abbreviation)!}
+                                      alt={game.awayTeam.name}
+                                      className="w-full h-full object-contain"
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-slate-700 rounded-full flex items-center justify-center text-sm font-bold">
+                                      {game.awayTeam.abbreviation}
+                                    </div>
+                                  )}
+                                </div>
+                                <div>
+                                  <div className="text-sm font-bold text-white">{game.awayTeam.name}</div>
+                                  <div className="text-xs text-slate-400">@ {game.homeTeam.name}</div>
+                                </div>
                               </div>
-                              <div className="text-slate-600 font-bold">@</div>
-                              <div className="text-center">
-                                <div className="text-sm text-slate-400">Home</div>
-                                <div className="text-lg font-bold text-white">{game.homeTeam.abbreviation}</div>
+
+                              {/* Confidence badge */}
+                              <div className="flex items-center gap-2">
+                                <div className="text-right">
+                                  <div className="text-2xl font-black text-green-400">{prediction.confidence}%</div>
+                                  <div className="text-xs text-green-300">Confidence</div>
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className={`font-bold ${getConfidenceColor(signal.confidence)} text-sm`}>
-                                {signal.confidence.toUpperCase()}
-                              </span>
-                              {getRecommendationBadge(signal.recommendation)}
+
+                            {/* Pick details */}
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700">
+                              <div className="flex items-center gap-2">
+                                <Target className="w-4 h-4 text-green-400" />
+                                <span className="text-sm font-bold text-green-400">
+                                  PICK: {prediction.predictedWinner === 'home' ? game.homeTeam.name : game.awayTeam.name}
+                                </span>
+                              </div>
+                              {homeSpreadValue !== undefined && (
+                                <div className="text-xs font-mono text-slate-400">
+                                  Spread: {game.homeTeam.abbreviation} {homeSpreadValue > 0 ? '+' : ''}{homeSpreadValue}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="flex items-start gap-2 text-sm">
-                            <Target className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
-                            <p className="text-slate-300">{signal.analysis}</p>
-                          </div>
-                          <div className="flex items-center gap-4 mt-3 text-xs">
-                            <span className="text-green-400 font-semibold">
-                              ✓ {signal.side === 'home' ? game.homeTeam.name : game.awayTeam.name}
-                            </span>
-                            {signal.indicators.reverseLineMovement && (
-                              <span className="text-yellow-400">⚡ Reverse Line Movement</span>
-                            )}
-                            {signal.indicators.steamMove && (
-                              <span className="text-red-400">🔥 Steam Move</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Games Grid */}
-            <div className="space-y-6">
+            {/* Games Grid - Compact */}
+            <div className="space-y-3">
               {games.map((game) => {
                 const movement = movements.get(game.id);
                 const percentages = bettingPercentages.get(game.id);
@@ -225,6 +333,22 @@ export default function GamesPage() {
                   o.name === game.homeTeam.name || o.name.includes(game.homeTeam.abbreviation)
                 )?.point;
 
+                // Debug logging for first game
+                if (games.indexOf(game) === 0) {
+                  console.log(`First Game Debug (${game.homeTeam.abbreviation}):`, {
+                    hasOdds: !!odds,
+                    oddsKeys: odds ? Object.keys(odds) : [],
+                    bookmakers: odds?.bookmakers?.length,
+                    markets: odds?.bookmakers?.[0]?.markets?.map((m: any) => m.key),
+                    currentSpread,
+                    spreadOutcomes: currentSpread?.outcomes,
+                    homeSpreadValue,
+                    homeTeamName: game.homeTeam.name,
+                    homeTeamAbbr: game.homeTeam.abbreviation,
+                    currentOddsSize: currentOdds.size
+                  });
+                }
+
                 return (
                   <div
                     key={game.id}
@@ -234,89 +358,91 @@ export default function GamesPage() {
                         : 'border-slate-700/50'
                     }`}
                   >
-                    {/* Game Header */}
+                    {/* Game Header - Compact */}
                     <div
-                      className="p-6 cursor-pointer hover:bg-slate-800/70 transition"
+                      className="p-4 cursor-pointer hover:bg-slate-800/70 transition"
                       onClick={() => setSelectedGame(isExpanded ? null : game.id)}
                     >
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                          {/* Teams */}
-                          <div className="flex items-center gap-6">
-                            <div className="text-center min-w-[80px]">
-                              <div className="text-2xl font-bold text-white mb-1">{game.awayTeam.abbreviation}</div>
-                              <div className="text-xs text-slate-400">{game.awayTeam.name}</div>
-                            </div>
-                            <div className="text-2xl font-bold text-slate-600">VS</div>
-                            <div className="text-center min-w-[80px]">
-                              <div className="text-2xl font-bold text-white mb-1">{game.homeTeam.abbreviation}</div>
-                              <div className="text-xs text-slate-400">{game.homeTeam.name}</div>
-                            </div>
-                          </div>
-
-                          {/* Game Info */}
-                          <div className="hidden lg:flex items-center gap-4 ml-8 text-sm text-slate-400">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              <span>{format(game.gameTime, 'EEE h:mm a')}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <MapPin className="w-4 h-4" />
-                              <span>{game.venue}</span>
-                            </div>
-                            {game.weather && (
-                              <div className="flex items-center gap-1">
-                                <Cloud className="w-4 h-4" />
-                                <span>{game.weather.temperature}°F</span>
+                      {/* Team Matchup with Logos - Compact */}
+                      <div className="flex items-center justify-between mb-3">
+                        {/* Away Team */}
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-12 h-12 flex-shrink-0">
+                            {getTeamLogo(game.awayTeam.abbreviation) ? (
+                              <img
+                                src={getTeamLogo(game.awayTeam.abbreviation)!}
+                                alt={game.awayTeam.name}
+                                className="w-full h-full object-contain"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-slate-700 rounded-full flex items-center justify-center text-lg font-bold">
+                                {game.awayTeam.abbreviation}
                               </div>
                             )}
                           </div>
+                          <div>
+                            <div className="text-base font-bold text-white">{game.awayTeam.name}</div>
+                            <div className="text-xs text-slate-400">Away</div>
+                          </div>
                         </div>
 
-                        {/* Right Side Badges */}
-                        <div className="flex items-center gap-3">
-                          {sharpSignal && getRecommendationBadge(sharpSignal.recommendation)}
-                          <ArrowRight className={`w-5 h-5 text-slate-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                        {/* VS + Spread */}
+                        <div className="px-4 text-center">
+                          <div className="text-sm font-bold text-slate-500 mb-1">VS</div>
+                          {homeSpreadValue !== undefined && (
+                            <div className="bg-blue-600/20 border border-blue-500/30 rounded px-3 py-1">
+                              <div className="text-[10px] text-blue-300">Spread</div>
+                              <div className="font-mono font-bold text-sm text-white">
+                                {game.homeTeam.abbreviation} {homeSpreadValue > 0 ? '+' : ''}{homeSpreadValue}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Home Team */}
+                        <div className="flex items-center gap-3 flex-1 justify-end">
+                          <div className="text-right">
+                            <div className="text-base font-bold text-white">{game.homeTeam.name}</div>
+                            <div className="text-xs text-slate-400">Home</div>
+                          </div>
+                          <div className="w-12 h-12 flex-shrink-0">
+                            {getTeamLogo(game.homeTeam.abbreviation) ? (
+                              <img
+                                src={getTeamLogo(game.homeTeam.abbreviation)!}
+                                alt={game.homeTeam.name}
+                                className="w-full h-full object-contain"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-slate-700 rounded-full flex items-center justify-center text-lg font-bold">
+                                {game.homeTeam.abbreviation}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
-                      {/* Quick Stats Row */}
-                      <div className="flex items-center gap-6 text-sm">
-                        {homeSpreadValue !== undefined && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-slate-400">Current Spread:</span>
-                            <span className="font-mono font-bold text-white text-lg">
-                              {game.homeTeam.abbreviation} {homeSpreadValue > 0 ? '+' : ''}{homeSpreadValue}
-                            </span>
-                            {movement && Math.abs(movement.spread.movement) > 0.5 && (
-                              <span className={`ml-2 text-xs ${movement.spread.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                                ({movement.spread.direction === 'up' ? '↑' : '↓'} {Math.abs(movement.spread.movement).toFixed(1)})
-                              </span>
-                            )}
+                      {/* Game Info Row - Compact */}
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-3 text-slate-400">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>{format(game.gameTime, 'EEE, MMM d • h:mm a')}</span>
                           </div>
-                        )}
-                        {movement && (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <span className="text-slate-400">Total:</span>
-                              <span className="font-mono font-semibold text-white">
-                                {movement.total.opening}
-                              {Math.abs(movement.total.movement) > 0.5 && (
-                                <span className={`ml-2 ${movement.total.direction === 'up' ? 'text-green-400' : 'text-red-400'}`}>
-                                  ({movement.total.direction === 'up' ? '↑' : '↓'} {Math.abs(movement.total.movement).toFixed(1)})
-                                </span>
-                              )}
-                            </span>
+                          <div className="hidden md:flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            <span>{game.venue}</span>
                           </div>
-                            {percentages && (
-                              <div className="flex items-center gap-2">
-                                <DollarSign className="w-4 h-4 text-green-400" />
-                                <span className="text-slate-400">Public:</span>
-                                <span className="text-white font-semibold">{percentages.spread.homeTickets}% Home</span>
-                              </div>
-                            )}
-                          </>
-                        )}
+                          {game.weather && (
+                            <div className="hidden lg:flex items-center gap-1">
+                              <Cloud className="w-3 h-3" />
+                              <span>{game.weather.temperature}°F</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {sharpSignal && getRecommendationBadge(sharpSignal.recommendation)}
+                          <ArrowRight className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                        </div>
                       </div>
                     </div>
 

@@ -12,13 +12,30 @@ export default function LoggedInHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/games" className="flex items-center gap-2 hover:opacity-80 transition">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-white" />
+          <Link href="/games" className="flex items-center gap-3 hover:opacity-90 transition group">
+            <div className="relative">
+              {/* ESPN-style square logo mark */}
+              <div className="w-12 h-12 bg-white rounded flex items-center justify-center relative overflow-hidden">
+                {/* Gradient overlay for depth */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-900 opacity-95"></div>
+                {/* Logo mark - PM in modern font */}
+                <div className="relative z-10">
+                  <span className="text-white font-black text-xl tracking-tighter" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                    PM
+                  </span>
+                </div>
+                {/* Subtle accent line */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-blue-400"></div>
+              </div>
             </div>
-            <h1 className="text-xl font-bold text-white">
-              Prediction<span className="text-blue-400">Matrix</span>
-            </h1>
+            <div className="flex items-center gap-0">
+              <h1 className="text-2xl font-black text-white leading-none tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                PREDICTION
+              </h1>
+              <h1 className="text-2xl font-black bg-gradient-to-r from-blue-400 to-blue-500 bg-clip-text text-transparent leading-none tracking-tight" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                MATRIX
+              </h1>
+            </div>
           </Link>
 
           {/* Center Navigation */}
@@ -40,12 +57,6 @@ export default function LoggedInHeader() {
               className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
             >
               Analytics
-            </Link>
-            <Link
-              href="/dashboard"
-              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
-            >
-              Dashboard
             </Link>
           </nav>
 

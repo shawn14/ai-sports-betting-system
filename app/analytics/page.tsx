@@ -117,18 +117,18 @@ export default function AnalyticsPage() {
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
       <LoggedInHeader />
 
-      {/* Page Header */}
+      {/* Page Header - Compact */}
       <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-slate-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Model Performance Analytics</h1>
-          <p className="text-slate-400">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <h1 className="text-2xl font-bold text-white">Model Performance Analytics</h1>
+          <p className="text-slate-400 text-xs">
             Track prediction accuracy and compare predicted vs actual results
           </p>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content - Compact */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {loading ? (
           <div className="text-center py-20">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -136,140 +136,140 @@ export default function AnalyticsPage() {
           </div>
         ) : performance ? (
           <>
-            {/* Historical Backtest Results - Highlight Best Performance */}
-            <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-700/50 rounded-lg p-6 mb-8">
-              <div className="flex items-center justify-between mb-4">
+            {/* Historical Backtest Results - Compact */}
+            <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-700/50 rounded-lg p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h2 className="text-2xl font-bold text-white mb-1">Historical Backtest Results</h2>
-                  <p className="text-green-400 text-sm">2021-2024 Season Performance (Confidence Filter: 6.0+)</p>
+                  <h2 className="text-lg font-bold text-white">Historical Backtest Results</h2>
+                  <p className="text-green-400 text-xs">2021-2024 Season Performance (Confidence Filter: 6.0+)</p>
                 </div>
-                <Trophy className="w-12 h-12 text-yellow-400" />
+                <Trophy className="w-8 h-8 text-yellow-400" />
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div className="bg-slate-800/50 rounded-lg p-4">
-                  <p className="text-slate-400 text-xs mb-1">Win Rate (ATS)</p>
-                  <p className="text-3xl font-bold text-green-400">58.1%</p>
-                  <p className="text-slate-500 text-xs mt-1">36-26 Record</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                <div className="bg-slate-800/50 rounded-lg p-3">
+                  <p className="text-slate-400 text-xs mb-0.5">Win Rate (ATS)</p>
+                  <p className="text-2xl font-bold text-green-400">58.1%</p>
+                  <p className="text-slate-500 text-xs">36-26 Record</p>
                 </div>
-                <div className="bg-slate-800/50 rounded-lg p-4">
-                  <p className="text-slate-400 text-xs mb-1">Return on Investment</p>
-                  <p className="text-3xl font-bold text-green-400">+11.9%</p>
-                  <p className="text-slate-500 text-xs mt-1">+7.4 Units</p>
+                <div className="bg-slate-800/50 rounded-lg p-3">
+                  <p className="text-slate-400 text-xs mb-0.5">Return on Investment</p>
+                  <p className="text-2xl font-bold text-green-400">+11.9%</p>
+                  <p className="text-slate-500 text-xs">+7.4 Units</p>
                 </div>
-                <div className="bg-slate-800/50 rounded-lg p-4">
-                  <p className="text-slate-400 text-xs mb-1">Total Bets</p>
-                  <p className="text-3xl font-bold text-white">62</p>
-                  <p className="text-slate-500 text-xs mt-1">High Confidence</p>
+                <div className="bg-slate-800/50 rounded-lg p-3">
+                  <p className="text-slate-400 text-xs mb-0.5">Total Bets</p>
+                  <p className="text-2xl font-bold text-white">62</p>
+                  <p className="text-slate-500 text-xs">High Confidence</p>
                 </div>
-                <div className="bg-slate-800/50 rounded-lg p-4">
-                  <p className="text-slate-400 text-xs mb-1">Edge Over Market</p>
-                  <p className="text-3xl font-bold text-blue-400">+5.7%</p>
-                  <p className="text-slate-500 text-xs mt-1">vs 52.4% Breakeven</p>
+                <div className="bg-slate-800/50 rounded-lg p-3">
+                  <p className="text-slate-400 text-xs mb-0.5">Edge Over Market</p>
+                  <p className="text-2xl font-bold text-blue-400">+5.7%</p>
+                  <p className="text-slate-500 text-xs">vs 52.4% Breakeven</p>
                 </div>
               </div>
 
-              <div className="bg-blue-900/20 border border-blue-700/50 rounded p-3">
-                <p className="text-blue-300 text-sm">
+              <div className="bg-blue-900/20 border border-blue-700/50 rounded p-2">
+                <p className="text-blue-300 text-xs">
                   <strong>Strategy:</strong> Our ML model achieved a 58.1% ATS win rate by betting only on games where our confidence edge over Vegas was 6.0+ points. This selective approach generated an 11.9% ROI across 62 bets spanning the 2021-2024 seasons, significantly outperforming the 52.4% breakeven threshold.
                 </p>
               </div>
             </div>
 
-            {/* Current Week Analysis */}
-            <h2 className="text-xl font-bold text-white mb-4">Current Week Performance</h2>
+            {/* Current Week Analysis - Compact */}
+            <h2 className="text-lg font-bold text-white mb-3">Current Week Performance</h2>
 
-            {/* Key Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            {/* Key Metrics - Compact */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
               {/* Total Games */}
-              <div className="bg-slate-800 rounded-lg p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-slate-400 text-sm font-semibold">Total Games</h3>
-                  <BarChart3 className="w-5 h-5 text-blue-400" />
+              <div className="bg-slate-800 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-slate-400 text-xs font-semibold">Total Games</h3>
+                  <BarChart3 className="w-4 h-4 text-blue-400" />
                 </div>
-                <p className="text-4xl font-bold text-white">{performance.totalGames}</p>
-                <p className="text-slate-400 text-sm mt-1">Analyzed</p>
+                <p className="text-2xl font-bold text-white">{performance.totalGames}</p>
+                <p className="text-slate-400 text-xs">Analyzed</p>
               </div>
 
               {/* Winner Accuracy */}
-              <div className="bg-slate-800 rounded-lg p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-slate-400 text-sm font-semibold">Winner Accuracy</h3>
-                  <Trophy className="w-5 h-5 text-yellow-400" />
+              <div className="bg-slate-800 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-slate-400 text-xs font-semibold">Winner Accuracy</h3>
+                  <Trophy className="w-4 h-4 text-yellow-400" />
                 </div>
-                <p className={`text-4xl font-bold ${getAccuracyColor(performance.winnerPredictions.accuracy)}`}>
+                <p className={`text-2xl font-bold ${getAccuracyColor(performance.winnerPredictions.accuracy)}`}>
                   {performance.winnerPredictions.accuracy.toFixed(1)}%
                 </p>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-slate-400 text-xs">
                   {performance.winnerPredictions.correct}W - {performance.winnerPredictions.incorrect}L
                 </p>
               </div>
 
               {/* Spread Accuracy */}
-              <div className="bg-slate-800 rounded-lg p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-slate-400 text-sm font-semibold">ATS Record</h3>
-                  <Target className="w-5 h-5 text-green-400" />
+              <div className="bg-slate-800 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-slate-400 text-xs font-semibold">ATS Record</h3>
+                  <Target className="w-4 h-4 text-green-400" />
                 </div>
-                <p className={`text-4xl font-bold ${getAccuracyColor(performance.spreadPredictions.accuracy)}`}>
+                <p className={`text-2xl font-bold ${getAccuracyColor(performance.spreadPredictions.accuracy)}`}>
                   {performance.spreadPredictions.accuracy.toFixed(1)}%
                 </p>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-slate-400 text-xs">
                   {performance.spreadPredictions.wins}-{performance.spreadPredictions.losses}-{performance.spreadPredictions.pushes}
                 </p>
               </div>
 
               {/* ROI */}
-              <div className="bg-slate-800 rounded-lg p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-slate-400 text-sm font-semibold">ROI</h3>
-                  <DollarSign className="w-5 h-5 text-green-400" />
+              <div className="bg-slate-800 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-1">
+                  <h3 className="text-slate-400 text-xs font-semibold">ROI</h3>
+                  <DollarSign className="w-4 h-4 text-green-400" />
                 </div>
-                <p className={`text-4xl font-bold ${getProfitColor(performance.profitability.roi)}`}>
+                <p className={`text-2xl font-bold ${getProfitColor(performance.profitability.roi)}`}>
                   {performance.profitability.roi > 0 ? '+' : ''}{performance.profitability.roi.toFixed(1)}%
                 </p>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className="text-slate-400 text-xs">
                   {performance.profitability.units > 0 ? '+' : ''}{performance.profitability.units.toFixed(1)} units
                 </p>
               </div>
             </div>
 
-            {/* Detailed Stats */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Detailed Stats - Compact */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
               {/* Score Accuracy */}
-              <div className="bg-slate-800 rounded-lg p-6">
-                <h3 className="text-white font-semibold mb-4 flex items-center">
-                  <Percent className="w-5 h-5 mr-2" />
+              <div className="bg-slate-800 rounded-lg p-4">
+                <h3 className="text-white font-semibold text-sm mb-3 flex items-center">
+                  <Percent className="w-4 h-4 mr-2" />
                   Score Prediction Accuracy
                 </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">Avg Home Team Error</span>
-                    <span className="text-white font-mono">
+                    <span className="text-white font-mono text-xs">
                       ±{performance.scoreAccuracy.avgHomeError.toFixed(1)} pts
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">Avg Away Team Error</span>
-                    <span className="text-white font-mono">
+                    <span className="text-white font-mono text-xs">
                       ±{performance.scoreAccuracy.avgAwayError.toFixed(1)} pts
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">Avg Total Error</span>
-                    <span className="text-white font-mono">
+                    <span className="text-white font-mono text-xs">
                       ±{performance.scoreAccuracy.avgTotalError.toFixed(1)} pts
                     </span>
                   </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-700">
+                  <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-700">
                     <span className="text-slate-400">Median Home Error</span>
-                    <span className="text-white font-mono">
+                    <span className="text-white font-mono text-xs">
                       ±{performance.scoreAccuracy.medianHomeError.toFixed(1)} pts
                     </span>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between text-sm">
                     <span className="text-slate-400">Median Away Error</span>
-                    <span className="text-white font-mono">
+                    <span className="text-white font-mono text-xs">
                       ±{performance.scoreAccuracy.medianAwayError.toFixed(1)} pts
                     </span>
                   </div>
@@ -277,9 +277,9 @@ export default function AnalyticsPage() {
               </div>
 
               {/* Confidence Breakdown */}
-              <div className="bg-slate-800 rounded-lg p-6">
-                <h3 className="text-white font-semibold mb-4">Confidence Level Performance</h3>
-                <div className="space-y-3">
+              <div className="bg-slate-800 rounded-lg p-4">
+                <h3 className="text-white font-semibold text-sm mb-3">Confidence Level Performance</h3>
+                <div className="space-y-2">
                   {performance.confidenceBreakdown.map((cb, idx) => (
                     <div key={idx}>
                       <div className="flex items-center justify-between mb-1">

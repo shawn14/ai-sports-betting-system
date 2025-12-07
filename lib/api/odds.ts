@@ -24,12 +24,14 @@ export class OddsAPI {
    * Get current NFL odds from multiple sportsbooks
    */
   static async getNFLOdds(regions: string = 'us', markets: string = 'h2h,spreads,totals') {
-    return this.request('/sports/americanfootball_nfl/odds', {
-      regions,
-      markets,
-      oddsFormat: 'american',
-      dateFormat: 'iso',
-    });
+    // Use our API proxy to avoid CORS issues
+    try {
+      const response = await axios.get('/api/odds');
+      return response.data;
+    } catch (error) {
+      console.error('Odds API Error:', error);
+      throw error;
+    }
   }
 
   /**

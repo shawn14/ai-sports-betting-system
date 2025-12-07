@@ -22,6 +22,7 @@ export default function PredictionsPage() {
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [bettingLines, setBettingLines] = useState<Map<string, any>>(new Map());
 
   useEffect(() => {
     loadPredictions();
@@ -92,6 +93,7 @@ export default function PredictionsPage() {
       }
 
       const newPredictions = new Map<string, GamePrediction>();
+      const newBettingLines = new Map<string, any>();
 
       for (const game of scheduledGames) {
         try {
@@ -113,6 +115,7 @@ export default function PredictionsPage() {
           let bettingLines;
           if (gameOdds) {
             bettingLines = OddsAPI.transformToBettingLines(gameOdds);
+            newBettingLines.set(game.id, gameOdds);
           }
 
           // Generate prediction
@@ -131,6 +134,7 @@ export default function PredictionsPage() {
       }
 
       setPredictions(newPredictions);
+      setBettingLines(newBettingLines);
       setLastUpdate(new Date());
       console.log(`✅ Generated ${newPredictions.size} predictions`);
     } catch (error) {
@@ -200,18 +204,15 @@ export default function PredictionsPage() {
     <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
       <LoggedInHeader />
 
-      {/* Page Header */}
+      {/* Page Header - Compact */}
       <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-slate-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-start justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Game Predictions</h1>
-              <p className="text-slate-400">
-                AI-powered predictions based on advanced statistical analysis
-              </p>
+              <h1 className="text-2xl font-bold text-white">Game Predictions</h1>
               {lastUpdate && (
-                <p className="text-slate-500 text-sm mt-1">
-                  Last updated: {format(lastUpdate, 'PPpp')}
+                <p className="text-slate-500 text-xs mt-0.5">
+                  Updated: {format(lastUpdate, 'MMM d, h:mm a')}
                 </p>
               )}
             </div>
@@ -219,7 +220,7 @@ export default function PredictionsPage() {
               onClick={refreshData}
               disabled={refreshing}
               className={`
-                px-6 py-3 rounded-lg font-semibold transition flex items-center gap-2
+                px-4 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2
                 ${refreshing
                   ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
@@ -228,15 +229,15 @@ export default function PredictionsPage() {
             >
               {refreshing ? (
                 <>
-                  <div className="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                  <div className="inline-block animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-white"></div>
                   Refreshing...
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  Refresh Data
+                  Refresh
                 </>
               )}
             </button>
@@ -244,71 +245,84 @@ export default function PredictionsPage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content - Compact */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {loading ? (
           <div className="text-center py-20">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
             <p className="text-slate-400 mt-4">Analyzing games and generating predictions...</p>
           </div>
         ) : (
-          <div className="grid gap-6">
-            {Array.from(predictions.entries()).map(([gameId, prediction]) => (
+          <div className="grid gap-3">
+            {Array.from(predictions.entries()).map(([gameId, prediction]) => {
+              // Extract current spread from betting lines
+              const odds = bettingLines.get(gameId);
+              const currentSpread = odds?.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'spreads');
+              const homeSpreadValue = currentSpread?.outcomes?.find((o: any) =>
+                o.name === prediction.game.homeTeam.name || o.name.includes(prediction.game.homeTeam.abbreviation)
+              )?.point;
+
+              return (
               <div
                 key={gameId}
-                className="bg-slate-800 rounded-lg p-6 hover:bg-slate-750 transition"
+                className="bg-slate-800 rounded-lg p-4 hover:bg-slate-750 transition"
               >
-                <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start justify-between mb-4">
                   {/* Game Info */}
                   <div className="flex-1">
-                    <div className="flex items-center space-x-4 mb-2">
-                      <h3 className="text-2xl font-bold text-white">
+                    <div className="flex items-center space-x-3 mb-1">
+                      <h3 className="text-lg font-bold text-white">
                         {prediction.game.awayTeam.name} @ {prediction.game.homeTeam.name}
                       </h3>
                       <span
                         className={`${getRecommendationColor(
                           prediction.recommendation
-                        )} text-white text-sm px-3 py-1 rounded-full font-semibold`}
+                        )} text-white text-xs px-2 py-1 rounded-full font-semibold`}
                       >
                         {getRecommendationText(prediction.recommendation)}
                       </span>
+                      {homeSpreadValue !== undefined && (
+                        <span className="text-slate-400 text-xs font-mono">
+                          Spread: {prediction.game.homeTeam.abbreviation} {homeSpreadValue > 0 ? '+' : ''}{homeSpreadValue}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-slate-400">
-                      {format(prediction.game.gameTime, 'EEEE, MMMM d, yyyy - h:mm a')}
+                    <p className="text-slate-400 text-xs">
+                      {format(prediction.game.gameTime, 'EEE, MMM d - h:mm a')}
                     </p>
                   </div>
 
                   {/* Confidence */}
                   <div className="text-right">
-                    <div className="text-3xl font-bold text-white">
+                    <div className="text-2xl font-bold text-white">
                       {prediction.confidence}%
                     </div>
-                    <div className="text-slate-400 text-sm">Confidence</div>
+                    <div className="text-slate-400 text-xs">Confidence</div>
                   </div>
                 </div>
 
                 {/* Prediction */}
-                <div className="grid grid-cols-3 gap-6 mb-6">
-                  <div className="bg-slate-900 rounded-lg p-4 text-center">
-                    <div className="text-slate-400 text-sm mb-2">Predicted Winner</div>
-                    <div className="text-xl font-bold text-white">
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="bg-slate-900 rounded-lg p-3 text-center">
+                    <div className="text-slate-400 text-xs mb-1">Predicted Winner</div>
+                    <div className="text-base font-bold text-white">
                       {prediction.predictedWinner === 'home'
                         ? prediction.game.homeTeam.name
                         : prediction.game.awayTeam.name}
                     </div>
                   </div>
 
-                  <div className="bg-slate-900 rounded-lg p-4 text-center">
-                    <div className="text-slate-400 text-sm mb-2">Predicted Score</div>
-                    <div className="text-xl font-bold text-white">
+                  <div className="bg-slate-900 rounded-lg p-3 text-center">
+                    <div className="text-slate-400 text-xs mb-1">Predicted Score</div>
+                    <div className="text-base font-bold text-white">
                       {prediction.predictedScore.away} - {prediction.predictedScore.home}
                     </div>
                   </div>
 
-                  <div className="bg-slate-900 rounded-lg p-4 text-center">
-                    <div className="text-slate-400 text-sm mb-2">Spread Edge</div>
+                  <div className="bg-slate-900 rounded-lg p-3 text-center">
+                    <div className="text-slate-400 text-xs mb-1">Spread Edge</div>
                     <div
-                      className={`text-xl font-bold ${
+                      className={`text-base font-bold ${
                         Math.abs(prediction.edgeAnalysis.spread) > 3
                           ? 'text-green-400'
                           : 'text-slate-400'
@@ -320,12 +334,12 @@ export default function PredictionsPage() {
                   </div>
                 </div>
 
-                {/* Prediction Factors */}
-                <div className="border-t border-slate-700 pt-4">
-                  <h4 className="text-white font-semibold mb-3">Key Factors</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Prediction Factors - Compact */}
+                <div className="border-t border-slate-700 pt-3">
+                  <h4 className="text-white font-semibold text-sm mb-2">Key Factors</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {prediction.factors.map((factor, idx) => (
-                      <div key={idx} className="bg-slate-900 rounded p-3">
+                      <div key={idx} className="bg-slate-900 rounded p-2">
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-white font-medium text-sm">
                             {factor.name}
@@ -523,7 +537,8 @@ export default function PredictionsPage() {
                   </div>
                 )}
               </div>
-            ))}
+              );
+            })}
 
             {predictions.size === 0 && (
               <div className="bg-slate-800 rounded-lg p-12 text-center">

@@ -69,8 +69,9 @@ export default function GamesPage() {
         } else {
           console.warn(`⚠️ No predictions found in cache for Season ${season}, Week ${week}`);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Failed to load predictions:', error);
+        console.error('Error details:', error?.message, error?.code);
         // Continue without predictions
       }
 

@@ -189,24 +189,18 @@ export class FirestoreService {
         }
       }
 
-      // Get games for these predictions
-      const gameIds = Array.from(latestPredictions.keys());
-      const games = await Promise.all(
-        gameIds.map(async (gameId) => {
-          const gameRef = doc(db, COLLECTIONS.GAMES, gameId);
-          const gameDoc = await getDoc(gameRef);
-          if (gameDoc.exists()) {
-            return {
-              id: gameDoc.id,
-              ...gameDoc.data(),
-              gameTime: gameDoc.data().gameTime.toDate(),
-            };
-          }
-          return null;
-        })
+      // Get games for this season/week in ONE query instead of individual requests
+      const gamesQuery = query(
+        collection(db, COLLECTIONS.GAMES),
+        where('season', '==', season),
+        where('week', '==', week)
       );
-
-      const validGames = games.filter(g => g !== null);
+      const gamesSnapshot = await getDocs(gamesQuery);
+      const validGames = gamesSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        gameTime: doc.data().gameTime.toDate(),
+      }));
 
       // Find most recent update time
       const lastUpdate = predictions.length > 0

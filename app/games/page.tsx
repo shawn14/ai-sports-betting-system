@@ -318,6 +318,7 @@ export default function GamesPage() {
                           </>
                         )}
                       </div>
+                    </div>
 
                     {/* Expanded Details */}
                     {isExpanded && (

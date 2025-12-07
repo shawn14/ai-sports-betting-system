@@ -36,7 +36,7 @@ export default function PredictionsPage() {
       setLoading(true);
       const { season, week } = await NFLAPI.getCurrentSeasonWeek();
 
-      // Load from cache first (fast!)
+      // Try to load from cache first (fast!)
       console.log('📦 Loading cached predictions from Firebase...');
       const cached = await FirestoreService.getCachedPredictions(season, week);
 
@@ -64,12 +64,77 @@ export default function PredictionsPage() {
         }
         setPredictions(newPredictions);
       } else {
-        console.log('⚠️  No cached predictions found. Click "Refresh Data" to generate predictions.');
+        // No cache - generate predictions on-the-fly
+        console.log('⚠️  No cached predictions found. Generating fresh predictions...');
+        await generatePredictions();
       }
     } catch (error) {
       console.error('Error loading predictions:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generatePredictions = async () => {
+    try {
+      const { season, week } = await NFLAPI.getCurrentSeasonWeek();
+      const weekGames = await NFLAPI.getWeekGames(season, week);
+      const scheduledGames = weekGames.filter(g => g.status === 'scheduled');
+
+      setGames(scheduledGames);
+
+      // Get betting odds
+      let oddsData: any[] = [];
+      try {
+        oddsData = await OddsAPI.getNFLOdds();
+      } catch (error) {
+        console.error('Error fetching odds:', error);
+      }
+
+      const newPredictions = new Map<string, GamePrediction>();
+
+      for (const game of scheduledGames) {
+        try {
+          // Get team stats
+          const [homeStats, awayStats] = await Promise.all([
+            NFLAPI.getTeamStats(game.homeTeam.id, season),
+            NFLAPI.getTeamStats(game.awayTeam.id, season)
+          ]);
+
+          // Find betting lines
+          const gameOdds = oddsData.find((o: any) => {
+            const matchHome = o.home_team?.toLowerCase().includes(game.homeTeam.name.toLowerCase()) ||
+                             o.home_team?.toLowerCase().includes(game.homeTeam.abbreviation.toLowerCase());
+            const matchAway = o.away_team?.toLowerCase().includes(game.awayTeam.name.toLowerCase()) ||
+                             o.away_team?.toLowerCase().includes(game.awayTeam.abbreviation.toLowerCase());
+            return matchHome && matchAway;
+          });
+
+          let bettingLines;
+          if (gameOdds) {
+            bettingLines = OddsAPI.transformToBettingLines(gameOdds);
+          }
+
+          // Generate prediction
+          const prediction = await GamePredictor.predictGame(
+            game,
+            homeStats,
+            awayStats,
+            null,
+            bettingLines
+          );
+
+          newPredictions.set(game.id, prediction);
+        } catch (error) {
+          console.error(`Error predicting game ${game.id}:`, error);
+        }
+      }
+
+      setPredictions(newPredictions);
+      setLastUpdate(new Date());
+      console.log(`✅ Generated ${newPredictions.size} predictions`);
+    } catch (error) {
+      console.error('Error generating predictions:', error);
     }
   };
 

@@ -66,9 +66,11 @@ export default function GamesPage() {
           }
           setPredictions(newPredictions);
           console.log(`✅ Loaded ${newPredictions.size} predictions for high confidence count`);
+        } else {
+          console.warn(`⚠️ No predictions found in cache for Season ${season}, Week ${week}`);
         }
       } catch (error) {
-        console.error('Failed to load predictions:', error);
+        console.error('❌ Failed to load predictions:', error);
         // Continue without predictions
       }
 

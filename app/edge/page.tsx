@@ -84,12 +84,18 @@ export default function EdgeDetectionPage() {
         });
 
         let vegasLines = null;
-        let edge = {
+        let edge: {
+          spread: number;
+          total: number;
+          recommendation: 'STRONG BET' | 'GOOD BET' | 'SLIGHT EDGE' | 'NO EDGE';
+          betOn: 'home' | 'away' | 'none';
+          totalRec: 'OVER' | 'UNDER' | 'PASS';
+        } = {
           spread: 0,
           total: 0,
-          recommendation: 'NO EDGE' as const,
-          betOn: 'none' as const,
-          totalRec: 'PASS' as const
+          recommendation: 'NO EDGE',
+          betOn: 'none',
+          totalRec: 'PASS'
         };
 
         if (gameOdds && gameOdds.bookmakers && gameOdds.bookmakers.length > 0) {

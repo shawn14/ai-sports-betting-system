@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     siteName: "PredictionMatrix",
     images: [
       {
-        url: "/og-image.png",
+        url: "/api/og",
         width: 1200,
         height: 630,
         alt: "PredictionMatrix - AI Sports Betting Analytics"
@@ -35,7 +35,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "PredictionMatrix - AI Sports Betting Analytics",
     description: "Find profitable betting edges with AI-powered predictions and advanced analytics.",
-    images: ["/og-image.png"]
+    images: ["/api/og"],
+    creator: "@predictionmatrix"
   },
   robots: {
     index: true,

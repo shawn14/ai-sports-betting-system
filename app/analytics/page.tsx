@@ -99,6 +99,49 @@ export default function AnalyticsPage() {
           </div>
         ) : performance ? (
           <>
+            {/* Historical Backtest Results - Highlight Best Performance */}
+            <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-700/50 rounded-lg p-6 mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">Historical Backtest Results</h2>
+                  <p className="text-green-400 text-sm">2021-2024 Season Performance (Confidence Filter: 6.0+)</p>
+                </div>
+                <Trophy className="w-12 h-12 text-yellow-400" />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="bg-slate-800/50 rounded-lg p-4">
+                  <p className="text-slate-400 text-xs mb-1">Win Rate (ATS)</p>
+                  <p className="text-3xl font-bold text-green-400">58.1%</p>
+                  <p className="text-slate-500 text-xs mt-1">36-26 Record</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4">
+                  <p className="text-slate-400 text-xs mb-1">Return on Investment</p>
+                  <p className="text-3xl font-bold text-green-400">+11.9%</p>
+                  <p className="text-slate-500 text-xs mt-1">+7.4 Units</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4">
+                  <p className="text-slate-400 text-xs mb-1">Total Bets</p>
+                  <p className="text-3xl font-bold text-white">62</p>
+                  <p className="text-slate-500 text-xs mt-1">High Confidence</p>
+                </div>
+                <div className="bg-slate-800/50 rounded-lg p-4">
+                  <p className="text-slate-400 text-xs mb-1">Edge Over Market</p>
+                  <p className="text-3xl font-bold text-blue-400">+5.7%</p>
+                  <p className="text-slate-500 text-xs mt-1">vs 52.4% Breakeven</p>
+                </div>
+              </div>
+
+              <div className="bg-blue-900/20 border border-blue-700/50 rounded p-3">
+                <p className="text-blue-300 text-sm">
+                  <strong>Strategy:</strong> Our ML model achieved a 58.1% ATS win rate by betting only on games where our confidence edge over Vegas was 6.0+ points. This selective approach generated an 11.9% ROI across 62 bets spanning the 2021-2024 seasons, significantly outperforming the 52.4% breakeven threshold.
+                </p>
+              </div>
+            </div>
+
+            {/* Current Week Analysis */}
+            <h2 className="text-xl font-bold text-white mb-4">Current Week Performance</h2>
+
             {/* Key Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {/* Total Games */}

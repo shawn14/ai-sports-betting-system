@@ -28,87 +28,69 @@ export default function AnalyticsPage() {
     try {
       setLoading(true);
 
-      // Load completed games from multiple weeks
+      // Load historical training data with REAL Vegas lines
+      const response = await fetch('/training/nfl_training_data_with_vegas.json');
+      const trainingData = await response.json();
+
+      // Filter to selected season and weeks
+      const historicalGames = trainingData.data.filter((g: any) =>
+        g.season === selectedSeason && g.week <= selectedWeek
+      );
+
+      console.log(`Loading ${historicalGames.length} historical games with real Vegas lines`);
+
       const results: PredictionResult[] = [];
 
-      for (let week = 1; week <= selectedWeek; week++) {
-        const weekGames = await NFLAPI.getWeekGames(selectedSeason, week);
-        const completedGames = weekGames.filter(g => g.status === 'completed');
+      for (const histGame of historicalGames) {
+        // Convert training data format to Game format
+        const game: any = {
+          id: histGame.gameId,
+          status: 'completed',
+          homeTeam: histGame.homeTeam,
+          awayTeam: histGame.awayTeam,
+          homeScore: histGame.outcome.homeScore,
+          awayScore: histGame.outcome.awayScore,
+          gameTime: new Date(),
+          season: histGame.season,
+          week: histGame.week,
+        };
 
-        console.log(`Week ${week}: ${completedGames.length} completed games`);
+        // Use REAL Vegas lines from historical data
+        const bettingLines: BettingLine = {
+          bookmaker: 'Historical Closing Line',
+          timestamp: new Date(),
+          spread: {
+            home: -histGame.lines.spread,  // Convert to home perspective
+            away: histGame.lines.spread,
+          },
+          moneyline: {
+            home: histGame.lines.spread < 0 ? -150 : 150,
+            away: histGame.lines.spread < 0 ? 150 : -150,
+          },
+          total: {
+            line: histGame.lines.total,
+            over: -110,
+            under: -110,
+          },
+        };
 
-        for (const game of completedGames) {
-          // Get team stats
-          const homeStats = await NFLAPI.getTeamStats(game.homeTeam.id, selectedSeason);
-          const awayStats = await NFLAPI.getTeamStats(game.awayTeam.id, selectedSeason);
+        // Generate prediction using historical team stats
+        const prediction = await GamePredictor.predictGame(
+          game,
+          histGame.homeTeam,
+          histGame.awayTeam,
+          null,
+          bettingLines
+        );
 
-          // Try to get historical betting lines for this game
-          let bettingLines: BettingLine | undefined;
-          try {
-            // For historical games, we'd need stored lines
-            // For now, create a mock line based on typical spreads
-            // Approximate the Vegas line as 75% of the actual margin (with some noise)
-            const actualMargin = game.homeScore && game.awayScore
-              ? game.homeScore - game.awayScore
-              : 0;
+        // Calculate result WITH real Vegas lines
+        const result = PredictionAnalytics.calculateResult(game, prediction, bettingLines);
 
-            // Vegas spread (home perspective): negative = home favored
-            // e.g., if home won by 10, Vegas line might have been -7.5
-            const vegasSpread = actualMargin * 0.75;
-
-            bettingLines = {
-              bookmaker: 'Closing Line',
-              timestamp: game.gameTime,
-              spread: {
-                home: vegasSpread,  // Can be positive or negative
-                away: -vegasSpread, // Opposite sign
-              },
-              moneyline: {
-                home: vegasSpread < 0 ? -150 : 150,  // Negative spread = home favored
-                away: vegasSpread < 0 ? 150 : -150,
-              },
-              total: {
-                line: game.homeScore && game.awayScore
-                  ? game.homeScore + game.awayScore
-                  : 45,
-                over: -110,
-                under: -110,
-              },
-            };
-          } catch (error) {
-            console.warn(`Could not get betting lines for game ${game.id}`);
-          }
-
-          // Generate prediction (what we would have predicted)
-          const prediction = await GamePredictor.predictGame(
-            game,
-            homeStats,
-            awayStats,
-            null,
-            bettingLines
-          );
-
-          // Calculate result WITH betting lines
-          const result = PredictionAnalytics.calculateResult(game, prediction, bettingLines);
-
-          // Debug logging
-          if (results.length === 0) {
-            console.log('First game result:', {
-              gameId: result.gameId,
-              hasProfitLoss: !!result.profitLoss,
-              profitLoss: result.profitLoss,
-              spreadCovered: result.outcomes.spreadCovered,
-              bettingLines: bettingLines
-            });
-          }
-
-          results.push(result);
-          analytics.addResult(result);
-        }
+        results.push(result);
+        analytics.addResult(result);
       }
 
-      console.log(`Loaded ${results.length} total completed games`);
-      console.log('Sample profitLoss values:', results.slice(0, 3).map(r => r.profitLoss));
+      console.log(`Loaded ${results.length} total completed games with REAL Vegas lines`);
       setRecentResults(results.slice(-10).reverse());
       setPerformance(analytics.getPerformance());
     } catch (error) {
@@ -330,8 +312,8 @@ export default function AnalyticsPage() {
                   <DollarSign className="w-5 h-5 mr-2" />
                   Profitability Analysis (ATS)
                 </h3>
-                <div className="text-xs text-slate-500">
-                  Note: Using approximated historical spreads
+                <div className="text-xs text-green-500">
+                  ✓ Using real historical Vegas closing lines
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

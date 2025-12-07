@@ -41,6 +41,9 @@ export default function GamesPage() {
       // Show all games (scheduled, in_progress, completed) - filter happens later if needed
       setGames(weekGames);
 
+      // Stop loading after games are loaded - odds/predictions can load in background
+      setLoading(false);
+
       // Load cached predictions from Firebase
       try {
         const cached = await FirestoreService.getCachedPredictions(season, week);
@@ -69,10 +72,19 @@ export default function GamesPage() {
         // Continue without predictions
       }
 
+      // Try to load odds from cache first (much faster!)
       let oddsData: any[] = [];
       try {
-        oddsData = await OddsAPI.getNFLOdds();
-        console.log('Fetched odds for', oddsData.length, 'games');
+        const cachedOdds = await FirestoreService.getCachedOdds(season, week);
+        if (cachedOdds) {
+          oddsData = cachedOdds;
+          console.log('✅ Loaded cached odds for', oddsData.length, 'games');
+        } else {
+          // Fallback to API if cache is empty/expired
+          console.log('⚠️ No cached odds found, fetching from API...');
+          oddsData = await OddsAPI.getNFLOdds();
+          console.log('Fetched odds from API for', oddsData.length, 'games');
+        }
       } catch (error) {
         console.error('Failed to fetch odds - spreads will not be displayed:', error);
         // Continue without odds data
@@ -144,7 +156,6 @@ export default function GamesPage() {
       });
     } catch (error) {
       console.error('Error loading dashboard:', error);
-    } finally {
       setLoading(false);
     }
   };

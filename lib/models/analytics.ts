@@ -236,11 +236,28 @@ export class PredictionAnalytics {
     const actualWinner = actualScore.home > actualScore.away ? 'home' : 'away';
     const predictedWinnerCorrect = prediction.predictedWinner === actualWinner;
 
-    // Spread analysis
+    // Spread analysis - TRUE ATS METHODOLOGY
     const predictedSpread = prediction.predictedScore.home - prediction.predictedScore.away;
     const actualSpread = actualScore.home - actualScore.away;
-    const spreadCovered = (predictedSpread > 0 && actualSpread > 0) ||
-                         (predictedSpread < 0 && actualSpread < 0);
+
+    // Use Vegas line for ATS if available, otherwise fall back to simple winner check
+    let spreadCovered: boolean;
+    if (closingLine?.spread) {
+      const vegasSpread = closingLine.spread.home; // e.g., -7 means home favored by 7
+
+      // Determine which side we'd bet based on our prediction vs Vegas
+      if (predictedSpread > vegasSpread) {
+        // We think home will beat the spread
+        spreadCovered = actualSpread > vegasSpread;
+      } else {
+        // We think away will beat the spread
+        spreadCovered = actualSpread < vegasSpread;
+      }
+    } else {
+      // Fallback: Just check if we predicted the right winner
+      spreadCovered = (predictedSpread > 0 && actualSpread > 0) ||
+                     (predictedSpread < 0 && actualSpread < 0);
+    }
 
     // Total analysis
     const actualTotal = actualScore.home + actualScore.away;

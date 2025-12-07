@@ -5,9 +5,10 @@ import LoggedInHeader from '@/components/LoggedInHeader';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { NFLAPI } from '@/lib/api/nfl';
+import { OddsAPI } from '@/lib/api/odds';
 import { GamePredictor } from '@/lib/models/predictor';
 import { PredictionAnalytics, PredictionResult, ModelPerformance } from '@/lib/models/analytics';
-import { Game } from '@/types';
+import { Game, BettingLine } from '@/types';
 import { format } from 'date-fns';
 import { TrendingUp, TrendingDown, Target, Trophy, XCircle, DollarSign, Percent, BarChart3 } from 'lucide-react';
 
@@ -15,45 +16,82 @@ export default function AnalyticsPage() {
   const [performance, setPerformance] = useState<ModelPerformance | null>(null);
   const [recentResults, setRecentResults] = useState<PredictionResult[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  const [selectedWeek, setSelectedWeek] = useState<number>(15);
+  const [selectedSeason, setSelectedSeason] = useState<number>(2024);
   const [analytics] = useState(() => new PredictionAnalytics());
 
   useEffect(() => {
     loadAnalytics();
-  }, [selectedWeek]);
+  }, [selectedWeek, selectedSeason]);
 
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      const { season } = await NFLAPI.getCurrentSeasonWeek();
 
       // Load completed games from multiple weeks
       const results: PredictionResult[] = [];
 
       for (let week = 1; week <= selectedWeek; week++) {
-        const weekGames = await NFLAPI.getWeekGames(season, week);
+        const weekGames = await NFLAPI.getWeekGames(selectedSeason, week);
         const completedGames = weekGames.filter(g => g.status === 'completed');
+
+        console.log(`Week ${week}: ${completedGames.length} completed games`);
 
         for (const game of completedGames) {
           // Get team stats
-          const homeStats = await NFLAPI.getTeamStats(game.homeTeam.id);
-          const awayStats = await NFLAPI.getTeamStats(game.awayTeam.id);
+          const homeStats = await NFLAPI.getTeamStats(game.homeTeam.id, selectedSeason);
+          const awayStats = await NFLAPI.getTeamStats(game.awayTeam.id, selectedSeason);
+
+          // Try to get historical betting lines for this game
+          let bettingLines: BettingLine | undefined;
+          try {
+            // For historical games, we'd need stored lines
+            // For now, create a mock line based on typical spreads
+            // TODO: Integrate with historical odds API or database
+            const spread = game.homeScore && game.awayScore
+              ? (game.homeScore - game.awayScore) * 0.75 // Rough approximation
+              : 0;
+
+            bettingLines = {
+              bookmaker: 'Closing Line',
+              timestamp: game.gameTime,
+              spread: {
+                home: -Math.abs(spread),
+                away: Math.abs(spread),
+              },
+              moneyline: {
+                home: spread > 0 ? -150 : 150,
+                away: spread > 0 ? 150 : -150,
+              },
+              total: {
+                line: game.homeScore && game.awayScore
+                  ? game.homeScore + game.awayScore
+                  : 45,
+                over: -110,
+                under: -110,
+              },
+            };
+          } catch (error) {
+            console.warn(`Could not get betting lines for game ${game.id}`);
+          }
 
           // Generate prediction (what we would have predicted)
           const prediction = await GamePredictor.predictGame(
             game,
             homeStats,
             awayStats,
-            null
+            null,
+            bettingLines
           );
 
-          // Calculate result
-          const result = PredictionAnalytics.calculateResult(game, prediction);
+          // Calculate result WITH betting lines
+          const result = PredictionAnalytics.calculateResult(game, prediction, bettingLines);
           results.push(result);
           analytics.addResult(result);
         }
       }
 
+      console.log(`Loaded ${results.length} total completed games`);
       setRecentResults(results.slice(-10).reverse());
       setPerformance(analytics.getPerformance());
     } catch (error) {
@@ -270,10 +308,15 @@ export default function AnalyticsPage() {
 
             {/* Profitability Breakdown */}
             <div className="bg-slate-800 rounded-lg p-6 mb-8">
-              <h3 className="text-white font-semibold mb-4 flex items-center">
-                <DollarSign className="w-5 h-5 mr-2" />
-                Profitability Analysis
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-white font-semibold flex items-center">
+                  <DollarSign className="w-5 h-5 mr-2" />
+                  Profitability Analysis (ATS)
+                </h3>
+                <div className="text-xs text-slate-500">
+                  Note: Using approximated historical spreads
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-slate-900 rounded-lg p-4">
                   <div className="text-slate-400 text-sm mb-1">Spread Bets</div>

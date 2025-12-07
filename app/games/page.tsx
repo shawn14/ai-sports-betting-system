@@ -15,6 +15,34 @@ import {
 import LoggedInHeader from '@/components/LoggedInHeader';
 import AILoadingAnimation from '@/components/AILoadingAnimation';
 
+// Helper function to fetch historical spread as last resort
+async function fetchHistoricalSpread(gameId: string, gameTime: Date): Promise<number | undefined> {
+  try {
+    console.log(`⚠️ Attempting historical odds lookup for ${gameId} (costs 10 credits)`);
+    const response = await fetch(`/api/odds/historical?gameId=${gameId}&gameTime=${gameTime.toISOString()}`);
+
+    if (!response.ok) {
+      console.log(`❌ Historical odds not found for ${gameId}`);
+      return undefined;
+    }
+
+    const data = await response.json();
+    const spreadMarket = data.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'spreads');
+    const homeSpread = spreadMarket?.outcomes?.find((o: any) =>
+      o.name === data.home_team || o.name.includes(data.home_team)
+    )?.point;
+
+    if (homeSpread !== undefined) {
+      console.log(`✅ Found historical spread: ${homeSpread}`);
+    }
+
+    return homeSpread;
+  } catch (error) {
+    console.error('Failed to fetch historical odds:', error);
+    return undefined;
+  }
+}
+
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [movements, setMovements] = useState<Map<string, LineMovement>>(new Map());
@@ -25,6 +53,7 @@ export default function GamesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [tracker] = useState(() => new LineMovementTracker());
+  const [historicalSpreads, setHistoricalSpreads] = useState<Map<string, number>>(new Map());
 
   useEffect(() => {
     loadDashboardData();
@@ -63,6 +92,7 @@ export default function GamesPage() {
                 factors: pred.factors,
                 edgeAnalysis: pred.edgeAnalysis,
                 recommendation: pred.recommendation,
+                vegasSpread: pred.vegasSpread,
               });
             }
           }
@@ -245,131 +275,50 @@ export default function GamesPage() {
           <AILoadingAnimation />
         ) : (
           <>
-            {/* High Confidence Picks - Enhanced */}
-            {highConfidenceGames > 0 && (
-              <div className="mb-4 relative overflow-hidden">
-                {/* Animated background gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-green-600/20 via-emerald-600/20 to-green-600/20 animate-pulse"></div>
-                <div className="relative bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-2 border-green-500/50 rounded-xl p-4 shadow-lg shadow-green-500/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-green-500/20 rounded-lg animate-pulse">
-                        <Flame className="text-green-400 w-6 h-6" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-black text-white flex items-center gap-2">
-                          🔥 HOT PICKS
-                          <span className="text-xs font-normal text-green-300 bg-green-500/20 px-2 py-1 rounded-full">
-                            HIGH CONFIDENCE
-                          </span>
-                        </h2>
-                        <p className="text-xs text-green-300">AI Model Confidence ≥75%</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-3xl font-black text-green-400">{highConfidenceGames}</div>
-                      <div className="text-xs text-green-300">Pick{highConfidenceGames > 1 ? 's' : ''}</div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3">
-                    {Array.from(predictions.values())
-                      .filter(pred => pred.confidence >= 75)
-                      .map((prediction) => {
-                        const game = prediction.game;
-                        const odds = currentOdds.get(game.id);
-                        const currentSpread = odds?.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'spreads');
-                        const homeSpreadValue = currentSpread?.outcomes?.find((o: any) =>
-                          o.name === game.homeTeam.name || o.name.includes(game.homeTeam.abbreviation)
-                        )?.point;
-
-                        return (
-                          <div key={game.id} className="bg-slate-800/80 backdrop-blur border border-green-500/30 rounded-lg p-3 hover:border-green-400/50 transition">
-                            <div className="flex items-center justify-between mb-2">
-                              {/* Team matchup with logos */}
-                              <div className="flex items-center gap-3 flex-1">
-                                <div className="w-10 h-10 flex-shrink-0">
-                                  {getTeamLogo(game.awayTeam.abbreviation) ? (
-                                    <img
-                                      src={getTeamLogo(game.awayTeam.abbreviation)!}
-                                      alt={game.awayTeam.name}
-                                      className="w-full h-full object-contain"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full bg-slate-700 rounded-full flex items-center justify-center text-sm font-bold">
-                                      {game.awayTeam.abbreviation}
-                                    </div>
-                                  )}
-                                </div>
-                                <div>
-                                  <div className="text-sm font-bold text-white">{game.awayTeam.name}</div>
-                                  <div className="text-xs text-slate-400">@ {game.homeTeam.name}</div>
-                                </div>
-                              </div>
-
-                              {/* Confidence badge */}
-                              <div className="flex items-center gap-2">
-                                <div className="text-right">
-                                  <div className="text-2xl font-black text-green-400">{prediction.confidence}%</div>
-                                  <div className="text-xs text-green-300">Confidence</div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Pick details - Make it crystal clear */}
-                            <div className="mt-2 pt-2 border-t border-slate-700">
-                              <div className="flex items-center gap-2 mb-1">
-                                <div className="px-2 py-0.5 bg-green-600 text-white text-xs font-bold rounded">
-                                  SPREAD BET
-                                </div>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <Target className="w-5 h-5 text-green-400" />
-                                  <div>
-                                    <div className="text-base font-black text-green-400">
-                                      {prediction.predictedWinner === 'home' ? game.homeTeam.abbreviation : game.awayTeam.abbreviation}
-                                      {homeSpreadValue !== undefined && (
-                                        <span className="ml-1">
-                                          {prediction.predictedWinner === 'home'
-                                            ? `${homeSpreadValue > 0 ? '+' : ''}${homeSpreadValue}`
-                                            : `${(-homeSpreadValue) > 0 ? '+' : ''}${(-homeSpreadValue)}`
-                                          }
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="text-xs text-green-300">
-                                      {prediction.predictedWinner === 'home' ? game.homeTeam.name : game.awayTeam.name} to cover the spread
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="text-xs text-slate-400 text-right">
-                                  Predicted: {prediction.predictedScore.home}-{prediction.predictedScore.away}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Games Grid - Compact */}
+            {/* Games Grid - Compact - Sort high confidence first */}
             <div className="space-y-3">
-              {games.map((game) => {
+              {games
+                .sort((a, b) => {
+                  // Sort by prediction confidence (high confidence games first)
+                  const predA = predictions.get(a.id);
+                  const predB = predictions.get(b.id);
+                  const confA = predA?.confidence || 0;
+                  const confB = predB?.confidence || 0;
+                  return confB - confA; // Descending order
+                })
+                .map((game) => {
                 const movement = movements.get(game.id);
                 const percentages = bettingPercentages.get(game.id);
                 const sharpSignal = sharpSignals.get(game.id);
                 const odds = currentOdds.get(game.id);
                 const isExpanded = selectedGame === game.id;
+                const prediction = predictions.get(game.id);
+                const isHighConfidence = prediction && prediction.confidence >= 75;
 
-                // Extract current spread from odds API
+                // THREE-TIER FALLBACK for spread data:
+                // 1. Try live odds from The Odds API (free, 1 credit)
+                // 2. Use saved spread from prediction (free, already stored)
+                // 3. Fetch historical odds from The Odds API (automatic, 10 credits as last resort)
+
                 const currentSpread = odds?.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'spreads');
-                const homeSpreadValue = currentSpread?.outcomes?.find((o: any) =>
+                const liveSpreadValue = currentSpread?.outcomes?.find((o: any) =>
                   o.name === game.homeTeam.name || o.name.includes(game.homeTeam.abbreviation)
                 )?.point;
+
+                // Tier 1: Live spread (for upcoming/in-progress games)
+                // Tier 2: Saved spread from prediction (for completed games)
+                // Tier 3: Historical spread from cache (auto-fetched as last resort)
+                const homeSpreadValue = liveSpreadValue ?? prediction?.vegasSpread ?? historicalSpreads.get(game.id);
+
+                // Auto-fetch historical spread if needed (completed game with no spread data)
+                if (game.status === 'completed' && !homeSpreadValue && !historicalSpreads.has(game.id) && prediction) {
+                  // Fetch in background, don't block rendering
+                  fetchHistoricalSpread(game.id, game.gameTime).then(historical => {
+                    if (historical !== undefined) {
+                      setHistoricalSpreads(prev => new Map(prev).set(game.id, historical));
+                    }
+                  });
+                }
 
                 // Debug logging for first game
                 if (games.indexOf(game) === 0) {
@@ -390,14 +339,16 @@ export default function GamesPage() {
                 return (
                   <div
                     key={game.id}
-                    className={`bg-slate-800/50 backdrop-blur border rounded-xl overflow-hidden transition-all ${
-                      game.status === 'in_progress'
-                        ? 'border-red-500/50 shadow-lg shadow-red-500/20'
+                    className={`backdrop-blur border rounded-xl overflow-hidden transition-all ${
+                      isHighConfidence
+                        ? 'bg-gradient-to-br from-green-900/40 to-emerald-900/40 border-2 border-green-500/50 shadow-lg shadow-green-500/20'
+                        : game.status === 'in_progress'
+                        ? 'bg-slate-800/50 border-red-500/50 shadow-lg shadow-red-500/20'
                         : game.status === 'completed'
-                        ? 'border-slate-600/30 opacity-70'
+                        ? 'bg-slate-800/50 border-slate-600/30 opacity-70'
                         : sharpSignal && (sharpSignal.confidence === 'very_high' || sharpSignal.confidence === 'high')
-                        ? 'border-green-500/30 shadow-lg shadow-green-500/10'
-                        : 'border-slate-700/50'
+                        ? 'bg-slate-800/50 border-green-500/30 shadow-lg shadow-green-500/10'
+                        : 'bg-slate-800/50 border-slate-700/50'
                     }`}
                   >
                     {/* Game Header - Compact */}
@@ -472,6 +423,13 @@ export default function GamesPage() {
                       {/* Game Info Row - Compact */}
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-3 text-slate-400">
+                          {/* High Confidence Badge */}
+                          {isHighConfidence && (
+                            <div className="flex items-center gap-1 bg-green-600/30 border border-green-500/50 text-green-400 px-2 py-1 rounded-full">
+                              <Flame className="w-3 h-3" />
+                              <span className="font-semibold">HOT PICK - {prediction.confidence}%</span>
+                            </div>
+                          )}
                           {/* Game Status Badge */}
                           {game.status === 'in_progress' && (
                             <div className="flex items-center gap-1 bg-red-600/20 border border-red-500/50 text-red-400 px-2 py-1 rounded-full animate-pulse">
@@ -504,6 +462,162 @@ export default function GamesPage() {
                           <ArrowRight className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
                         </div>
                       </div>
+
+                      {/* Prediction Details for Upcoming/Live Games */}
+                      {prediction && game.status !== 'completed' && homeSpreadValue !== undefined && (
+                        <div className={`mt-3 pt-3 ${isHighConfidence ? 'border-t border-green-500/30' : 'border-t border-slate-700'}`}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className={`px-2 py-0.5 ${isHighConfidence ? 'bg-green-600' : 'bg-blue-600'} text-white text-xs font-bold rounded`}>
+                                  OUR PICK
+                                </div>
+                              </div>
+                              <div className={`text-lg font-black mb-1 ${isHighConfidence ? 'text-green-400' : 'text-blue-400'}`}>
+                                {prediction.predictedWinner === 'home' ? game.homeTeam.abbreviation : game.awayTeam.abbreviation}
+                                {' '}
+                                {prediction.predictedWinner === 'home'
+                                  ? `${homeSpreadValue > 0 ? '+' : ''}${homeSpreadValue}`
+                                  : `${(-homeSpreadValue) > 0 ? '+' : ''}${(-homeSpreadValue)}`
+                                }
+                              </div>
+                              <div className="text-xs text-slate-400">
+                                {prediction.predictedWinner === 'home' ? game.homeTeam.name : game.awayTeam.name} to cover
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xs text-slate-500 mb-1">Our Forecast</div>
+                              <div className="text-base font-bold text-white">
+                                {game.awayTeam.abbreviation} {prediction.predictedScore.away} - {game.homeTeam.abbreviation} {prediction.predictedScore.home}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Bet Result for Completed Games - Show prediction vs actual */}
+                      {prediction && game.status === 'completed' && (
+                        (() => {
+                          const pickedTeam = prediction.predictedWinner === 'home' ? game.homeTeam : game.awayTeam;
+                          const actualMargin = (game.homeScore || 0) - (game.awayScore || 0);
+
+                          // Check if we have spread data
+                          if (homeSpreadValue !== undefined) {
+                            // Full spread-based win/loss calculation
+                            const pickedSpread = prediction.predictedWinner === 'home' ? homeSpreadValue : -homeSpreadValue;
+                            const homeScoreWithSpread = (game.homeScore || 0) + homeSpreadValue;
+                            const awayScore = game.awayScore || 0;
+
+                            let won = false;
+                            if (prediction.predictedWinner === 'home') {
+                              won = homeScoreWithSpread > awayScore;
+                            } else {
+                              won = awayScore > homeScoreWithSpread;
+                            }
+
+                            // Calculate delta (how much we won/lost by)
+                            const delta = prediction.predictedWinner === 'home'
+                              ? homeScoreWithSpread - awayScore
+                              : awayScore - homeScoreWithSpread;
+
+                            return (
+                              <div className="mt-3 pt-3 border-t border-slate-700 -mx-4 px-4 pb-3">
+                                {/* Clean, minimal result card */}
+                                <div className="bg-slate-800/20 rounded-lg p-4 space-y-3">
+                                  {/* Header row */}
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="text-xs text-slate-500 uppercase tracking-wider">Our Pick</div>
+                                      <div className="text-lg font-bold text-white">
+                                        {pickedTeam.abbreviation} {pickedSpread > 0 ? '+' : ''}{pickedSpread}
+                                      </div>
+                                      {isHighConfidence && (
+                                        <div className="text-xs text-slate-600">({prediction.confidence}% conf)</div>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 px-3 py-1 rounded bg-slate-700/40">
+                                      {won ? <Trophy className="w-3.5 h-3.5 text-slate-400" /> : <AlertTriangle className="w-3.5 h-3.5 text-slate-400" />}
+                                      <span className="text-sm font-semibold text-slate-300">{won ? 'WON' : 'LOST'}</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Game details */}
+                                  <div className="space-y-1.5 text-sm">
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-slate-500">Final:</span>
+                                      <span className="font-mono text-slate-300">
+                                        {game.awayTeam.abbreviation} {game.awayScore} - {game.homeTeam.abbreviation} {game.homeScore}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-slate-500">Result:</span>
+                                      <span className="font-semibold text-slate-300">
+                                        {won ? 'Covered' : 'Missed'} by {Math.abs(delta).toFixed(1)} {Math.abs(delta) < 3 && <span className="text-slate-500">· Close call</span>}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          } else {
+                            // No spread data - show basic prediction vs outcome
+                            const didPickedTeamWin = (prediction.predictedWinner === 'home' && actualMargin > 0) ||
+                                                     (prediction.predictedWinner === 'away' && actualMargin < 0);
+
+                            return (
+                              <div className={`mt-3 pt-3 border-t-2 ${didPickedTeamWin ? 'border-blue-500' : 'border-slate-600'} bg-slate-900/30 -mx-4 px-4 pb-3`}>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className="px-2 py-0.5 bg-slate-700 text-white text-xs font-bold rounded">
+                                        OUR PICK
+                                      </div>
+                                      {isHighConfidence && (
+                                        <div className="px-2 py-0.5 bg-green-600/30 text-green-400 text-xs font-bold rounded">
+                                          {prediction.confidence}% CONFIDENCE
+                                        </div>
+                                      )}
+                                      <div className="px-2 py-0.5 bg-yellow-600/30 text-yellow-400 text-xs rounded">
+                                        Fetching spread data...
+                                      </div>
+                                    </div>
+                                    <div className="text-lg font-black text-white mb-1">
+                                      {pickedTeam.name}
+                                    </div>
+                                    <div className="text-xs text-slate-400 mb-1">
+                                      Final: {game.awayTeam.abbreviation} {game.awayScore} @ {game.homeTeam.abbreviation} {game.homeScore}
+                                    </div>
+                                    <div className="text-xs text-slate-500">
+                                      Our forecast: {game.awayTeam.abbreviation} {prediction.predictedScore.away} - {game.homeTeam.abbreviation} {prediction.predictedScore.home}
+                                    </div>
+                                  </div>
+                                  <div className={`flex items-center gap-3 px-5 py-3 rounded-xl ${
+                                    didPickedTeamWin ? 'bg-blue-600 border-2 border-blue-400' : 'bg-slate-700 border-2 border-slate-500'
+                                  }`}>
+                                    {didPickedTeamWin ? (
+                                      <>
+                                        <Trophy className="w-8 h-8 text-white" />
+                                        <div>
+                                          <div className="text-2xl font-black text-white">WON</div>
+                                          <div className="text-xs text-blue-100">Straight Up</div>
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <AlertTriangle className="w-8 h-8 text-white" />
+                                        <div>
+                                          <div className="text-2xl font-black text-white">LOST</div>
+                                          <div className="text-xs text-slate-300">Straight Up</div>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+                        })()
+                      )}
                     </div>
 
                     {/* Expanded Details */}

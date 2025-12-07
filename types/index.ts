@@ -102,6 +102,7 @@ export interface GamePrediction {
     total: number;
   };
   recommendation: 'strong_bet' | 'value_bet' | 'avoid' | 'wait';
+  vegasSpread?: number; // home team spread (saved at prediction time for historical reference)
 }
 
 export interface PredictionFactor {

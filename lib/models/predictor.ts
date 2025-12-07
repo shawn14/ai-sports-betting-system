@@ -103,6 +103,11 @@ export class GamePredictor {
       ? this.calculateEdge(homeScore, awayScore, bettingLines[0])
       : { spread: 0, moneyline: 0, total: 0 };
 
+    // Save Vegas spread for historical reference (home team spread)
+    const vegasSpread = bettingLines && bettingLines.length > 0
+      ? bettingLines[0].spread.home
+      : undefined;
+
     // Recommendation
     const recommendation = this.getRecommendation(confidence, edgeAnalysis);
 
@@ -118,6 +123,7 @@ export class GamePredictor {
       factors,
       edgeAnalysis,
       recommendation,
+      vegasSpread, // Save the spread at prediction time
     };
   }
 

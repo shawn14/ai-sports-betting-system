@@ -24,9 +24,17 @@ export class OddsAPI {
    * Get current NFL odds from multiple sportsbooks
    */
   static async getNFLOdds(regions: string = 'us', markets: string = 'h2h,spreads,totals') {
-    // Use our API proxy to avoid CORS issues
+    // Call The Odds API directly (works server-side and client-side)
     try {
-      const response = await axios.get('/api/odds');
+      const response = await axios.get(`${ODDS_API_BASE}/sports/americanfootball_nfl/odds`, {
+        params: {
+          apiKey: API_KEY,
+          regions,
+          markets,
+          oddsFormat: 'american',
+          dateFormat: 'iso',
+        },
+      });
       return response.data;
     } catch (error) {
       console.error('Odds API Error:', error);

@@ -47,21 +47,25 @@ export default function AnalyticsPage() {
           try {
             // For historical games, we'd need stored lines
             // For now, create a mock line based on typical spreads
-            // TODO: Integrate with historical odds API or database
-            const spread = game.homeScore && game.awayScore
-              ? (game.homeScore - game.awayScore) * 0.75 // Rough approximation
+            // Approximate the Vegas line as 75% of the actual margin (with some noise)
+            const actualMargin = game.homeScore && game.awayScore
+              ? game.homeScore - game.awayScore
               : 0;
+
+            // Vegas spread (home perspective): negative = home favored
+            // e.g., if home won by 10, Vegas line might have been -7.5
+            const vegasSpread = actualMargin * 0.75;
 
             bettingLines = {
               bookmaker: 'Closing Line',
               timestamp: game.gameTime,
               spread: {
-                home: -Math.abs(spread),
-                away: Math.abs(spread),
+                home: vegasSpread,  // Can be positive or negative
+                away: -vegasSpread, // Opposite sign
               },
               moneyline: {
-                home: spread > 0 ? -150 : 150,
-                away: spread > 0 ? 150 : -150,
+                home: vegasSpread < 0 ? -150 : 150,  // Negative spread = home favored
+                away: vegasSpread < 0 ? 150 : -150,
               },
               total: {
                 line: game.homeScore && game.awayScore
@@ -86,12 +90,25 @@ export default function AnalyticsPage() {
 
           // Calculate result WITH betting lines
           const result = PredictionAnalytics.calculateResult(game, prediction, bettingLines);
+
+          // Debug logging
+          if (results.length === 0) {
+            console.log('First game result:', {
+              gameId: result.gameId,
+              hasProfitLoss: !!result.profitLoss,
+              profitLoss: result.profitLoss,
+              spreadCovered: result.outcomes.spreadCovered,
+              bettingLines: bettingLines
+            });
+          }
+
           results.push(result);
           analytics.addResult(result);
         }
       }
 
       console.log(`Loaded ${results.length} total completed games`);
+      console.log('Sample profitLoss values:', results.slice(0, 3).map(r => r.profitLoss));
       setRecentResults(results.slice(-10).reverse());
       setPerformance(analytics.getPerformance());
     } catch (error) {
@@ -339,13 +356,13 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
                 <div className="bg-slate-900 rounded-lg p-4">
-                  <div className="text-slate-400 text-sm mb-1">Total Bets</div>
+                  <div className="text-slate-400 text-sm mb-1">Over/Under Bets</div>
                   <div className={`text-3xl font-bold ${getProfitColor(performance.profitability.totalProfit)}`}>
                     ${performance.profitability.totalProfit > 0 ? '+' : ''}
                     {performance.profitability.totalProfit.toFixed(0)}
                   </div>
                   <div className="text-slate-500 text-xs mt-1">
-                    {performance.totalPredictions.overs + performance.totalPredictions.unders} total
+                    {performance.totalPredictions.overs}O - {performance.totalPredictions.unders}U
                   </div>
                 </div>
               </div>

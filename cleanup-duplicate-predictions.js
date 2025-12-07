@@ -52,13 +52,21 @@ async function cleanupDuplicates() {
     let deletedCount = 0;
     let keptCount = 0;
 
-    // For each game, keep only the most recent prediction
+    // For each game, keep only the prediction with gameId as document ID (no timestamp)
     for (const [gameId, predictions] of byGameId) {
-      // Sort by timestamp (newest first)
-      predictions.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+      // Find the one with just gameId as document ID (new format)
+      const newFormat = predictions.find(p => p.id === gameId);
+      const duplicates = predictions.filter(p => p.id !== gameId);
 
-      const mostRecent = predictions[0];
-      const duplicates = predictions.slice(1);
+      if (!newFormat) {
+        // If no new format, keep the most recent
+        predictions.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+        const mostRecent = predictions[0];
+        const duplicates = predictions.slice(1);
+        continue;
+      }
+
+      const mostRecent = newFormat;
 
       console.log(`Game ${gameId}:`);
       console.log(`  ✅ KEEPING: ${mostRecent.id} (${mostRecent.data.confidence}% confidence, ${mostRecent.timestamp.toISOString()})`);

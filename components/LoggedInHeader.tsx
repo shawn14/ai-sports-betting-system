@@ -39,12 +39,6 @@ export default function LoggedInHeader() {
               Games
             </Link>
             <Link
-              href="/chat-predict"
-              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
-            >
-              Chat
-            </Link>
-            <Link
               href="/predictions"
               className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
             >

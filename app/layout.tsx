@@ -85,7 +85,9 @@ export default function RootLayout({
         <link rel="canonical" href="https://predictionmatrix.com" />
       </head>
       <body className={inter.className}>
-        {children}
+        <div className="pb-24">
+          {children}
+        </div>
         <GlobalChat />
       </body>
     </html>

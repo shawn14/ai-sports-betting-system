@@ -1,23 +1,18 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { Send, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Message {
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant';
   content: string;
 }
 
 export default function GlobalChat() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: 'system',
-      content: "Hi! I'm your AI betting assistant. Ask me anything about NFL predictions, team stats, or betting strategies!"
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -35,6 +30,11 @@ export default function GlobalChat() {
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setLoading(true);
+
+    // Expand messages when user sends first message
+    if (messages.length === 0) {
+      setIsExpanded(true);
+    }
 
     try {
       // TODO: Implement actual API call to your prediction/data API
@@ -63,49 +63,20 @@ export default function GlobalChat() {
   };
 
   return (
-    <>
-      {/* Chat Toggle Button - Fixed bottom right */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-4 shadow-lg transition-all hover:scale-110"
-          aria-label="Open chat"
-        >
-          <MessageCircle className="w-6 h-6" />
-        </button>
-      )}
-
-      {/* Chat Window */}
-      {isOpen && (
-        <div className="fixed bottom-6 right-6 z-50 w-96 h-[600px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col">
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-blue-600 rounded-t-lg">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="w-5 h-5 text-white" />
-              <h3 className="font-semibold text-white">AI Assistant</h3>
-            </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-white hover:text-gray-200 transition"
-              aria-label="Close chat"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-300 shadow-lg">
+      {/* Messages Area (Expandable) */}
+      {isExpanded && messages.length > 0 && (
+        <div className="max-w-7xl mx-auto px-4 py-4 max-h-96 overflow-y-auto">
+          <div className="space-y-3">
             {messages.map((msg, idx) => (
               <div
                 key={idx}
                 className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                  className={`max-w-[70%] rounded-lg px-4 py-2 ${
                     msg.role === 'user'
                       ? 'bg-blue-600 text-white'
-                      : msg.role === 'system'
-                      ? 'bg-gray-100 text-gray-700 text-sm'
                       : 'bg-gray-100 text-gray-900'
                   }`}
                 >
@@ -126,30 +97,45 @@ export default function GlobalChat() {
             )}
             <div ref={messagesEndRef} />
           </div>
-
-          {/* Input */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask me anything..."
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-                disabled={loading}
-              />
-              <button
-                onClick={handleSend}
-                disabled={loading || !input.trim()}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition"
-              >
-                <Send className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
         </div>
       )}
-    </>
+
+      {/* Input Bar */}
+      <div className="max-w-7xl mx-auto px-4 py-3">
+        <div className="flex items-center gap-3">
+          {/* Expand/Collapse Button */}
+          {messages.length > 0 && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition"
+              aria-label={isExpanded ? "Collapse messages" : "Expand messages"}
+            >
+              {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+            </button>
+          )}
+
+          {/* Input Field */}
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Ask me anything about NFL predictions, team stats, betting strategies..."
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+            disabled={loading}
+          />
+
+          {/* Send Button */}
+          <button
+            onClick={handleSend}
+            disabled={loading || !input.trim()}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded-lg transition flex items-center gap-2"
+          >
+            <Send className="w-5 h-5" />
+            <span className="hidden sm:inline">Send</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

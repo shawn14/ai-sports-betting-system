@@ -45,6 +45,12 @@ export default function LoggedInHeader() {
               Predictions
             </Link>
             <Link
+              href="/history"
+              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
+            >
+              History
+            </Link>
+            <Link
               href="/analytics"
               className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
             >

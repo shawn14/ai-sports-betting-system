@@ -52,7 +52,29 @@ async function getESPNOdds() {
 }
 
 export async function GET(request: NextRequest) {
-  // Try ESPN first (free, no API key needed)
+  // Try The Odds API FIRST (paid, has historical data)
+  if (API_KEY) {
+    try {
+      console.log('Fetching odds from The Odds API (paid)...');
+      const response = await axios.get(`${ODDS_API_BASE}/sports/americanfootball_nfl/odds`, {
+        params: {
+          apiKey: API_KEY,
+          regions: 'us',
+          markets: 'h2h,spreads,totals',
+          oddsFormat: 'american',
+          dateFormat: 'iso',
+        },
+      });
+
+      console.log(`✅ Got ${response.data.length} games from The Odds API`);
+      return NextResponse.json(response.data);
+    } catch (error: any) {
+      console.error('The Odds API Error:', error.response?.data || error.message);
+      console.log('⚠️ The Odds API failed, falling back to ESPN...');
+    }
+  }
+
+  // Fall back to ESPN (free, but only has upcoming games)
   console.log('Fetching odds from ESPN...');
   const espnOdds = await getESPNOdds();
 
@@ -61,26 +83,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(espnOdds);
   }
 
-  // Fall back to The Odds API if ESPN fails
-  try {
-    console.log('ESPN failed, trying The Odds API...');
-    const response = await axios.get(`${ODDS_API_BASE}/sports/americanfootball_nfl/odds`, {
-      params: {
-        apiKey: API_KEY,
-        regions: 'us',
-        markets: 'h2h,spreads,totals',
-        oddsFormat: 'american',
-        dateFormat: 'iso',
-      },
-    });
-
-    console.log(`✅ Got ${response.data.length} games from The Odds API`);
-    return NextResponse.json(response.data);
-  } catch (error: any) {
-    console.error('The Odds API Error:', error.response?.data || error.message);
-
-    // Return empty array if both APIs fail - NO MOCK DATA
-    console.log('❌ Both APIs failed - returning empty array (no odds available)');
-    return NextResponse.json([]);
-  }
+  // Return empty array if both APIs fail
+  console.log('❌ Both APIs failed - returning empty array (no odds available)');
+  return NextResponse.json([]);
 }

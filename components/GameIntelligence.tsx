@@ -105,24 +105,24 @@ export default function GameIntelligence({ homeTeam, awayTeam, gameDate, locatio
       <button
         onClick={fetchIntelligence}
         disabled={loading}
-        className="w-full bg-gradient-to-r from-indigo-900/40 to-indigo-800/40 hover:from-indigo-900/60 hover:to-indigo-800/60 border border-indigo-700/50 rounded-lg p-3 transition disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full bg-blue-600 hover:bg-blue-700 border border-blue-600 rounded p-3 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             {loading ? (
-              <Loader2 className="w-5 h-5 text-indigo-300 animate-spin" />
+              <Loader2 className="w-5 h-5 text-white animate-spin" />
             ) : (
-              <Brain className="w-5 h-5 text-indigo-300" />
+              <Brain className="w-5 h-5 text-white" />
             )}
-            <span className="text-indigo-300 font-semibold">
+            <span className="text-white font-semibold text-sm">
               {loading ? 'Gathering Intelligence...' : intelligence ? (expanded ? 'Hide Intelligence' : 'Show Intelligence') : 'Get Pre-Game Intelligence'}
             </span>
           </div>
           {intelligence && intelligence.overall.confidenceAdjustment !== 0 && (
             <span className={`text-xs font-bold px-2 py-1 rounded ${
               intelligence.overall.confidenceAdjustment > 0
-                ? 'bg-green-900/50 text-green-300'
-                : 'bg-red-900/50 text-red-300'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
             }`}>
               {intelligence.overall.confidenceAdjustment > 0 ? '+' : ''}{intelligence.overall.confidenceAdjustment}% Confidence
             </span>
@@ -131,7 +131,7 @@ export default function GameIntelligence({ homeTeam, awayTeam, gameDate, locatio
       </button>
 
       {error && (
-        <div className="mt-2 bg-red-900/20 border border-red-700 rounded-lg p-3 text-red-300 text-sm">
+        <div className="mt-2 bg-red-50 border border-red-200 rounded p-3 text-red-700 text-sm">
           {error}
         </div>
       )}
@@ -139,23 +139,23 @@ export default function GameIntelligence({ homeTeam, awayTeam, gameDate, locatio
       {intelligence && expanded && (
         <div className="mt-3 space-y-3">
           {/* Injuries */}
-          <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+          <div className="bg-white rounded border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
-                <Activity className="w-5 h-5 text-red-400" />
-                <h4 className="font-semibold text-white">Injury Report</h4>
+                <Activity className="w-5 h-5 text-red-600" />
+                <h4 className="font-semibold text-gray-900">Injury Report</h4>
               </div>
               <div className={`flex items-center space-x-1 ${getImpactColor(intelligence.injuries.impact)}`}>
                 {getImpactIcon(intelligence.injuries.impact)}
                 <span className="text-xs font-semibold uppercase">{intelligence.injuries.impact} Impact</span>
               </div>
             </div>
-            <p className="text-slate-300 text-sm mb-2">{intelligence.injuries.summary}</p>
+            <p className="text-gray-700 text-sm mb-2">{intelligence.injuries.summary}</p>
             {intelligence.injuries.keyInjuries.length > 0 && (
               <ul className="space-y-1">
                 {intelligence.injuries.keyInjuries.map((injury, idx) => (
-                  <li key={idx} className="text-xs text-slate-400 flex items-start">
-                    <span className="text-red-400 mr-2">•</span>
+                  <li key={idx} className="text-xs text-gray-600 flex items-start">
+                    <span className="text-red-600 mr-2">•</span>
                     <span>{injury}</span>
                   </li>
                 ))}
@@ -164,39 +164,39 @@ export default function GameIntelligence({ homeTeam, awayTeam, gameDate, locatio
           </div>
 
           {/* Weather */}
-          <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+          <div className="bg-white rounded border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
-                <CloudRain className="w-5 h-5 text-blue-400" />
-                <h4 className="font-semibold text-white">Weather Conditions</h4>
+                <CloudRain className="w-5 h-5 text-blue-600" />
+                <h4 className="font-semibold text-gray-900">Weather Conditions</h4>
               </div>
               <div className={`flex items-center space-x-1 ${getImpactColor(intelligence.weather.impact)}`}>
                 {getImpactIcon(intelligence.weather.impact)}
                 <span className="text-xs font-semibold uppercase">{intelligence.weather.impact} Impact</span>
               </div>
             </div>
-            <p className="text-slate-300 text-sm mb-1">{intelligence.weather.summary}</p>
-            <p className="text-slate-400 text-xs">{intelligence.weather.conditions}</p>
+            <p className="text-gray-700 text-sm mb-1">{intelligence.weather.summary}</p>
+            <p className="text-gray-600 text-xs">{intelligence.weather.conditions}</p>
           </div>
 
           {/* News */}
-          <div className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+          <div className="bg-white rounded border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center space-x-2">
-                <Newspaper className="w-5 h-5 text-purple-400" />
-                <h4 className="font-semibold text-white">News & Storylines</h4>
+                <Newspaper className="w-5 h-5 text-purple-600" />
+                <h4 className="font-semibold text-gray-900">News & Storylines</h4>
               </div>
               <div className={`flex items-center space-x-1 ${getImpactColor(intelligence.news.impact)}`}>
                 {getImpactIcon(intelligence.news.impact)}
                 <span className="text-xs font-semibold uppercase">{intelligence.news.impact} Impact</span>
               </div>
             </div>
-            <p className="text-slate-300 text-sm mb-2">{intelligence.news.summary}</p>
+            <p className="text-gray-700 text-sm mb-2">{intelligence.news.summary}</p>
             {intelligence.news.keyStorylines.length > 0 && (
               <ul className="space-y-1">
                 {intelligence.news.keyStorylines.map((storyline, idx) => (
-                  <li key={idx} className="text-xs text-slate-400 flex items-start">
-                    <span className="text-purple-400 mr-2">•</span>
+                  <li key={idx} className="text-xs text-gray-600 flex items-start">
+                    <span className="text-purple-600 mr-2">•</span>
                     <span>{storyline}</span>
                   </li>
                 ))}

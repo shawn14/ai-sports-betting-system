@@ -27,6 +27,7 @@ export default function ChatPredictPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const hasLoadedGame = useRef(false);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -41,7 +42,8 @@ export default function ChatPredictPage() {
     const params = new URLSearchParams(window.location.search);
     const gameId = params.get('game');
 
-    if (gameId && messages.length === 1) { // Only run once on initial load
+    if (gameId && !hasLoadedGame.current) {
+      hasLoadedGame.current = true;
       loadGamePrediction(gameId);
     }
   }, []);

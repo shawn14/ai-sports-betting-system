@@ -376,25 +376,25 @@ export default function ChatPredictPage() {
                       const isCorrect = actualWinner ? predictedWinner === actualWinner : null;
 
                       return (
-                        <div key={i} className="bg-slate-900/50 rounded-lg p-4 border border-slate-700">
+                        <div key={i} className="bg-white rounded border border-gray-200 p-4">
                           <div className="flex justify-between items-start mb-3">
                             <div>
-                              <h3 className="font-bold text-lg">
+                              <h3 className="font-bold text-lg text-gray-900">
                                 {pred.awayTeam} @ {pred.homeTeam}
                               </h3>
-                              <p className="text-sm text-slate-400">Confidence: {pred.confidence}%</p>
+                              <p className="text-sm text-gray-600">Confidence: {pred.confidence}%</p>
                             </div>
                             {isCorrect !== null && (
                               <div className="flex items-center gap-2">
                                 {isCorrect ? (
                                   <>
-                                    <CheckCircle className="w-5 h-5 text-green-400" />
-                                    <span className="text-green-400 font-semibold">CORRECT</span>
+                                    <CheckCircle className="w-5 h-5 text-green-600" />
+                                    <span className="text-green-600 font-semibold">CORRECT</span>
                                   </>
                                 ) : (
                                   <>
-                                    <XCircle className="w-5 h-5 text-red-400" />
-                                    <span className="text-red-400 font-semibold">INCORRECT</span>
+                                    <XCircle className="w-5 h-5 text-red-600" />
+                                    <span className="text-red-600 font-semibold">INCORRECT</span>
                                   </>
                                 )}
                               </div>
@@ -404,44 +404,44 @@ export default function ChatPredictPage() {
                           {/* Three Bet Types */}
                           <div className="space-y-3 mb-4">
                             {/* 1. MONEYLINE (Winner) */}
-                            <div className="bg-gradient-to-r from-blue-900/40 to-blue-800/40 rounded-lg p-4 border border-blue-700/50">
+                            <div className="bg-blue-50 rounded border border-blue-200 p-4">
                               <div className="flex justify-between items-start mb-2">
                                 <div>
-                                  <div className="text-sm font-semibold text-blue-300">🎯 MONEYLINE (Winner)</div>
-                                  <div className="text-2xl font-bold text-white mt-1">
+                                  <div className="text-sm font-semibold text-blue-700">🎯 MONEYLINE (Winner)</div>
+                                  <div className="text-2xl font-bold text-gray-900 mt-1">
                                     {pred.predictedScore.home > pred.predictedScore.away ? pred.homeTeam : pred.awayTeam}
                                   </div>
-                                  <div className="text-xs text-slate-400 mt-1">
+                                  <div className="text-xs text-gray-600 mt-1">
                                     Predicted: {pred.predictedScore.away}-{pred.predictedScore.home} | Confidence: {pred.confidence}%
                                   </div>
                                 </div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                  pred.confidence >= 70 ? 'bg-green-900/50 text-green-300' :
-                                  pred.confidence >= 65 ? 'bg-blue-900/50 text-blue-300' :
-                                  pred.confidence >= 55 ? 'bg-yellow-900/50 text-yellow-300' :
-                                  'bg-slate-700 text-slate-400'
+                                <span className={`px-3 py-1 rounded text-xs font-bold ${
+                                  pred.confidence >= 70 ? 'bg-green-100 text-green-700' :
+                                  pred.confidence >= 65 ? 'bg-blue-100 text-blue-700' :
+                                  pred.confidence >= 55 ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-gray-100 text-gray-600'
                                 }`}>
-                                  {pred.confidence >= 70 ? 'STRONG BET' :
+                                  {pred.confidence >= 70 ? 'GOOD BET' :
                                    pred.confidence >= 65 ? 'GOOD BET' :
                                    pred.confidence >= 55 ? 'SLIGHT EDGE' : 'AVOID'}
                                 </span>
                               </div>
                               {actual && (
-                                <div className="text-xs text-slate-300 mt-2 pt-2 border-t border-blue-700/30">
+                                <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-blue-200">
                                   Actual Winner: {actual.homeScore > actual.awayScore ? pred.homeTeam : pred.awayTeam} ({actual.awayScore}-{actual.homeScore})
                                 </div>
                               )}
                             </div>
 
                             {/* 2. SPREAD */}
-                            <div className="bg-gradient-to-r from-purple-900/40 to-purple-800/40 rounded-lg p-4 border border-purple-700/50">
+                            <div className="bg-purple-50 rounded border border-purple-200 p-4">
                               <div className="flex justify-between items-start mb-2">
                                 <div>
-                                  <div className="text-sm font-semibold text-purple-300">📏 SPREAD</div>
-                                  <div className="text-2xl font-bold text-white mt-1">
+                                  <div className="text-sm font-semibold text-purple-700">📏 SPREAD</div>
+                                  <div className="text-2xl font-bold text-gray-900 mt-1">
                                     {pred.homeTeam} {pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}
                                   </div>
-                                  <div className="text-xs text-slate-400 mt-1">
+                                  <div className="text-xs text-gray-600 mt-1">
                                     {pred.predictedSpread > 0
                                       ? `${pred.homeTeam} +${pred.predictedSpread.toFixed(1)} (underdog)`
                                       : `${pred.homeTeam} ${pred.predictedSpread.toFixed(1)} (favorite)`
@@ -449,10 +449,10 @@ export default function ChatPredictPage() {
                                   </div>
                                 </div>
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                  Math.abs(pred.predictedSpread) >= 7 && pred.confidence >= 70 ? 'bg-green-900/50 text-green-300' :
-                                  Math.abs(pred.predictedSpread) >= 4 && pred.confidence >= 65 ? 'bg-blue-900/50 text-blue-300' :
-                                  Math.abs(pred.predictedSpread) >= 3 && pred.confidence >= 55 ? 'bg-yellow-900/50 text-yellow-300' :
-                                  'bg-slate-700 text-slate-400'
+                                  Math.abs(pred.predictedSpread) >= 7 && pred.confidence >= 70 ? 'bg-green-100 text-green-700' :
+                                  Math.abs(pred.predictedSpread) >= 4 && pred.confidence >= 65 ? 'bg-blue-100 text-blue-700' :
+                                  Math.abs(pred.predictedSpread) >= 3 && pred.confidence >= 55 ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-gray-100 text-gray-600'
                                 }`}>
                                   {Math.abs(pred.predictedSpread) >= 7 && pred.confidence >= 70 ? 'STRONG BET' :
                                    Math.abs(pred.predictedSpread) >= 4 && pred.confidence >= 65 ? 'GOOD BET' :
@@ -460,7 +460,7 @@ export default function ChatPredictPage() {
                                 </span>
                               </div>
                               {actual && (
-                                <div className="text-xs text-slate-300 mt-2 pt-2 border-t border-purple-700/30">
+                                <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-purple-200">
                                   Actual Spread: {pred.homeTeam} {(actual.homeScore - actual.awayScore) > 0 ? '+' : ''}{(actual.homeScore - actual.awayScore).toFixed(1)} |
                                   Error: ±{Math.abs(pred.predictedSpread - (actual.homeScore - actual.awayScore)).toFixed(1)} pts
                                 </div>
@@ -468,22 +468,22 @@ export default function ChatPredictPage() {
                             </div>
 
                             {/* 3. TOTAL (Over/Under) */}
-                            <div className="bg-gradient-to-r from-orange-900/40 to-orange-800/40 rounded-lg p-4 border border-orange-700/50">
+                            <div className="bg-orange-50 rounded border border-orange-200 p-4">
                               <div className="flex justify-between items-start mb-2">
                                 <div>
-                                  <div className="text-sm font-semibold text-orange-300">📊 TOTAL (Over/Under)</div>
-                                  <div className="text-2xl font-bold text-white mt-1">
+                                  <div className="text-sm font-semibold text-orange-700">📊 TOTAL (Over/Under)</div>
+                                  <div className="text-2xl font-bold text-gray-900 mt-1">
                                     {pred.predictedTotal.toFixed(1)} points
                                   </div>
-                                  <div className="text-xs text-slate-400 mt-1">
+                                  <div className="text-xs text-gray-600 mt-1">
                                     Projected: {pred.awayTeam} {pred.predictedScore.away} + {pred.homeTeam} {pred.predictedScore.home}
                                   </div>
                                 </div>
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                  pred.confidence >= 70 ? 'bg-green-900/50 text-green-300' :
-                                  pred.confidence >= 65 ? 'bg-blue-900/50 text-blue-300' :
-                                  pred.confidence >= 55 ? 'bg-yellow-900/50 text-yellow-300' :
-                                  'bg-slate-700 text-slate-400'
+                                  pred.confidence >= 70 ? 'bg-green-100 text-green-700' :
+                                  pred.confidence >= 65 ? 'bg-blue-100 text-blue-700' :
+                                  pred.confidence >= 55 ? 'bg-yellow-100 text-yellow-700' :
+                                  'bg-gray-100 text-gray-600'
                                 }`}>
                                   {pred.confidence >= 70 ? 'STRONG BET' :
                                    pred.confidence >= 65 ? 'GOOD BET' :
@@ -491,7 +491,7 @@ export default function ChatPredictPage() {
                                 </span>
                               </div>
                               {actual && (
-                                <div className="text-xs text-slate-300 mt-2 pt-2 border-t border-orange-700/30">
+                                <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-orange-200">
                                   Actual Total: {(actual.homeScore + actual.awayScore).toFixed(1)} points |
                                   Error: ±{Math.abs(pred.predictedTotal - (actual.homeScore + actual.awayScore)).toFixed(1)} pts
                                 </div>
@@ -501,48 +501,48 @@ export default function ChatPredictPage() {
 
                           {/* Prediction Accuracy Summary (for completed games) */}
                           {actual && (
-                            <div className="mt-4 bg-slate-900/70 rounded-lg p-4 border border-slate-700">
-                              <h4 className="font-bold text-sm mb-3 text-white">📊 Prediction Results</h4>
+                            <div className="mt-4 bg-white rounded border border-gray-200 p-4">
+                              <h4 className="font-bold text-sm mb-3 text-gray-900">📊 Prediction Results</h4>
                               <div className="grid grid-cols-3 gap-3 text-sm">
                                 {/* Moneyline Result */}
-                                <div className={`p-3 rounded ${
-                                  isCorrect ? 'bg-green-900/30 border border-green-700' : 'bg-red-900/30 border border-red-700'
+                                <div className={`p-3 rounded border ${
+                                  isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
                                 }`}>
-                                  <div className="text-xs text-slate-400 mb-1">MONEYLINE</div>
-                                  <div className={`font-bold ${isCorrect ? 'text-green-400' : 'text-red-400'}`}>
+                                  <div className="text-xs text-gray-600 mb-1">MONEYLINE</div>
+                                  <div className={`font-bold ${isCorrect ? 'text-green-700' : 'text-red-700'}`}>
                                     {isCorrect ? '✓ CORRECT' : '✗ WRONG'}
                                   </div>
-                                  <div className="text-xs text-slate-400 mt-1">
+                                  <div className="text-xs text-gray-600 mt-1">
                                     Predicted: {predictedWinner === 'home' ? pred.homeTeam : pred.awayTeam}
                                   </div>
                                 </div>
 
                                 {/* Spread Result */}
-                                <div className="p-3 rounded bg-purple-900/30 border border-purple-700">
-                                  <div className="text-xs text-slate-400 mb-1">SPREAD</div>
+                                <div className="p-3 rounded bg-purple-50 border border-purple-200">
+                                  <div className="text-xs text-gray-600 mb-1">SPREAD</div>
                                   <div className={`font-bold ${
-                                    Math.abs(pred.predictedSpread - (actual.homeScore - actual.awayScore)) <= 3 ? 'text-green-400' :
-                                    Math.abs(pred.predictedSpread - (actual.homeScore - actual.awayScore)) <= 7 ? 'text-yellow-400' : 'text-red-400'
+                                    Math.abs(pred.predictedSpread - (actual.homeScore - actual.awayScore)) <= 3 ? 'text-green-700' :
+                                    Math.abs(pred.predictedSpread - (actual.homeScore - actual.awayScore)) <= 7 ? 'text-yellow-700' : 'text-red-700'
                                   }`}>
                                     {Math.abs(pred.predictedSpread - (actual.homeScore - actual.awayScore)) <= 3 ? '✓ EXCELLENT' :
                                      Math.abs(pred.predictedSpread - (actual.homeScore - actual.awayScore)) <= 7 ? '△ GOOD' : '✗ MISS'}
                                   </div>
-                                  <div className="text-xs text-slate-400 mt-1">
+                                  <div className="text-xs text-gray-600 mt-1">
                                     Error: ±{Math.abs(pred.predictedSpread - (actual.homeScore - actual.awayScore)).toFixed(1)} pts
                                   </div>
                                 </div>
 
                                 {/* Total Result */}
-                                <div className="p-3 rounded bg-orange-900/30 border border-orange-700">
-                                  <div className="text-xs text-slate-400 mb-1">TOTAL</div>
+                                <div className="p-3 rounded bg-orange-50 border border-orange-200">
+                                  <div className="text-xs text-gray-600 mb-1">TOTAL</div>
                                   <div className={`font-bold ${
-                                    Math.abs(pred.predictedTotal - (actual.homeScore + actual.awayScore)) <= 3 ? 'text-green-400' :
-                                    Math.abs(pred.predictedTotal - (actual.homeScore + actual.awayScore)) <= 7 ? 'text-yellow-400' : 'text-red-400'
+                                    Math.abs(pred.predictedTotal - (actual.homeScore + actual.awayScore)) <= 3 ? 'text-green-700' :
+                                    Math.abs(pred.predictedTotal - (actual.homeScore + actual.awayScore)) <= 7 ? 'text-yellow-700' : 'text-red-700'
                                   }`}>
                                     {Math.abs(pred.predictedTotal - (actual.homeScore + actual.awayScore)) <= 3 ? '✓ EXCELLENT' :
                                      Math.abs(pred.predictedTotal - (actual.homeScore + actual.awayScore)) <= 7 ? '△ GOOD' : '✗ MISS'}
                                   </div>
-                                  <div className="text-xs text-slate-400 mt-1">
+                                  <div className="text-xs text-gray-600 mt-1">
                                     Error: ±{Math.abs(pred.predictedTotal - (actual.homeScore + actual.awayScore)).toFixed(1)} pts
                                   </div>
                                 </div>
@@ -552,9 +552,9 @@ export default function ChatPredictPage() {
 
                           {/* AI Reasoning */}
                           {pred.reasoning && (
-                            <div className="mt-3 bg-slate-800/50 rounded p-2">
-                              <div className="text-xs text-slate-400 font-semibold mb-1">AI ANALYSIS</div>
-                              <p className="text-sm text-slate-300">{pred.reasoning}</p>
+                            <div className="mt-3 bg-blue-50 rounded border border-blue-200 p-3">
+                              <div className="text-xs text-blue-700 font-semibold mb-1">AI ANALYSIS</div>
+                              <p className="text-sm text-gray-700">{pred.reasoning}</p>
                             </div>
                           )}
 
@@ -571,23 +571,23 @@ export default function ChatPredictPage() {
 
                 {/* Accuracy Summary */}
                 {msg.accuracy && (
-                  <div className="mt-4 bg-slate-900/70 rounded-lg p-4 border border-slate-600">
-                    <h4 className="font-bold text-lg mb-3 text-white">📊 Accuracy Summary</h4>
+                  <div className="mt-4 bg-white rounded border border-gray-200 p-4">
+                    <h4 className="font-bold text-lg mb-3 text-gray-900">📊 Accuracy Summary</h4>
                     <div className="grid grid-cols-3 gap-4">
                       <div>
-                        <div className="text-sm text-slate-400">Winner Accuracy</div>
-                        <div className="text-2xl font-bold text-green-400">{msg.accuracy.winPct}%</div>
-                        <div className="text-xs text-slate-500">{msg.accuracy.winnerCorrect}W - {msg.accuracy.total - msg.accuracy.winnerCorrect}L</div>
+                        <div className="text-sm text-gray-600">Winner Accuracy</div>
+                        <div className="text-2xl font-bold text-green-700">{msg.accuracy.winPct}%</div>
+                        <div className="text-xs text-gray-500">{msg.accuracy.winnerCorrect}W - {msg.accuracy.total - msg.accuracy.winnerCorrect}L</div>
                       </div>
                       <div>
-                        <div className="text-sm text-slate-400">Avg Spread Error</div>
-                        <div className="text-2xl font-bold text-blue-400">±{msg.accuracy.avgSpreadError}</div>
-                        <div className="text-xs text-slate-500">points</div>
+                        <div className="text-sm text-gray-600">Avg Spread Error</div>
+                        <div className="text-2xl font-bold text-blue-700">±{msg.accuracy.avgSpreadError}</div>
+                        <div className="text-xs text-gray-500">points</div>
                       </div>
                       <div>
-                        <div className="text-sm text-slate-400">Avg Total Error</div>
-                        <div className="text-2xl font-bold text-purple-400">±{msg.accuracy.avgTotalError}</div>
-                        <div className="text-xs text-slate-500">points</div>
+                        <div className="text-sm text-gray-600">Avg Total Error</div>
+                        <div className="text-2xl font-bold text-purple-700">±{msg.accuracy.avgTotalError}</div>
+                        <div className="text-xs text-gray-500">points</div>
                       </div>
                     </div>
                   </div>

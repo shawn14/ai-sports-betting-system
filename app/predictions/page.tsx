@@ -38,21 +38,7 @@ export default function PredictionsPage() {
 
   const loadPredictions = async () => {
     try {
-      // Try loading from Firebase first
-      console.log('Checking Firebase for cached predictions...');
-      const cachedResponse = await fetch('/api/predictions/cached');
-
-      if (cachedResponse.ok) {
-        const cachedData = await cachedResponse.json();
-        if (cachedData.predictions && cachedData.predictions.length > 0) {
-          console.log(`Loaded ${cachedData.predictions.length} predictions from Firebase cache`);
-          setPredictions(cachedData.predictions);
-          setLoading(false);
-          return;
-        }
-      }
-
-      // Fall back to JSON file
+      // Load from JSON file directly
       console.log('Loading predictions from JSON file...');
       const response = await fetch('/training/backtest_results_2025.json');
       const data = await response.json();
@@ -143,12 +129,12 @@ export default function PredictionsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+      <div className="min-h-screen bg-gray-100">
         <LoggedInHeader />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-slate-300">Loading predictions...</p>
+            <p className="text-gray-600">Loading predictions...</p>
           </div>
         </div>
       </div>
@@ -156,77 +142,80 @@ export default function PredictionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gray-100">
       <LoggedInHeader />
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-            <Target className="w-10 h-10 text-blue-400" />
-            All Predictions
-          </h1>
-          <p className="text-slate-300 text-lg">
-            2025 Season • Weeks 2-14 • {predictions.length} Games
-          </p>
+      <div className="bg-white border-b border-gray-300">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-12">
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg font-bold text-gray-900">PREDICTIONS</h1>
+              <div className="flex items-center gap-1 text-xs text-gray-600">
+                <span>2025 Season</span>
+                <span>•</span>
+                <span>{predictions.length} Games</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Stats Summary */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-            <div className="text-2xl font-bold text-white">{stats.total}</div>
-            <div className="text-slate-400 text-sm">Games</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="text-xl font-bold text-gray-900">{stats.total}</div>
+            <div className="text-gray-600 text-xs">Games</div>
           </div>
-          <div className="bg-green-900/20 rounded-lg p-4 border border-green-700/50">
-            <div className="text-2xl font-bold text-green-400">{stats.correct}</div>
-            <div className="text-slate-400 text-sm">Correct</div>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="text-xl font-bold text-green-600">{stats.correct}</div>
+            <div className="text-gray-600 text-xs">Correct</div>
           </div>
-          <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-700/50">
-            <div className="text-2xl font-bold text-blue-400">{stats.accuracy}%</div>
-            <div className="text-slate-400 text-sm">Accuracy</div>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="text-xl font-bold text-blue-600">{stats.accuracy}%</div>
+            <div className="text-gray-600 text-xs">Accuracy</div>
           </div>
-          <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-700/50">
-            <div className="text-2xl font-bold text-purple-400">±{stats.avgSpreadError}</div>
-            <div className="text-slate-400 text-sm">Avg Spread Error</div>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="text-xl font-bold text-purple-600">±{stats.avgSpreadError}</div>
+            <div className="text-gray-600 text-xs">Avg Spread Error</div>
           </div>
-          <div className="bg-orange-900/20 rounded-lg p-4 border border-orange-700/50">
-            <div className="text-2xl font-bold text-orange-400">±{stats.avgTotalError}</div>
-            <div className="text-slate-400 text-sm">Avg Total Error</div>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="text-xl font-bold text-orange-600">±{stats.avgTotalError}</div>
+            <div className="text-gray-600 text-xs">Avg Total Error</div>
           </div>
         </div>
 
         {/* Sync Status */}
         {syncStatus && (
-          <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-3 mb-4">
-            <p className="text-blue-300 text-sm">{syncStatus}</p>
+          <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+            <p className="text-blue-700 text-xs">{syncStatus}</p>
           </div>
         )}
 
         {/* Filters */}
-        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 mb-6">
+        <div className="bg-white rounded border border-gray-200 p-3 mb-4">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-slate-400" />
-              <span className="text-white font-semibold">Filters</span>
+              <Filter className="w-4 h-4 text-gray-600" />
+              <span className="text-gray-900 font-semibold text-sm">Filters</span>
             </div>
             <button
               onClick={syncToFirebase}
               disabled={syncing}
-              className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white rounded transition"
+              className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white rounded transition"
             >
-              {syncing ? 'Syncing...' : '🔄 Sync to Firebase'}
+              {syncing ? 'Syncing...' : 'Sync to Firebase'}
             </button>
           </div>
           <div className="flex flex-wrap gap-3">
             {/* Week Filter */}
             <div>
-              <label className="text-slate-400 text-sm mb-1 block">Week</label>
+              <label className="text-gray-600 text-xs mb-1 block">Week</label>
               <select
                 value={selectedWeek}
                 onChange={(e) => setSelectedWeek(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
-                className="bg-slate-700 text-white rounded px-3 py-2 text-sm border border-slate-600"
+                className="bg-white text-gray-900 rounded px-3 py-1.5 text-xs border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Weeks</option>
                 {weeks.map(week => (
@@ -237,11 +226,11 @@ export default function PredictionsPage() {
 
             {/* Result Filter */}
             <div>
-              <label className="text-slate-400 text-sm mb-1 block">Result</label>
+              <label className="text-gray-600 text-xs mb-1 block">Result</label>
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as any)}
-                className="bg-slate-700 text-white rounded px-3 py-2 text-sm border border-slate-600"
+                className="bg-white text-gray-900 rounded px-3 py-1.5 text-xs border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">All Results</option>
                 <option value="correct">Correct Only</option>
@@ -252,77 +241,77 @@ export default function PredictionsPage() {
         </div>
 
         {/* Predictions List */}
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filteredPredictions.map((pred, idx) => (
             <div
               key={idx}
-              className={`bg-slate-800/50 rounded-lg p-4 border ${
-                pred.correct ? 'border-green-700/50' : 'border-red-700/50'
+              className={`bg-white rounded border p-3 ${
+                pred.correct ? 'border-green-200' : 'border-red-200'
               }`}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    pred.correct ? 'bg-green-900/30' : 'bg-red-900/30'
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    pred.correct ? 'bg-green-50' : 'bg-red-50'
                   }`}>
                     {pred.correct ? (
-                      <CheckCircle className="w-6 h-6 text-green-400" />
+                      <CheckCircle className="w-5 h-5 text-green-600" />
                     ) : (
-                      <XCircle className="w-6 h-6 text-red-400" />
+                      <XCircle className="w-5 h-5 text-red-600" />
                     )}
                   </div>
                   <div>
-                    <div className="text-white font-semibold text-lg">
+                    <div className="text-gray-900 font-bold text-sm">
                       {pred.awayTeam} @ {pred.homeTeam}
                     </div>
-                    <div className="text-slate-400 text-sm">Week {pred.week}</div>
+                    <div className="text-gray-600 text-[11px]">Week {pred.week}</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className={`text-sm font-semibold ${pred.correct ? 'text-green-400' : 'text-red-400'}`}>
+                  <div className={`text-[11px] font-semibold ${pred.correct ? 'text-green-600' : 'text-red-600'}`}>
                     {pred.correct ? 'CORRECT' : 'INCORRECT'}
                   </div>
-                  <div className="text-slate-400 text-xs">{pred.confidence}% confidence</div>
+                  <div className="text-gray-600 text-[10px]">{pred.confidence}% confidence</div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {/* Moneyline */}
-                <div className="bg-blue-900/20 rounded-lg p-3 border border-blue-700/30">
-                  <div className="text-blue-300 text-xs font-semibold mb-2">MONEYLINE (WINNER)</div>
+                <div className="bg-blue-50 rounded border border-blue-200 p-2">
+                  <div className="text-blue-700 text-[10px] font-semibold mb-2">MONEYLINE (WINNER)</div>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Predicted:</span>
-                      <span className="text-white font-semibold">{pred.predictedWinner}</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Predicted:</span>
+                      <span className="text-gray-900 font-semibold">{pred.predictedWinner}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Actual:</span>
-                      <span className="text-white font-semibold">{pred.actualWinner}</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Actual:</span>
+                      <span className="text-gray-900 font-semibold">{pred.actualWinner}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Score:</span>
-                      <span className="text-white">{pred.actualAwayScore}-{pred.actualHomeScore}</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Score:</span>
+                      <span className="text-gray-900">{pred.actualAwayScore}-{pred.actualHomeScore}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Spread */}
-                <div className="bg-purple-900/20 rounded-lg p-3 border border-purple-700/30">
-                  <div className="text-purple-300 text-xs font-semibold mb-2">SPREAD</div>
+                <div className="bg-purple-50 rounded border border-purple-200 p-2">
+                  <div className="text-purple-700 text-[10px] font-semibold mb-2">SPREAD</div>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Predicted:</span>
-                      <span className="text-white font-semibold">{pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Predicted:</span>
+                      <span className="text-gray-900 font-semibold">{pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Actual:</span>
-                      <span className="text-white font-semibold">{pred.actualSpread > 0 ? '+' : ''}{pred.actualSpread.toFixed(1)}</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Actual:</span>
+                      <span className="text-gray-900 font-semibold">{pred.actualSpread > 0 ? '+' : ''}{pred.actualSpread.toFixed(1)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Error:</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Error:</span>
                       <span className={`font-semibold ${
-                        pred.spreadError <= 3 ? 'text-green-400' :
-                        pred.spreadError <= 7 ? 'text-yellow-400' : 'text-red-400'
+                        pred.spreadError <= 3 ? 'text-green-600' :
+                        pred.spreadError <= 7 ? 'text-yellow-600' : 'text-red-600'
                       }`}>
                         ±{pred.spreadError.toFixed(1)} pts
                       </span>
@@ -331,22 +320,22 @@ export default function PredictionsPage() {
                 </div>
 
                 {/* Total */}
-                <div className="bg-orange-900/20 rounded-lg p-3 border border-orange-700/30">
-                  <div className="text-orange-300 text-xs font-semibold mb-2">TOTAL (O/U)</div>
+                <div className="bg-orange-50 rounded border border-orange-200 p-2">
+                  <div className="text-orange-700 text-[10px] font-semibold mb-2">TOTAL (O/U)</div>
                   <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Predicted:</span>
-                      <span className="text-white font-semibold">{pred.predictedTotal.toFixed(1)}</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Predicted:</span>
+                      <span className="text-gray-900 font-semibold">{pred.predictedTotal.toFixed(1)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Actual:</span>
-                      <span className="text-white font-semibold">{pred.actualTotal.toFixed(1)}</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Actual:</span>
+                      <span className="text-gray-900 font-semibold">{pred.actualTotal.toFixed(1)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-400">Error:</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-600">Error:</span>
                       <span className={`font-semibold ${
-                        pred.totalError <= 3 ? 'text-green-400' :
-                        pred.totalError <= 7 ? 'text-yellow-400' : 'text-red-400'
+                        pred.totalError <= 3 ? 'text-green-600' :
+                        pred.totalError <= 7 ? 'text-yellow-600' : 'text-red-600'
                       }`}>
                         ±{pred.totalError.toFixed(1)} pts
                       </span>
@@ -360,7 +349,7 @@ export default function PredictionsPage() {
 
         {filteredPredictions.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-slate-400">No predictions match your filters.</p>
+            <p className="text-gray-500 text-sm">No predictions match your filters.</p>
           </div>
         )}
       </div>

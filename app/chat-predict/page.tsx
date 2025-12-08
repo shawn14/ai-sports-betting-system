@@ -285,7 +285,7 @@ export default function ChatPredictPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
       <LoggedInHeader />
 
       {/* Messages */}
@@ -297,8 +297,8 @@ export default function ChatPredictPage() {
                 msg.role === 'user'
                   ? 'bg-blue-600 text-white'
                   : msg.role === 'system'
-                  ? 'bg-slate-700/50 text-slate-300'
-                  : 'bg-slate-800/50 text-white'
+                  ? 'bg-blue-50 text-gray-700 border border-blue-200'
+                  : 'bg-white text-gray-900 border border-gray-200'
               }`}>
                 <div className="whitespace-pre-wrap">{msg.content}</div>
 
@@ -534,9 +534,9 @@ export default function ChatPredictPage() {
 
           {loading && (
             <div className="flex justify-start">
-              <div className="bg-slate-800/50 rounded-lg p-4 text-white">
+              <div className="bg-white border border-gray-200 rounded-lg p-4 text-gray-900">
                 <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                   <span>Thinking...</span>
                 </div>
               </div>
@@ -548,7 +548,7 @@ export default function ChatPredictPage() {
       </div>
 
       {/* Input */}
-      <div className="bg-slate-800/50 backdrop-blur-sm border-t border-slate-700 p-4">
+      <div className="bg-white border-t border-gray-300 p-4">
         <div className="max-w-4xl mx-auto flex gap-3">
           <input
             type="text"
@@ -556,13 +556,13 @@ export default function ChatPredictPage() {
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask me to predict a game... (e.g., 'Predict Week 14 Chiefs vs Chargers')"
-            className="flex-1 bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={loading}
           />
           <button
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white rounded-lg px-6 py-3 font-semibold flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg px-6 py-3 font-semibold flex items-center gap-2"
           >
             <Send className="w-5 h-5" />
             Send

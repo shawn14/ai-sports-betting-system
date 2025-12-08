@@ -64,11 +64,11 @@ export default function GamesPage() {
   const getStatusBadge = (status: Game['status']) => {
     switch (status) {
       case 'scheduled':
-        return <span className="px-2 py-1 bg-blue-900/50 text-blue-300 rounded text-xs font-semibold">UPCOMING</span>;
+        return <span className="text-[11px] font-medium text-gray-600">UPCOMING</span>;
       case 'in_progress':
-        return <span className="px-2 py-1 bg-green-900/50 text-green-300 rounded text-xs font-semibold animate-pulse">LIVE</span>;
+        return <span className="text-[11px] font-bold text-red-600 animate-pulse">LIVE</span>;
       case 'completed':
-        return <span className="px-2 py-1 bg-slate-700 text-slate-300 rounded text-xs font-semibold">FINAL</span>;
+        return <span className="text-[11px] font-medium text-gray-600">FINAL</span>;
       default:
         return null;
     }
@@ -91,148 +91,131 @@ export default function GamesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gray-100">
       <LoggedInHeader />
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-            <Calendar className="w-10 h-10 text-blue-400" />
-            NFL Games
-          </h1>
-          <p className="text-slate-300 text-lg">
-            {currentSeason} Season • Week {selectedWeek || currentWeek} • {games.length} Games
-          </p>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Week Selector */}
-        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 mb-6">
-          <div className="flex items-center gap-4">
-            <label className="text-slate-400 font-semibold">Select Week:</label>
+      {/* ESPN-style Header */}
+      <div className="bg-white border-b border-gray-300">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-12">
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg font-bold text-gray-900">SCORES</h1>
+              <div className="flex items-center gap-1 text-xs text-gray-600">
+                <span>NFL</span>
+                <span>•</span>
+                <span>{currentSeason}</span>
+              </div>
+            </div>
             <select
               value={selectedWeek || currentWeek}
               onChange={(e) => loadWeek(parseInt(e.target.value))}
-              className="bg-slate-700 text-white rounded-lg px-4 py-2 border border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-white border border-gray-300 text-gray-900 rounded px-2 py-1 text-xs font-medium hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               {weekOptions.map(week => (
                 <option key={week} value={week}>
-                  Week {week} {week === currentWeek ? '(Current)' : ''}
+                  Week {week}
                 </option>
               ))}
             </select>
           </div>
         </div>
+      </div>
 
-        {/* Games Grid */}
-        <div className="space-y-4">
+      <div className="max-w-7xl mx-auto px-4 py-4">
+
+        {/* Games List - NFL.com style */}
+        <div className="space-y-2">
           {games.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-slate-400 text-lg">No games scheduled for this week yet.</p>
+              <p className="text-gray-500">No games scheduled for this week yet.</p>
             </div>
           ) : (
             games.map((game) => (
               <div
                 key={game.id}
-                className="bg-slate-800/50 rounded-lg border border-slate-700 overflow-hidden hover:border-blue-600/50 transition"
+                className="bg-white border border-gray-200 hover:border-gray-300 transition shadow-sm"
               >
-                <div className="p-6">
-                  {/* Game Header - Time and Status */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3 text-sm text-slate-400">
-                      <Clock className="w-4 h-4" />
-                      <span>{formatGameTime(game.gameTime)}</span>
+                <div className="p-3">
+                  {/* Time/Status Bar */}
+                  <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-100">
+                    <div className="text-[11px] text-gray-600 font-medium">
+                      {new Date(game.gameTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      {' • '}
+                      {new Date(game.gameTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                     </div>
                     {getStatusBadge(game.status)}
                   </div>
 
-                  {/* Teams Matchup */}
-                  <div className="flex items-center justify-between mb-6">
+                  {/* Teams */}
+                  <div className="space-y-2">
                     {/* Away Team */}
-                    <div className="flex-1 flex items-center gap-4">
-                      <div className="w-20 h-20 bg-slate-700/50 rounded-full p-3 flex items-center justify-center">
-                        {game.awayTeam.logo ? (
-                          <img
-                            src={game.awayTeam.logo}
-                            alt={`${game.awayTeam.name} logo`}
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <div className="text-2xl font-bold text-slate-400">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-10 h-10 flex-shrink-0">
+                          {game.awayTeam.logo && (
+                            <img
+                              src={game.awayTeam.logo}
+                              alt={game.awayTeam.abbreviation}
+                              className="w-full h-full object-contain"
+                            />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-bold text-gray-900">
+                            {game.awayTeam.name}
+                          </div>
+                          <div className="text-[11px] text-gray-500">
                             {game.awayTeam.abbreviation}
                           </div>
-                        )}
-                      </div>
-                      <div>
-                        <div className="text-xl font-bold text-white">
-                          {game.awayTeam.name}
                         </div>
-                        <div className="text-sm text-slate-400">
-                          {game.awayTeam.conference}
-                        </div>
-                        {game.status === 'completed' && (
-                          <div className="text-3xl font-bold text-white mt-2">
-                            {game.awayScore}
-                          </div>
-                        )}
                       </div>
-                    </div>
-
-                    {/* VS Separator */}
-                    <div className="px-8 text-slate-500 font-bold text-xl">
-                      {game.status === 'completed' ? 'FINAL' : '@'}
+                      {game.status === 'completed' && (
+                        <div className="text-2xl font-bold text-gray-900 tabular-nums">
+                          {game.awayScore}
+                        </div>
+                      )}
                     </div>
 
                     {/* Home Team */}
-                    <div className="flex-1 flex items-center gap-4 justify-end">
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-white">
-                          {game.homeTeam.name}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-10 h-10 flex-shrink-0">
+                          {game.homeTeam.logo && (
+                            <img
+                              src={game.homeTeam.logo}
+                              alt={game.homeTeam.abbreviation}
+                              className="w-full h-full object-contain"
+                            />
+                          )}
                         </div>
-                        <div className="text-sm text-slate-400">
-                          {game.homeTeam.conference}
-                        </div>
-                        {game.status === 'completed' && (
-                          <div className="text-3xl font-bold text-white mt-2">
-                            {game.homeScore}
+                        <div className="flex-1">
+                          <div className="text-sm font-bold text-gray-900">
+                            {game.homeTeam.name}
                           </div>
-                        )}
-                      </div>
-                      <div className="w-20 h-20 bg-slate-700/50 rounded-full p-3 flex items-center justify-center">
-                        {game.homeTeam.logo ? (
-                          <img
-                            src={game.homeTeam.logo}
-                            alt={`${game.homeTeam.name} logo`}
-                            className="w-full h-full object-contain"
-                          />
-                        ) : (
-                          <div className="text-2xl font-bold text-slate-400">
+                          <div className="text-[11px] text-gray-500">
                             {game.homeTeam.abbreviation}
                           </div>
-                        )}
+                        </div>
                       </div>
+                      {game.status === 'completed' && (
+                        <div className="text-2xl font-bold text-gray-900 tabular-nums">
+                          {game.homeScore}
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* Game Details */}
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-700">
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
-                      <MapPin className="w-4 h-4" />
-                      <span>{game.venue}</span>
-                    </div>
-
-                    {game.status === 'scheduled' && (
+                  {/* Action */}
+                  {game.status === 'scheduled' && (
+                    <div className="mt-3 pt-2 border-t border-gray-100">
                       <button
                         onClick={() => window.location.href = `/chat-predict?game=${game.id}`}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2"
+                        className="w-full px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-semibold transition"
                       >
-                        <TrendingUp className="w-4 h-4" />
                         Get Prediction
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))

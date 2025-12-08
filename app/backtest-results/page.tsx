@@ -111,16 +111,16 @@ export default function BacktestResultsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-white text-xl">Loading backtest results...</div>
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-900 text-lg">Loading backtest results...</div>
       </main>
     );
   }
 
   if (!data) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800 flex items-center justify-center">
-        <div className="text-red-400 text-xl">Error loading backtest data</div>
+      <main className="min-h-screen bg-gray-100 flex items-center justify-center">
+        <div className="text-red-600 text-lg">Error loading backtest data</div>
       </main>
     );
   }
@@ -129,125 +129,125 @@ export default function BacktestResultsPage() {
   const filteredWeeks = getFilteredWeeks();
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
+    <main className="min-h-screen bg-gray-100">
       <LoggedInHeader />
 
       {/* Header */}
-      <div className="bg-slate-900 border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-4xl font-bold text-white">2025 Season Backtest Results</h1>
-          <p className="text-slate-400 mt-2">
-            Comprehensive historical performance analysis (Weeks 2-14)
-          </p>
+      <div className="bg-white border-b border-gray-300">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-12">
+            <div className="flex items-center gap-4">
+              <h1 className="text-lg font-bold text-gray-900">BACKTEST RESULTS</h1>
+              <div className="flex items-center gap-1 text-xs text-gray-600">
+                <span>2025 Season</span>
+                <span>•</span>
+                <span>Weeks 2-14</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-4">
         {/* Hero Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
           {/* Winner Accuracy */}
-          <div className="bg-gradient-to-br from-green-900/40 to-green-800/40 rounded-lg p-6 border border-green-700/50">
-            <div className="flex items-center justify-between mb-2">
-              <Trophy className="w-8 h-8 text-green-300" />
-              <span className="text-xs text-green-300 font-semibold">WINNER</span>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="mb-2">
+              <span className="text-[10px] text-green-600 font-semibold">WINNER</span>
             </div>
-            <div className="text-4xl font-bold text-white mb-1">
+            <div className="text-2xl font-bold text-gray-900 mb-1">
               {data.overallWinnerAccuracy.toFixed(1)}%
             </div>
-            <div className="text-sm text-green-200">
+            <div className="text-xs text-gray-600">
               {data.totalWinnerCorrect}W - {data.totalGames - data.totalWinnerCorrect}L
             </div>
-            <div className="text-xs text-green-300 mt-2">
+            <div className="text-[10px] text-gray-500 mt-1">
               {data.totalGames} games analyzed
             </div>
           </div>
 
           {/* Spread Error */}
-          <div className="bg-gradient-to-br from-purple-900/40 to-purple-800/40 rounded-lg p-6 border border-purple-700/50">
-            <div className="flex items-center justify-between mb-2">
-              <Target className="w-8 h-8 text-purple-300" />
-              <span className="text-xs text-purple-300 font-semibold">SPREAD</span>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="mb-2">
+              <span className="text-[10px] text-purple-600 font-semibold">SPREAD</span>
             </div>
-            <div className="text-4xl font-bold text-white mb-1">
+            <div className="text-2xl font-bold text-gray-900 mb-1">
               ±{data.overallAvgSpreadError.toFixed(1)}
             </div>
-            <div className="text-sm text-purple-200">
+            <div className="text-xs text-gray-600">
               avg spread error
             </div>
-            <div className="text-xs text-purple-300 mt-2">
+            <div className="text-[10px] text-gray-500 mt-1">
               points differential
             </div>
           </div>
 
           {/* Total Error */}
-          <div className="bg-gradient-to-br from-orange-900/40 to-orange-800/40 rounded-lg p-6 border border-orange-700/50">
-            <div className="flex items-center justify-between mb-2">
-              <TrendingUp className="w-8 h-8 text-orange-300" />
-              <span className="text-xs text-orange-300 font-semibold">TOTAL</span>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="mb-2">
+              <span className="text-[10px] text-orange-600 font-semibold">TOTAL</span>
             </div>
-            <div className="text-4xl font-bold text-white mb-1">
+            <div className="text-2xl font-bold text-gray-900 mb-1">
               ±{data.overallAvgTotalError.toFixed(1)}
             </div>
-            <div className="text-sm text-orange-200">
+            <div className="text-xs text-gray-600">
               avg total error
             </div>
-            <div className="text-xs text-orange-300 mt-2">
+            <div className="text-[10px] text-gray-500 mt-1">
               combined score
             </div>
           </div>
 
           {/* Estimated Profit */}
-          <div className={`bg-gradient-to-br ${
-            profit > 0
-              ? 'from-blue-900/40 to-blue-800/40 border-blue-700/50'
-              : 'from-red-900/40 to-red-800/40 border-red-700/50'
-          } rounded-lg p-6 border`}>
-            <div className="flex items-center justify-between mb-2">
-              <DollarSign className={`w-8 h-8 ${profit > 0 ? 'text-blue-300' : 'text-red-300'}`} />
-              <span className={`text-xs font-semibold ${profit > 0 ? 'text-blue-300' : 'text-red-300'}`}>
+          <div className={`bg-white rounded border p-3 ${
+            profit > 0 ? 'border-blue-200' : 'border-red-200'
+          }`}>
+            <div className="mb-2">
+              <span className={`text-[10px] font-semibold ${profit > 0 ? 'text-blue-600' : 'text-red-600'}`}>
                 PROFIT
               </span>
             </div>
-            <div className={`text-4xl font-bold ${profit > 0 ? 'text-white' : 'text-white'} mb-1`}>
+            <div className={`text-2xl font-bold ${profit > 0 ? 'text-gray-900' : 'text-gray-900'} mb-1`}>
               ${profit > 0 ? '+' : ''}{profit.toFixed(0)}
             </div>
-            <div className={`text-sm ${profit > 0 ? 'text-blue-200' : 'text-red-200'}`}>
+            <div className={`text-xs ${profit > 0 ? 'text-gray-600' : 'text-gray-600'}`}>
               $100/game @ -110
             </div>
-            <div className={`text-xs mt-2 ${profit > 0 ? 'text-blue-300' : 'text-red-300'}`}>
+            <div className={`text-[10px] mt-1 ${profit > 0 ? 'text-gray-500' : 'text-gray-500'}`}>
               {data.totalGames} total bets
             </div>
           </div>
         </div>
 
         {/* Profitability Analysis */}
-        <div className="bg-slate-800 rounded-lg p-6 mb-8 border border-slate-700">
-          <h2 className="text-xl font-bold text-white mb-4">💰 Profitability Analysis</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white rounded border border-gray-200 p-3 mb-4">
+          <h2 className="text-sm font-bold text-gray-900 mb-3">Profitability Analysis</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <div className="text-sm text-slate-400 mb-1">Breakeven (at -110 odds)</div>
-              <div className="text-2xl font-bold text-yellow-400">52.4%</div>
-              <div className="text-xs text-slate-500 mt-1">Industry standard</div>
+              <div className="text-xs text-gray-600 mb-1">Breakeven (at -110 odds)</div>
+              <div className="text-xl font-bold text-yellow-600">52.4%</div>
+              <div className="text-[10px] text-gray-500 mt-1">Industry standard</div>
             </div>
             <div>
-              <div className="text-sm text-slate-400 mb-1">Your System</div>
-              <div className={`text-2xl font-bold ${
-                data.overallWinnerAccuracy >= 52.4 ? 'text-green-400' : 'text-red-400'
+              <div className="text-xs text-gray-600 mb-1">Your System</div>
+              <div className={`text-xl font-bold ${
+                data.overallWinnerAccuracy >= 52.4 ? 'text-green-600' : 'text-red-600'
               }`}>
                 {data.overallWinnerAccuracy.toFixed(1)}%
               </div>
-              <div className="text-xs text-slate-500 mt-1">
-                {data.overallWinnerAccuracy >= 52.4 ? 'Above breakeven ✅' : 'Below breakeven ⚠️'}
+              <div className="text-[10px] text-gray-500 mt-1">
+                {data.overallWinnerAccuracy >= 52.4 ? 'Above breakeven ✓' : 'Below breakeven ✗'}
               </div>
             </div>
             <div>
-              <div className="text-sm text-slate-400 mb-1">Edge Over Breakeven</div>
-              <div className={`text-2xl font-bold ${
-                data.overallWinnerAccuracy >= 52.4 ? 'text-green-400' : 'text-red-400'
+              <div className="text-xs text-gray-600 mb-1">Edge Over Breakeven</div>
+              <div className={`text-xl font-bold ${
+                data.overallWinnerAccuracy >= 52.4 ? 'text-green-600' : 'text-red-600'
               }`}>
                 +{(data.overallWinnerAccuracy - 52.4).toFixed(1)}%
               </div>
-              <div className="text-xs text-slate-500 mt-1">
+              <div className="text-[10px] text-gray-500 mt-1">
                 Percentage points above breakeven
               </div>
             </div>
@@ -255,45 +255,45 @@ export default function BacktestResultsPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700">
-          <div className="flex items-center space-x-4">
-            <span className="text-slate-400 font-semibold">Filter:</span>
+        <div className="bg-white rounded border border-gray-200 p-3 mb-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-gray-600 font-semibold text-xs">Filter:</span>
             <button
               onClick={() => setFilter('all')}
-              className={`px-4 py-2 rounded-lg transition ${
+              className={`px-3 py-1.5 rounded text-xs transition ${
                 filter === 'all'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               All Weeks ({data.weeklyStats.length})
             </button>
             <button
               onClick={() => setFilter('strong')}
-              className={`px-4 py-2 rounded-lg transition ${
+              className={`px-3 py-1.5 rounded text-xs transition ${
                 filter === 'strong'
                   ? 'bg-green-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Strong (70%+)
             </button>
             <button
               onClick={() => setFilter('good')}
-              className={`px-4 py-2 rounded-lg transition ${
+              className={`px-3 py-1.5 rounded text-xs transition ${
                 filter === 'good'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Good (65%+)
             </button>
             <button
               onClick={() => setFilter('edge')}
-              className={`px-4 py-2 rounded-lg transition ${
+              className={`px-3 py-1.5 rounded text-xs transition ${
                 filter === 'edge'
                   ? 'bg-yellow-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               Edge (55%+)
@@ -302,78 +302,78 @@ export default function BacktestResultsPage() {
         </div>
 
         {/* Week-by-Week Table */}
-        <div className="bg-slate-800 rounded-lg overflow-hidden border border-slate-700">
+        <div className="bg-white rounded border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-900">
+              <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Week
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Games
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Winner Accuracy
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Spread Error
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Total Error
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Avg Confidence
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Strong Bets
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Details
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className="divide-y divide-gray-200">
                 {filteredWeeks.map((week) => {
                   const isExpanded = expandedWeeks.has(week.week);
                   const weekGames = getWeekGames(week.week);
 
                   return (
                     <React.Fragment key={week.week}>
-                      <tr className="hover:bg-slate-700/50 transition cursor-pointer">
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-white">
+                      <tr className="hover:bg-gray-50 transition cursor-pointer">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-gray-900">
                           Week {week.week}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                           {week.games}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm">
                           <span className={`font-bold ${
-                            week.winnerAccuracy >= 70 ? 'text-green-400' :
-                            week.winnerAccuracy >= 65 ? 'text-blue-400' :
-                            week.winnerAccuracy >= 55 ? 'text-yellow-400' :
-                            'text-red-400'
+                            week.winnerAccuracy >= 70 ? 'text-green-600' :
+                            week.winnerAccuracy >= 65 ? 'text-blue-600' :
+                            week.winnerAccuracy >= 55 ? 'text-yellow-600' :
+                            'text-red-600'
                           }`}>
                             {week.winnerAccuracy.toFixed(1)}%
                           </span>
-                          <span className="text-slate-500 text-xs ml-2">
+                          <span className="text-gray-500 text-xs ml-2">
                             ({week.winnerCorrect}/{week.games})
                           </span>
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                           ±{week.avgSpreadError.toFixed(1)} pts
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                           ±{week.avgTotalError.toFixed(1)} pts
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                           {week.avgConfidence.toFixed(1)}%
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm text-slate-300">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                           {week.strongBets > 0 ? (
                             <>
                               {week.strongBetsCorrect}/{week.strongBets}
-                              <span className="text-slate-500 ml-1">
+                              <span className="text-gray-500 ml-1">
                                 ({week.strongBetsAccuracy.toFixed(0)}%)
                               </span>
                             </>
@@ -381,10 +381,10 @@ export default function BacktestResultsPage() {
                             '-'
                           )}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
+                        <td className="px-4 py-3 whitespace-nowrap text-right text-sm">
                           <button
                             onClick={() => toggleWeek(week.week)}
-                            className="text-blue-400 hover:text-blue-300 transition"
+                            className="text-blue-600 hover:text-blue-700 transition"
                           >
                             {isExpanded ? (
                               <ChevronUp className="w-5 h-5 inline" />
@@ -398,73 +398,73 @@ export default function BacktestResultsPage() {
                       {/* Expanded Game Details */}
                       {isExpanded && (
                         <tr>
-                          <td colSpan={8} className="bg-slate-900/50 px-4 py-4">
+                          <td colSpan={8} className="bg-gray-50 px-4 py-4">
                             <div className="space-y-2">
                               {weekGames.map((game, idx) => (
-                                <div key={idx} className="bg-slate-800 rounded-lg p-4 border border-slate-700">
+                                <div key={idx} className="bg-white rounded border border-gray-200 p-3">
                                   <div className="flex justify-between items-start mb-3">
                                     <div>
-                                      <div className="text-white font-semibold">
+                                      <div className="text-gray-900 font-semibold text-sm">
                                         {game.awayTeam} @ {game.homeTeam}
                                       </div>
-                                      <div className="text-xs text-slate-400 mt-1">
+                                      <div className="text-xs text-gray-600 mt-1">
                                         Confidence: {game.confidence}% • {game.recommendation}
                                       </div>
                                     </div>
                                     <div className="flex items-center space-x-2">
                                       {game.winnerCorrect ? (
-                                        <span className="px-2 py-1 bg-green-900/50 text-green-300 rounded text-xs font-bold">
+                                        <span className="px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded text-xs font-bold">
                                           ✓ CORRECT
                                         </span>
                                       ) : (
-                                        <span className="px-2 py-1 bg-red-900/50 text-red-300 rounded text-xs font-bold">
+                                        <span className="px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded text-xs font-bold">
                                           ✗ WRONG
                                         </span>
                                       )}
                                     </div>
                                   </div>
 
-                                  <div className="grid grid-cols-3 gap-4 text-sm">
+                                  <div className="grid grid-cols-3 gap-4 text-xs">
                                     {/* Predicted Score */}
                                     <div>
-                                      <div className="text-slate-500 text-xs mb-1">PREDICTED</div>
-                                      <div className="text-white font-mono">
+                                      <div className="text-gray-500 text-[10px] mb-1 font-semibold">PREDICTED</div>
+                                      <div className="text-gray-900 font-mono text-sm">
                                         {game.predictedAway} - {game.predictedHome}
                                       </div>
-                                      <div className="text-xs text-slate-400 mt-1">
+                                      <div className="text-xs text-gray-600 mt-1">
                                         Spread: {game.predictedSpread > 0 ? '+' : ''}{game.predictedSpread.toFixed(1)}
                                       </div>
-                                      <div className="text-xs text-slate-400">
+                                      <div className="text-xs text-gray-600">
                                         Total: {game.predictedTotal.toFixed(1)}
                                       </div>
                                     </div>
 
                                     {/* Actual Score */}
                                     <div>
-                                      <div className="text-slate-500 text-xs mb-1">ACTUAL</div>
-                                      <div className="text-white font-mono font-bold">
+                                      <div className="text-gray-500 text-[10px] mb-1 font-semibold">ACTUAL</div>
+                                      <div className="text-gray-900 font-mono font-bold text-sm">
                                         {game.actualAway} - {game.actualHome}
                                       </div>
-                                      <div className="text-xs text-slate-400 mt-1">
+                                      <div className="text-xs text-gray-600 mt-1">
                                         Spread: {game.actualSpread > 0 ? '+' : ''}{game.actualSpread.toFixed(1)}
                                       </div>
-                                      <div className="text-xs text-slate-400">
+                                      <div className="text-xs text-gray-600">
                                         Total: {game.actualTotal.toFixed(1)}
                                       </div>
                                     </div>
 
                                     {/* Errors */}
                                     <div>
-                                      <div className="text-slate-500 text-xs mb-1">ERROR</div>
-                                      <div className={`font-mono ${
-                                        game.spreadError <= 7 ? 'text-green-400' :
-                                        game.spreadError <= 14 ? 'text-yellow-400' : 'text-red-400'
+                                      <div className="text-gray-500 text-[10px] mb-1 font-semibold">ERROR</div>
+                                      <div className={`font-mono text-sm ${
+                                        game.spreadError <= 7 ? 'text-green-600' :
+                                        game.spreadError <= 14 ? 'text-yellow-600' : 'text-red-600'
                                       }`}>
                                         Spread: ±{game.spreadError.toFixed(1)}
                                       </div>
-                                      <div className={`font-mono mt-1 ${
-                                        game.totalError <= 7 ? 'text-green-400' :
-                                        game.totalError <= 14 ? 'text-yellow-400' : 'text-red-400'
+                                      <div className={`font-mono mt-1 text-sm ${
+                                        game.totalError <= 7 ? 'text-green-600' :
+                                        game.totalError <= 14 ? 'text-yellow-600' : 'text-red-600'
                                       }`}>
                                         Total: ±{game.totalError.toFixed(1)}
                                       </div>
@@ -485,9 +485,9 @@ export default function BacktestResultsPage() {
         </div>
 
         {/* Methodology */}
-        <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-6 mt-8">
-          <h3 className="text-blue-400 font-semibold mb-3">📊 Methodology</h3>
-          <div className="text-slate-300 space-y-2 text-sm">
+        <div className="bg-blue-50 border border-blue-200 rounded p-4 mt-4">
+          <h3 className="text-blue-700 font-semibold mb-3 text-sm">Methodology</h3>
+          <div className="text-gray-700 space-y-2 text-xs">
             <p>
               <strong>Temporal Integrity:</strong> Week N predictions used ONLY Week N-1 standings data (no future data leakage).
             </p>

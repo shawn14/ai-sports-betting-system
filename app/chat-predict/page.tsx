@@ -36,6 +36,68 @@ export default function ChatPredictPage() {
     scrollToBottom();
   }, [messages]);
 
+  // Auto-load game prediction from URL parameter
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const gameId = params.get('game');
+
+    if (gameId && messages.length === 1) { // Only run once on initial load
+      loadGamePrediction(gameId);
+    }
+  }, []);
+
+  const loadGamePrediction = async (gameId: string) => {
+    setLoading(true);
+
+    try {
+      // Fetch all games to find the specific game
+      const { season, week } = await NFLAPI.getCurrentSeasonWeek();
+      const allGames = await NFLAPI.getWeekGames(season, week);
+      const game = allGames.find(g => g.id === gameId);
+
+      if (!game) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Game not found. Please select a game from the games page.`
+        }]);
+        setLoading(false);
+        return;
+      }
+
+      // Add system message showing which game
+      setMessages(prev => [...prev, {
+        role: 'system',
+        content: `Generating prediction for ${game.awayTeam.name} @ ${game.homeTeam.name} (Week ${week})...`
+      }]);
+
+      // Generate prediction
+      const prediction = await predictGame(game, week - 1);
+
+      if (prediction) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `✅ Generated prediction for ${game.awayTeam.name} @ ${game.homeTeam.name}`,
+          prediction: [prediction],
+          actual: null,
+          accuracy: null
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Failed to generate prediction. Please try again.`
+        }]);
+      }
+    } catch (error) {
+      console.error('Error loading game:', error);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+      }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const parseUserRequest = (text: string) => {
     const lower = text.toLowerCase();
 

@@ -610,29 +610,6 @@ export default function ChatPredictPage() {
           <div ref={messagesEndRef} />
         </div>
       </div>
-
-      {/* Input */}
-      <div className="bg-white border-t border-gray-300 p-4">
-        <div className="max-w-4xl mx-auto flex gap-3">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Ask me to predict a game... (e.g., 'Predict Week 14 Chiefs vs Chargers')"
-            className="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={loading}
-          />
-          <button
-            onClick={handleSend}
-            disabled={loading || !input.trim()}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg px-6 py-3 font-semibold flex items-center gap-2"
-          >
-            <Send className="w-5 h-5" />
-            Send
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

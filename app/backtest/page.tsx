@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { NFLAPI } from '@/lib/api/nfl';
-import { GamePredictor } from '@/lib/models/predictor';
+import { MatrixHelperClient } from '@/lib/models/matrixHelperClient';
 import { PredictionAnalytics, PredictionResult } from '@/lib/models/analytics';
 import { FirestoreService } from '@/lib/firebase/firestore';
 import AILoadingAnimation from '@/components/AILoadingAnimation';
@@ -34,6 +34,13 @@ export default function BacktestPage() {
         console.log(`Loading week ${week}...`);
 
         try {
+          // Check if standings data exists for this week
+          const hasStandings = await MatrixHelperClient.hasStandingsData(season, week);
+          if (!hasStandings) {
+            console.warn(`⚠️  Missing standings data for ${season} week ${week}. Skipping this week.`);
+            continue;
+          }
+
           const weekGames = await NFLAPI.getWeekGames(season, week);
           const completedGames = weekGames.filter(g => g.status === 'completed');
 
@@ -41,16 +48,12 @@ export default function BacktestPage() {
 
           for (const game of completedGames) {
             try {
-              // Get team stats at the time of the game
-              const homeStats = await NFLAPI.getTeamStats(game.homeTeam.id, season);
-              const awayStats = await NFLAPI.getTeamStats(game.awayTeam.id, season);
-
-              // Generate prediction
-              const prediction = await GamePredictor.predictGame(
+              // Generate prediction using Matrix system
+              const prediction = await MatrixHelperClient.predictGame(
                 game,
-                homeStats,
-                awayStats,
-                null
+                season,
+                week,
+                'balanced'
               );
 
               // Calculate result

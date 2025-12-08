@@ -1,611 +1,368 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { NFLAPI } from '@/lib/api/nfl';
-import { OddsAPI } from '@/lib/api/odds';
-import { WeatherAPI } from '@/lib/api/weather';
-import { GamePredictor } from '@/lib/models/predictor';
-import { FirestoreService } from '@/lib/firebase/firestore';
-import { Game, GamePrediction } from '@/types';
-import { format } from 'date-fns';
 import LoggedInHeader from '@/components/LoggedInHeader';
-import AILoadingAnimation from '@/components/AILoadingAnimation';
-import { Brain, Database, Cpu, BarChart3 } from 'lucide-react';
+import { TrendingUp, CheckCircle, XCircle, Target, Filter } from 'lucide-react';
 
-// Force dynamic rendering for this page
-export const dynamic = 'force-dynamic';
+interface PredictionResult {
+  week: number;
+  homeTeam: string;
+  awayTeam: string;
+  predictedHomeScore: number;
+  predictedAwayScore: number;
+  actualHomeScore: number;
+  actualAwayScore: number;
+  predictedWinner: string;
+  actualWinner: string;
+  correct: boolean;
+  predictedSpread: number;
+  actualSpread: number;
+  spreadError: number;
+  predictedTotal: number;
+  actualTotal: number;
+  totalError: number;
+  confidence: number;
+}
 
 export default function PredictionsPage() {
-  const searchParams = useSearchParams();
-  const [games, setGames] = useState<Game[]>([]);
-  const [predictions, setPredictions] = useState<Map<string, GamePrediction>>(new Map());
+  const [predictions, setPredictions] = useState<PredictionResult[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedGame, setSelectedGame] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [bettingLines, setBettingLines] = useState<Map<string, any>>(new Map());
+  const [selectedWeek, setSelectedWeek] = useState<number | 'all'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'correct' | 'incorrect'>('all');
+  const [syncing, setSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
   useEffect(() => {
     loadPredictions();
-    const gameId = searchParams.get('game');
-    if (gameId) {
-      setSelectedGame(gameId);
-    }
-  }, [searchParams]);
+  }, []);
 
   const loadPredictions = async () => {
     try {
-      setLoading(true);
-      const { season, week } = await NFLAPI.getCurrentSeasonWeek();
+      // Try loading from Firebase first
+      console.log('Checking Firebase for cached predictions...');
+      const cachedResponse = await fetch('/api/predictions/cached');
 
-      // Try to load from cache first (fast!)
-      console.log('📦 Loading cached predictions from Firebase...');
-      const cached = await FirestoreService.getCachedPredictions(season, week);
-
-      if (cached.predictions.length > 0) {
-        console.log(`✅ Loaded ${cached.predictions.length} cached predictions`);
-        setGames(cached.games);
-        setLastUpdate(cached.lastUpdate);
-
-        // Build predictions map
-        const newPredictions = new Map<string, GamePrediction>();
-        for (const pred of cached.predictions) {
-          const game = cached.games.find(g => g.id === pred.gameId);
-          if (game) {
-            newPredictions.set(pred.gameId, {
-              gameId: pred.gameId,
-              game: game,
-              predictedWinner: pred.predictedWinner,
-              confidence: pred.confidence,
-              predictedScore: pred.predictedScore,
-              factors: pred.factors,
-              edgeAnalysis: pred.edgeAnalysis,
-              recommendation: pred.recommendation,
-            });
-          }
+      if (cachedResponse.ok) {
+        const cachedData = await cachedResponse.json();
+        if (cachedData.predictions && cachedData.predictions.length > 0) {
+          console.log(`Loaded ${cachedData.predictions.length} predictions from Firebase cache`);
+          setPredictions(cachedData.predictions);
+          setLoading(false);
+          return;
         }
-        setPredictions(newPredictions);
-      } else {
-        // No cache - generate predictions on-the-fly
-        console.log('⚠️  No cached predictions found. Generating fresh predictions...');
-        await generatePredictions();
       }
+
+      // Fall back to JSON file
+      console.log('Loading predictions from JSON file...');
+      const response = await fetch('/training/backtest_results_2025.json');
+      const data = await response.json();
+
+      const formattedPredictions: PredictionResult[] = data.allResults.map((result: any) => {
+        const predictedWinner = result.predictedHome > result.predictedAway ? result.homeTeam : result.awayTeam;
+        const actualWinner = result.actualHome > result.actualAway ? result.homeTeam : result.awayTeam;
+
+        return {
+          week: result.week,
+          homeTeam: result.homeTeam,
+          awayTeam: result.awayTeam,
+          predictedHomeScore: result.predictedHome,
+          predictedAwayScore: result.predictedAway,
+          actualHomeScore: result.actualHome,
+          actualAwayScore: result.actualAway,
+          predictedWinner,
+          actualWinner,
+          correct: result.winnerCorrect,
+          predictedSpread: result.predictedSpread,
+          actualSpread: result.actualSpread,
+          spreadError: result.spreadError,
+          predictedTotal: result.predictedTotal,
+          actualTotal: result.actualTotal,
+          totalError: result.totalError,
+          confidence: result.confidence
+        };
+      });
+
+      setPredictions(formattedPredictions);
+      setLoading(false);
     } catch (error) {
       console.error('Error loading predictions:', error);
-    } finally {
       setLoading(false);
     }
   };
 
-  const generatePredictions = async () => {
+  const filteredPredictions = predictions.filter(pred => {
+    if (selectedWeek !== 'all' && pred.week !== selectedWeek) return false;
+    if (filterType === 'correct' && !pred.correct) return false;
+    if (filterType === 'incorrect' && pred.correct) return false;
+    return true;
+  });
+
+  const weeks = Array.from(new Set(predictions.map(p => p.week))).sort((a, b) => a - b);
+
+  const syncToFirebase = async () => {
+    setSyncing(true);
+    setSyncStatus('Syncing predictions to Firebase...');
+
     try {
-      const { season, week } = await NFLAPI.getCurrentSeasonWeek();
-      const weekGames = await NFLAPI.getWeekGames(season, week);
-      const scheduledGames = weekGames.filter(g => g.status === 'scheduled');
-
-      setGames(scheduledGames);
-
-      // Get betting odds
-      let oddsData: any[] = [];
-      try {
-        oddsData = await OddsAPI.getNFLOdds();
-      } catch (error) {
-        console.error('Error fetching odds:', error);
-      }
-
-      const newPredictions = new Map<string, GamePrediction>();
-      const newBettingLines = new Map<string, any>();
-
-      for (const game of scheduledGames) {
-        try {
-          // Get team stats
-          const [homeStats, awayStats] = await Promise.all([
-            NFLAPI.getTeamStats(game.homeTeam.id, season),
-            NFLAPI.getTeamStats(game.awayTeam.id, season)
-          ]);
-
-          // Find betting lines
-          const gameOdds = oddsData.find((o: any) => {
-            const matchHome = o.home_team?.toLowerCase().includes(game.homeTeam.name.toLowerCase()) ||
-                             o.home_team?.toLowerCase().includes(game.homeTeam.abbreviation.toLowerCase());
-            const matchAway = o.away_team?.toLowerCase().includes(game.awayTeam.name.toLowerCase()) ||
-                             o.away_team?.toLowerCase().includes(game.awayTeam.abbreviation.toLowerCase());
-            return matchHome && matchAway;
-          });
-
-          let bettingLines;
-          if (gameOdds) {
-            bettingLines = OddsAPI.transformToBettingLines(gameOdds);
-            newBettingLines.set(game.id, gameOdds);
-          }
-
-          // Generate prediction
-          const prediction = await GamePredictor.predictGame(
-            game,
-            homeStats,
-            awayStats,
-            null,
-            bettingLines
-          );
-
-          newPredictions.set(game.id, prediction);
-        } catch (error) {
-          console.error(`Error predicting game ${game.id}:`, error);
-        }
-      }
-
-      setPredictions(newPredictions);
-      setBettingLines(newBettingLines);
-      setLastUpdate(new Date());
-      console.log(`✅ Generated ${newPredictions.size} predictions`);
-    } catch (error) {
-      console.error('Error generating predictions:', error);
-    }
-  };
-
-  const refreshData = async () => {
-    try {
-      setRefreshing(true);
-      console.log('🔄 Triggering data refresh...');
-
-      // Call the update API endpoint
-      const response = await fetch('/api/update-data', {
-        method: 'POST',
+      const response = await fetch('/api/predictions/sync', {
+        method: 'POST'
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (result.success) {
-        console.log(`✅ Refresh complete! Updated ${result.stats.updated} games`);
-        // Reload from cache to show new data
-        await loadPredictions();
+      if (response.ok) {
+        setSyncStatus(`✅ Successfully synced ${data.count} predictions!`);
+        // Reload predictions from Firebase
+        setTimeout(() => {
+          loadPredictions();
+          setSyncStatus(null);
+        }, 2000);
       } else {
-        console.error('❌ Refresh failed:', result.error);
-        alert('Failed to refresh data. Check console for details.');
+        setSyncStatus(`❌ Error: ${data.error}`);
       }
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-      alert('Failed to refresh data. Check console for details.');
+    } catch (error: any) {
+      setSyncStatus(`❌ Error: ${error.message}`);
     } finally {
-      setRefreshing(false);
+      setSyncing(false);
     }
   };
 
-  const getRecommendationColor = (rec: GamePrediction['recommendation']) => {
-    switch (rec) {
-      case 'strong_bet':
-        return 'bg-green-600';
-      case 'value_bet':
-        return 'bg-blue-600';
-      case 'avoid':
-        return 'bg-red-600';
-      case 'wait':
-        return 'bg-yellow-600';
-      default:
-        return 'bg-gray-600';
-    }
+  const stats = {
+    total: filteredPredictions.length,
+    correct: filteredPredictions.filter(p => p.correct).length,
+    accuracy: filteredPredictions.length > 0
+      ? (filteredPredictions.filter(p => p.correct).length / filteredPredictions.length * 100).toFixed(1)
+      : '0.0',
+    avgSpreadError: filteredPredictions.length > 0
+      ? (filteredPredictions.reduce((sum, p) => sum + p.spreadError, 0) / filteredPredictions.length).toFixed(1)
+      : '0.0',
+    avgTotalError: filteredPredictions.length > 0
+      ? (filteredPredictions.reduce((sum, p) => sum + p.totalError, 0) / filteredPredictions.length).toFixed(1)
+      : '0.0'
   };
 
-  const getRecommendationText = (rec: GamePrediction['recommendation']) => {
-    switch (rec) {
-      case 'strong_bet':
-        return 'Strong Bet';
-      case 'value_bet':
-        return 'Value Bet';
-      case 'avoid':
-        return 'Avoid';
-      case 'wait':
-        return 'Wait for Better Line';
-      default:
-        return 'No Recommendation';
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 to-slate-800">
-      <LoggedInHeader />
-
-      {/* Page Header - Compact */}
-      <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border-b border-slate-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Game Predictions</h1>
-              {lastUpdate && (
-                <p className="text-slate-500 text-xs mt-0.5">
-                  Updated: {format(lastUpdate, 'MMM d, h:mm a')}
-                </p>
-              )}
-            </div>
-            <button
-              onClick={refreshData}
-              disabled={refreshing}
-              className={`
-                px-4 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2
-                ${refreshing
-                  ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-                }
-              `}
-            >
-              {refreshing ? (
-                <>
-                  <div className="inline-block animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-white"></div>
-                  Refreshing...
-                </>
-              ) : (
-                <>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Refresh
-                </>
-              )}
-            </button>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+        <LoggedInHeader />
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-slate-300">Loading predictions...</p>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Main Content - Compact */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {loading ? (
-          <AILoadingAnimation
-            title="PREDICTION ENGINE ACTIVE"
-            subtitle="Analyzing matchups and generating AI predictions..."
-            steps={[
-              { label: 'Loading game schedules', icon: Database, delay: 0 },
-              { label: 'Fetching current odds data', icon: BarChart3, delay: 200 },
-              { label: 'Running ML prediction models', icon: Brain, delay: 400 },
-              { label: 'Analyzing weather conditions', icon: Cpu, delay: 600 },
-              { label: 'Calculating confidence scores', icon: BarChart3, delay: 800 },
-              { label: 'Generating recommendations', icon: Brain, delay: 1000 },
-            ]}
-          />
-        ) : (
-          <div className="grid gap-3">
-            {Array.from(predictions.entries()).map(([gameId, prediction]) => {
-              // Extract current spread from betting lines
-              const odds = bettingLines.get(gameId);
-              const currentSpread = odds?.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'spreads');
-              const homeSpreadValue = currentSpread?.outcomes?.find((o: any) =>
-                o.name === prediction.game.homeTeam.name || o.name.includes(prediction.game.homeTeam.abbreviation)
-              )?.point;
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+      <LoggedInHeader />
 
-              return (
-              <div
-                key={gameId}
-                className="bg-slate-800 rounded-lg p-4 hover:bg-slate-750 transition"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  {/* Game Info */}
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-1">
-                      <h3 className="text-lg font-bold text-white">
-                        {prediction.game.awayTeam.name} @ {prediction.game.homeTeam.name}
-                      </h3>
-                      <span
-                        className={`${getRecommendationColor(
-                          prediction.recommendation
-                        )} text-white text-xs px-2 py-1 rounded-full font-semibold`}
-                      >
-                        {getRecommendationText(prediction.recommendation)}
-                      </span>
-                      {homeSpreadValue !== undefined && (
-                        <span className="text-slate-400 text-xs font-mono">
-                          Spread: {prediction.game.homeTeam.abbreviation} {homeSpreadValue > 0 ? '+' : ''}{homeSpreadValue}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-slate-400 text-xs">
-                      {format(prediction.game.gameTime, 'EEE, MMM d - h:mm a')}
-                    </p>
-                  </div>
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border-b border-slate-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+            <Target className="w-10 h-10 text-blue-400" />
+            All Predictions
+          </h1>
+          <p className="text-slate-300 text-lg">
+            2025 Season • Weeks 2-14 • {predictions.length} Games
+          </p>
+        </div>
+      </div>
 
-                  {/* Confidence */}
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-white">
-                      {prediction.confidence}%
-                    </div>
-                    <div className="text-slate-400 text-xs">Confidence</div>
-                  </div>
-                </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Stats Summary */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+          <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
+            <div className="text-2xl font-bold text-white">{stats.total}</div>
+            <div className="text-slate-400 text-sm">Games</div>
+          </div>
+          <div className="bg-green-900/20 rounded-lg p-4 border border-green-700/50">
+            <div className="text-2xl font-bold text-green-400">{stats.correct}</div>
+            <div className="text-slate-400 text-sm">Correct</div>
+          </div>
+          <div className="bg-blue-900/20 rounded-lg p-4 border border-blue-700/50">
+            <div className="text-2xl font-bold text-blue-400">{stats.accuracy}%</div>
+            <div className="text-slate-400 text-sm">Accuracy</div>
+          </div>
+          <div className="bg-purple-900/20 rounded-lg p-4 border border-purple-700/50">
+            <div className="text-2xl font-bold text-purple-400">±{stats.avgSpreadError}</div>
+            <div className="text-slate-400 text-sm">Avg Spread Error</div>
+          </div>
+          <div className="bg-orange-900/20 rounded-lg p-4 border border-orange-700/50">
+            <div className="text-2xl font-bold text-orange-400">±{stats.avgTotalError}</div>
+            <div className="text-slate-400 text-sm">Avg Total Error</div>
+          </div>
+        </div>
 
-                {/* Prediction - Crystal Clear */}
-                <div className="space-y-3 mb-4">
-                  {/* Spread Pick */}
-                  <div className="bg-gradient-to-r from-green-900/30 to-emerald-900/30 border border-green-500/30 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="px-2 py-0.5 bg-green-600 text-white text-xs font-bold rounded">
-                        SPREAD BET
-                      </div>
-                      {homeSpreadValue !== undefined && (
-                        <span className="text-slate-400 text-xs">
-                          Line: {prediction.game.homeTeam.abbreviation} {homeSpreadValue > 0 ? '+' : ''}{homeSpreadValue}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-lg font-black text-green-400">
-                          {prediction.predictedWinner === 'home'
-                            ? prediction.game.homeTeam.abbreviation
-                            : prediction.game.awayTeam.abbreviation}
-                          {homeSpreadValue !== undefined && (
-                            <span className="ml-1">
-                              {prediction.predictedWinner === 'home'
-                                ? `${homeSpreadValue > 0 ? '+' : ''}${homeSpreadValue}`
-                                : `${(-homeSpreadValue) > 0 ? '+' : ''}${(-homeSpreadValue)}`
-                              }
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-green-300">
-                          {prediction.predictedWinner === 'home'
-                            ? prediction.game.homeTeam.name
-                            : prediction.game.awayTeam.name} to cover
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-slate-400 text-xs">Predicted Final</div>
-                        <div className="text-base font-bold text-white">
-                          {prediction.predictedScore.away}-{prediction.predictedScore.home}
-                        </div>
-                        <div className="text-xs text-slate-500">
-                          Margin: {Math.abs(prediction.predictedScore.home - prediction.predictedScore.away)} pts
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Edge Analysis Summary */}
-                  {Math.abs(prediction.edgeAnalysis.spread) > 1.5 && (
-                    <div className="bg-slate-900 rounded-lg p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-slate-400">Spread Edge vs. Vegas</div>
-                        <div className={`text-base font-bold ${
-                          Math.abs(prediction.edgeAnalysis.spread) > 3 ? 'text-green-400' : 'text-yellow-400'
-                        }`}>
-                          {prediction.edgeAnalysis.spread > 0 ? '+' : ''}
-                          {prediction.edgeAnalysis.spread.toFixed(1)} pts
-                          <span className="text-xs ml-1">
-                            {Math.abs(prediction.edgeAnalysis.spread) > 4 ? '(STRONG)' :
-                             Math.abs(prediction.edgeAnalysis.spread) > 2.5 ? '(GOOD)' : '(SLIGHT)'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Prediction Factors - Compact */}
-                <div className="border-t border-slate-700 pt-3">
-                  <h4 className="text-white font-semibold text-sm mb-2">Key Factors</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {prediction.factors.map((factor, idx) => (
-                      <div key={idx} className="bg-slate-900 rounded p-2">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-white font-medium text-sm">
-                            {factor.name}
-                          </span>
-                          <span
-                            className={`text-sm font-semibold ${
-                              factor.value > 0 ? 'text-green-400' : 'text-red-400'
-                            }`}
-                          >
-                            {factor.value > 0 ? '+' : ''}
-                            {factor.value.toFixed(1)}
-                          </span>
-                        </div>
-                        <p className="text-slate-400 text-xs">{factor.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Action Button */}
-                <div className="mt-6 pt-4 border-t border-slate-700">
-                  <button
-                    onClick={() =>
-                      setSelectedGame(selectedGame === gameId ? null : gameId)
-                    }
-                    className="text-blue-400 hover:text-blue-300 transition text-sm font-medium"
-                  >
-                    {selectedGame === gameId ? 'Hide Details ↑' : 'View Full Analysis →'}
-                  </button>
-                </div>
-
-                {/* Expanded Details */}
-                {selectedGame === gameId && (
-                  <div className="mt-4 pt-4 border-t border-slate-700 space-y-4">
-                    {/* Edge Analysis Breakdown */}
-                    <div>
-                      <h5 className="text-white font-semibold mb-3">Edge Analysis</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="bg-slate-900 rounded p-4">
-                          <div className="text-slate-400 text-xs mb-1">Spread Edge</div>
-                          <div className={`text-2xl font-bold ${
-                            Math.abs(prediction.edgeAnalysis.spread) > 3 ? 'text-green-400' : 'text-slate-400'
-                          }`}>
-                            {prediction.edgeAnalysis.spread > 0 ? '+' : ''}
-                            {prediction.edgeAnalysis.spread.toFixed(1)} pts
-                          </div>
-                          <div className="text-slate-500 text-xs mt-1">
-                            {Math.abs(prediction.edgeAnalysis.spread) > 4 ? 'STRONG EDGE' :
-                             Math.abs(prediction.edgeAnalysis.spread) > 2.5 ? 'GOOD EDGE' :
-                             Math.abs(prediction.edgeAnalysis.spread) > 1.5 ? 'SLIGHT EDGE' : 'NO EDGE'}
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-900 rounded p-4">
-                          <div className="text-slate-400 text-xs mb-1">Total Edge</div>
-                          <div className={`text-2xl font-bold ${
-                            Math.abs(prediction.edgeAnalysis.total) > 3 ? 'text-green-400' : 'text-slate-400'
-                          }`}>
-                            {prediction.edgeAnalysis.total > 0 ? '+' : ''}
-                            {prediction.edgeAnalysis.total.toFixed(1)} pts
-                          </div>
-                          <div className="text-slate-500 text-xs mt-1">
-                            {prediction.edgeAnalysis.total > 3 ? 'Bet OVER' :
-                             prediction.edgeAnalysis.total < -3 ? 'Bet UNDER' : 'PASS'}
-                          </div>
-                        </div>
-
-                        <div className="bg-slate-900 rounded p-4">
-                          <div className="text-slate-400 text-xs mb-1">Confidence</div>
-                          <div className="text-2xl font-bold text-blue-400">
-                            {prediction.confidence}%
-                          </div>
-                          <div className="text-slate-500 text-xs mt-1">
-                            {prediction.confidence >= 75 ? 'VERY HIGH' :
-                             prediction.confidence >= 65 ? 'HIGH' :
-                             prediction.confidence >= 50 ? 'MEDIUM' : 'LOW'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Betting Recommendation */}
-                    <div className="bg-gradient-to-r from-slate-900 to-slate-800 rounded-lg p-4 border border-slate-700">
-                      <h5 className="text-white font-semibold mb-2">Betting Recommendation</h5>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-400">Suggested Bet:</span>
-                          <span className={`font-bold ${
-                            prediction.recommendation === 'strong_bet' ? 'text-green-400' :
-                            prediction.recommendation === 'value_bet' ? 'text-blue-400' :
-                            prediction.recommendation === 'wait' ? 'text-yellow-400' : 'text-red-400'
-                          }`}>
-                            {getRecommendationText(prediction.recommendation).toUpperCase()}
-                          </span>
-                        </div>
-                        {prediction.edgeAnalysis.spread !== 0 && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">Spread Pick:</span>
-                            <span className="text-white font-semibold">
-                              {prediction.edgeAnalysis.spread > 0
-                                ? `${prediction.game.homeTeam.name} (Home)`
-                                : `${prediction.game.awayTeam.name} (Away)`}
-                            </span>
-                          </div>
-                        )}
-                        {Math.abs(prediction.edgeAnalysis.total) > 3 && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-slate-400">Total Pick:</span>
-                            <span className="text-white font-semibold">
-                              {prediction.edgeAnalysis.total > 3 ? 'OVER' : 'UNDER'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Team Stats Comparison */}
-                    <div>
-                      <h5 className="text-white font-semibold mb-3">Team Comparison</h5>
-                      <div className="bg-slate-900 rounded p-4 space-y-3">
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div className="text-left">
-                            <div className="font-semibold text-white">{prediction.game.awayTeam.abbreviation}</div>
-                            <div className="text-xs text-slate-400">Away</div>
-                          </div>
-                          <div className="text-slate-500 text-xs">VS</div>
-                          <div className="text-right">
-                            <div className="font-semibold text-white">{prediction.game.homeTeam.abbreviation}</div>
-                            <div className="text-xs text-slate-400">Home</div>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4 items-center">
-                          <div className="text-right text-lg font-bold text-white">
-                            {prediction.predictedScore.away}
-                          </div>
-                          <div className="text-center text-xs text-slate-500">Predicted Score</div>
-                          <div className="text-left text-lg font-bold text-white">
-                            {prediction.predictedScore.home}
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-4 items-center">
-                          <div className={`text-right font-semibold ${
-                            prediction.predictedWinner === 'away' ? 'text-green-400' : 'text-slate-500'
-                          }`}>
-                            {prediction.predictedWinner === 'away' ? '✓ Winner' : ''}
-                          </div>
-                          <div className="text-center text-xs text-slate-500">Prediction</div>
-                          <div className={`text-left font-semibold ${
-                            prediction.predictedWinner === 'home' ? 'text-green-400' : 'text-slate-500'
-                          }`}>
-                            {prediction.predictedWinner === 'home' ? 'Winner ✓' : ''}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Game Info */}
-                    <div>
-                      <h5 className="text-white font-semibold mb-3">Game Details</h5>
-                      <div className="bg-slate-900 rounded p-4 space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Venue:</span>
-                          <span className="text-white">{prediction.game.venue || 'TBD'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Kickoff:</span>
-                          <span className="text-white">
-                            {format(prediction.game.gameTime, 'EEEE, MMM d @ h:mm a')}
-                          </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-slate-400">Season / Week:</span>
-                          <span className="text-white">{prediction.game.season} / Week {prediction.game.week}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Betting Tips */}
-                    <div className="bg-blue-900/20 border border-blue-700/50 rounded-lg p-4">
-                      <h5 className="text-blue-300 font-semibold mb-2 flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Betting Tips
-                      </h5>
-                      <ul className="text-blue-200 text-sm space-y-1">
-                        <li>• Shop multiple sportsbooks for best line</li>
-                        <li>• Consider line movement before game time</li>
-                        <li>• Never bet more than 2-5% of bankroll per game</li>
-                        <li>• Track all bets for long-term analysis</li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-              </div>
-              );
-            })}
-
-            {predictions.size === 0 && (
-              <div className="bg-slate-800 rounded-lg p-12 text-center">
-                <p className="text-slate-400 text-lg">
-                  No predictions available
-                </p>
-                <p className="text-slate-500 mt-2">
-                  Check back closer to game time for updated predictions
-                </p>
-              </div>
-            )}
+        {/* Sync Status */}
+        {syncStatus && (
+          <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-3 mb-4">
+            <p className="text-blue-300 text-sm">{syncStatus}</p>
           </div>
         )}
 
-        {/* Disclaimer */}
-        <div className="mt-8 bg-yellow-900/20 border border-yellow-700 rounded-lg p-4">
-          <p className="text-yellow-400 text-sm">
-            <strong>Disclaimer:</strong> These predictions are for informational and
-            educational purposes only. They are based on statistical models and historical
-            data. Past performance does not guarantee future results. Always gamble
-            responsibly and within your means.
-          </p>
+        {/* Filters */}
+        <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Filter className="w-5 h-5 text-slate-400" />
+              <span className="text-white font-semibold">Filters</span>
+            </div>
+            <button
+              onClick={syncToFirebase}
+              disabled={syncing}
+              className="text-xs px-3 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white rounded transition"
+            >
+              {syncing ? 'Syncing...' : '🔄 Sync to Firebase'}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            {/* Week Filter */}
+            <div>
+              <label className="text-slate-400 text-sm mb-1 block">Week</label>
+              <select
+                value={selectedWeek}
+                onChange={(e) => setSelectedWeek(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
+                className="bg-slate-700 text-white rounded px-3 py-2 text-sm border border-slate-600"
+              >
+                <option value="all">All Weeks</option>
+                {weeks.map(week => (
+                  <option key={week} value={week}>Week {week}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Result Filter */}
+            <div>
+              <label className="text-slate-400 text-sm mb-1 block">Result</label>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value as any)}
+                className="bg-slate-700 text-white rounded px-3 py-2 text-sm border border-slate-600"
+              >
+                <option value="all">All Results</option>
+                <option value="correct">Correct Only</option>
+                <option value="incorrect">Incorrect Only</option>
+              </select>
+            </div>
+          </div>
         </div>
+
+        {/* Predictions List */}
+        <div className="space-y-3">
+          {filteredPredictions.map((pred, idx) => (
+            <div
+              key={idx}
+              className={`bg-slate-800/50 rounded-lg p-4 border ${
+                pred.correct ? 'border-green-700/50' : 'border-red-700/50'
+              }`}
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    pred.correct ? 'bg-green-900/30' : 'bg-red-900/30'
+                  }`}>
+                    {pred.correct ? (
+                      <CheckCircle className="w-6 h-6 text-green-400" />
+                    ) : (
+                      <XCircle className="w-6 h-6 text-red-400" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="text-white font-semibold text-lg">
+                      {pred.awayTeam} @ {pred.homeTeam}
+                    </div>
+                    <div className="text-slate-400 text-sm">Week {pred.week}</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-sm font-semibold ${pred.correct ? 'text-green-400' : 'text-red-400'}`}>
+                    {pred.correct ? 'CORRECT' : 'INCORRECT'}
+                  </div>
+                  <div className="text-slate-400 text-xs">{pred.confidence}% confidence</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Moneyline */}
+                <div className="bg-blue-900/20 rounded-lg p-3 border border-blue-700/30">
+                  <div className="text-blue-300 text-xs font-semibold mb-2">MONEYLINE (WINNER)</div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Predicted:</span>
+                      <span className="text-white font-semibold">{pred.predictedWinner}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Actual:</span>
+                      <span className="text-white font-semibold">{pred.actualWinner}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Score:</span>
+                      <span className="text-white">{pred.actualAwayScore}-{pred.actualHomeScore}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Spread */}
+                <div className="bg-purple-900/20 rounded-lg p-3 border border-purple-700/30">
+                  <div className="text-purple-300 text-xs font-semibold mb-2">SPREAD</div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Predicted:</span>
+                      <span className="text-white font-semibold">{pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Actual:</span>
+                      <span className="text-white font-semibold">{pred.actualSpread > 0 ? '+' : ''}{pred.actualSpread.toFixed(1)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Error:</span>
+                      <span className={`font-semibold ${
+                        pred.spreadError <= 3 ? 'text-green-400' :
+                        pred.spreadError <= 7 ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        ±{pred.spreadError.toFixed(1)} pts
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="bg-orange-900/20 rounded-lg p-3 border border-orange-700/30">
+                  <div className="text-orange-300 text-xs font-semibold mb-2">TOTAL (O/U)</div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Predicted:</span>
+                      <span className="text-white font-semibold">{pred.predictedTotal.toFixed(1)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Actual:</span>
+                      <span className="text-white font-semibold">{pred.actualTotal.toFixed(1)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Error:</span>
+                      <span className={`font-semibold ${
+                        pred.totalError <= 3 ? 'text-green-400' :
+                        pred.totalError <= 7 ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        ±{pred.totalError.toFixed(1)} pts
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {filteredPredictions.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-slate-400">No predictions match your filters.</p>
+          </div>
+        )}
       </div>
     </div>
   );

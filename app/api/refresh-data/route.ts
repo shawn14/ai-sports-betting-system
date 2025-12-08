@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { NFLAPI } from '@/lib/api/nfl';
 import { OddsAPI } from '@/lib/api/odds';
-import { GamePredictor } from '@/lib/models/predictor';
+import { MatrixHelper } from '@/lib/models/matrixHelper';
 import { FirestoreService } from '@/lib/firebase/firestore';
 
 /**
@@ -58,18 +58,22 @@ export async function GET(request: NextRequest) {
     await Promise.all(scheduledGames.map(game => FirestoreService.saveGame(game)));
     console.log(`✅ Saved ${scheduledGames.length} games to Firebase`);
 
-    // 5. Generate and save predictions
+    // 5. Check standings data availability
+    const hasStandings = await MatrixHelper.hasStandingsData(season, week);
+    if (!hasStandings) {
+      console.error(`⚠️  Missing standings data for ${season} week ${week}`);
+      return NextResponse.json({
+        error: `Missing standings data for ${season} week ${week}. Please run: npm run scrape-standings ${season} ${week}`,
+        success: false
+      }, { status: 400 });
+    }
+
+    // 6. Generate and save predictions using Matrix system
     const predictions = [];
     const oddsCache = new Map();
 
     for (const game of scheduledGames) {
       try {
-        // Get team stats
-        const [homeStats, awayStats] = await Promise.all([
-          NFLAPI.getTeamStats(game.homeTeam.id, season),
-          NFLAPI.getTeamStats(game.awayTeam.id, season)
-        ]);
-
         // Find betting lines
         const gameOdds = oddsData.find((o: any) => {
           const matchHome = o.home_team?.toLowerCase().includes(game.homeTeam.name.toLowerCase()) ||
@@ -85,12 +89,12 @@ export async function GET(request: NextRequest) {
           oddsCache.set(game.id, gameOdds); // Cache for later
         }
 
-        // Generate prediction
-        const prediction = await GamePredictor.predictGame(
+        // Generate prediction using Matrix system
+        const prediction = await MatrixHelper.predictGame(
           game,
-          homeStats,
-          awayStats,
-          null,
+          season,
+          week,
+          'balanced',
           bettingLines
         );
 
@@ -104,7 +108,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 6. Cache odds data separately for quick access
+    // 7. Cache odds data separately for quick access
     await saveOddsCache(season, week, oddsData);
 
     const duration = Date.now() - startTime;

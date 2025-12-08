@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { NFLAPI } from '@/lib/api/nfl';
 import { OddsAPI } from '@/lib/api/odds';
 import { WeatherAPI } from '@/lib/api/weather';
-import { GamePredictor } from '@/lib/models/predictor';
+import { MatrixHelper } from '@/lib/models/matrixHelper';
 import { FirestoreService } from '@/lib/firebase/firestore';
 
 /**
@@ -46,16 +46,23 @@ export async function POST(request: Request) {
       games: [] as any[]
     };
 
+    // Check if standings data is available
+    const hasStandings = await MatrixHelper.hasStandingsData(season, week);
+    if (!hasStandings) {
+      console.error(`⚠️  Missing standings data for ${season} week ${week}`);
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Missing standings data for ${season} week ${week}. Please run: npm run scrape-standings ${season} ${week}`,
+          timestamp: new Date().toISOString()
+        },
+        { status: 400 }
+      );
+    }
+
     for (const game of weekGames) {
       try {
         if (game.status === 'scheduled') {
-          // Fetch team stats and weather
-          const [homeStats, awayStats, weather] = await Promise.all([
-            NFLAPI.getTeamStats(game.homeTeam.id),
-            NFLAPI.getTeamStats(game.awayTeam.id),
-            WeatherAPI.getForecast(game.homeTeam.name, game.gameTime)
-          ]);
-
           // Find betting lines
           let bettingLines;
           const gameOdds = oddsData.find((o: any) => {
@@ -70,12 +77,12 @@ export async function POST(request: Request) {
             bettingLines = OddsAPI.transformToBettingLines(gameOdds);
           }
 
-          // Generate prediction
-          const prediction = await GamePredictor.predictGame(
+          // Generate prediction using Matrix system
+          const prediction = await MatrixHelper.predictGame(
             game,
-            homeStats,
-            awayStats,
-            weather,
+            season,
+            week,
+            'balanced',
             bettingLines
           );
 

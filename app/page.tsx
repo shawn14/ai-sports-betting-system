@@ -32,10 +32,10 @@ export default function LandingPage() {
               <a href="#how-it-works" className="text-slate-300 hover:text-white transition">How It Works</a>
               <a href="#pricing" className="text-slate-300 hover:text-white transition">Pricing</a>
               <Link
-                href="/dashboard"
+                href="/chat-predict"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition font-semibold"
               >
-                Get Started
+                Try Chat
               </Link>
             </nav>
           </div>
@@ -52,7 +52,7 @@ export default function LandingPage() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-2 mb-8">
               <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm text-blue-300 font-semibold">58.1% Win Rate | +11.9% ROI</span>
+              <span className="text-sm text-blue-300 font-semibold">61.8% Win Rate | 191 Games Backtested</span>
             </div>
 
             <h2 className="text-5xl sm:text-7xl font-bold text-white mb-6 leading-tight">
@@ -109,24 +109,24 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-blue-400 mb-2">58.1%</div>
-              <div className="text-slate-400">Win Rate (ATS)</div>
-              <div className="text-slate-500 text-sm mt-1">on high-confidence picks</div>
+              <div className="text-4xl font-bold text-blue-400 mb-2">61.8%</div>
+              <div className="text-slate-400">Winner Accuracy</div>
+              <div className="text-slate-500 text-sm mt-1">validated predictions</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-green-400 mb-2">+11.9%</div>
-              <div className="text-slate-400">Return on Investment</div>
-              <div className="text-slate-500 text-sm mt-1">verified backtesting</div>
+              <div className="text-4xl font-bold text-green-400 mb-2">$3,770</div>
+              <div className="text-slate-400">Estimated Profit</div>
+              <div className="text-slate-500 text-sm mt-1">$100/game @ -110 odds</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-purple-400 mb-2">6.0+</div>
-              <div className="text-slate-400">Point Threshold</div>
-              <div className="text-slate-500 text-sm mt-1">confidence filtering</div>
+              <div className="text-4xl font-bold text-purple-400 mb-2">±7.5</div>
+              <div className="text-slate-400">Avg Spread Error</div>
+              <div className="text-slate-500 text-sm mt-1">point differential accuracy</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-orange-400 mb-2">832</div>
-              <div className="text-slate-400">Games Analyzed</div>
-              <div className="text-slate-500 text-sm mt-1">2021-2024 seasons</div>
+              <div className="text-4xl font-bold text-orange-400 mb-2">191</div>
+              <div className="text-slate-400">Games Backtested</div>
+              <div className="text-slate-500 text-sm mt-1">2025 Season Weeks 2-14</div>
             </div>
           </div>
         </div>
@@ -150,22 +150,22 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center mb-6">
                 <TrendingUp className="w-6 h-6 text-blue-400" />
               </div>
-              <h4 className="text-xl font-bold text-white mb-3">High-Confidence Picks</h4>
+              <h4 className="text-xl font-bold text-white mb-3">Three Bet Types</h4>
               <p className="text-slate-400 leading-relaxed">
-                Only get recommendations when our model has strong conviction. We filter out noise and show you the best opportunities.
+                Every prediction shows Moneyline (winner), Spread (point differential), and Total (over/under) with individual confidence ratings.
               </p>
               <ul className="mt-4 space-y-2">
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>6-point confidence threshold</span>
+                  <span>Moneyline winner predictions</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>58.1% historical win rate</span>
+                  <span>Spread recommendations</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>Selective betting strategy</span>
+                  <span>Over/under totals</span>
                 </li>
               </ul>
             </div>
@@ -175,22 +175,22 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-6">
                 <BarChart3 className="w-6 h-6 text-purple-400" />
               </div>
-              <h4 className="text-xl font-bold text-white mb-3">Machine Learning Models</h4>
+              <h4 className="text-xl font-bold text-white mb-3">Matrix TSR Algorithm</h4>
               <p className="text-slate-400 leading-relaxed">
-                XGBoost algorithms trained on 33 key features including team stats, rest days, weather, and matchup context.
+                Team Strength Rating system with 6 components: Net Points, Momentum, Conference, Home/Away, Offensive and Defensive strength.
               </p>
               <ul className="mt-4 space-y-2">
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>Real-time predictions</span>
+                  <span>Instant predictions</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>Continuously updated</span>
+                  <span>Conversational AI interface</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>Backtested performance</span>
+                  <span>61.8% accuracy validated</span>
                 </li>
               </ul>
             </div>
@@ -200,22 +200,22 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-green-500/10 rounded-lg flex items-center justify-center mb-6">
                 <Target className="w-6 h-6 text-green-400" />
               </div>
-              <h4 className="text-xl font-bold text-white mb-3">Against The Spread (ATS)</h4>
+              <h4 className="text-xl font-bold text-white mb-3">Pre-Game Intelligence</h4>
               <p className="text-slate-400 leading-relaxed">
-                We don&apos;t just predict winners - we beat Vegas spreads. Our models find value where oddsmakers make mistakes.
+                AI-powered intelligence gathering for injuries, weather, and news. Get confidence adjustments based on real-time factors.
               </p>
               <ul className="mt-4 space-y-2">
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>Live odds integration</span>
+                  <span>Injury report analysis</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>Edge calculation</span>
+                  <span>Weather impact assessment</span>
                 </li>
                 <li className="flex items-center gap-2 text-sm text-slate-300">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>Expected value metrics</span>
+                  <span>Key storylines & news</span>
                 </li>
               </ul>
             </div>
@@ -240,9 +240,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">
                 1
               </div>
-              <h4 className="text-xl font-bold text-white mb-3">Data Collection</h4>
+              <h4 className="text-xl font-bold text-white mb-3">Ask About a Game</h4>
               <p className="text-slate-400">
-                Our system aggregates real-time NFL data including team stats, weather, injuries, and Vegas odds.
+                Chat naturally with our AI. Type &quot;Predict Week 15 Chiefs vs Chargers&quot; or just &quot;2&quot; after seeing a game list.
               </p>
             </div>
 
@@ -250,9 +250,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">
                 2
               </div>
-              <h4 className="text-xl font-bold text-white mb-3">AI Analysis</h4>
+              <h4 className="text-xl font-bold text-white mb-3">Matrix TSR Calculation</h4>
               <p className="text-slate-400">
-                Machine learning models process 33 features to predict outcomes and calculate confidence levels.
+                System calculates Team Strength Ratings using Net Points, Momentum, Conference, Home/Away, Offense, and Defense.
               </p>
             </div>
 
@@ -260,9 +260,9 @@ export default function LandingPage() {
               <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white text-2xl font-bold mx-auto mb-6">
                 3
               </div>
-              <h4 className="text-xl font-bold text-white mb-3">Smart Picks</h4>
+              <h4 className="text-xl font-bold text-white mb-3">Get Three Predictions</h4>
               <p className="text-slate-400">
-                Only high-confidence bets (6+ point edge) are recommended with expected win rates and ROI.
+                Receive Moneyline, Spread, and Total predictions with confidence ratings and optional pre-game intelligence.
               </p>
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function LandingPage() {
                 </li>
               </ul>
               <Link
-                href="/dashboard"
+                href="/chat-predict"
                 className="block text-center bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg transition font-semibold"
               >
                 Get Started
@@ -342,7 +342,7 @@ export default function LandingPage() {
                 </li>
               </ul>
               <Link
-                href="/dashboard"
+                href="/chat-predict"
                 className="block text-center bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition font-semibold"
               >
                 Start 7-Day Trial
@@ -378,7 +378,7 @@ export default function LandingPage() {
                 </li>
               </ul>
               <Link
-                href="/dashboard"
+                href="/chat-predict"
                 className="block text-center bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg transition font-semibold"
               >
                 Contact Sales
@@ -398,7 +398,7 @@ export default function LandingPage() {
             Join thousands of smart bettors using AI to beat the odds.
           </p>
           <Link
-            href="/dashboard"
+            href="/chat-predict"
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg transition font-semibold text-lg"
           >
             Start Your Free Trial
@@ -419,7 +419,8 @@ export default function LandingPage() {
               <ul className="space-y-2 text-slate-400">
                 <li><a href="#features" className="hover:text-white transition">Features</a></li>
                 <li><a href="#pricing" className="hover:text-white transition">Pricing</a></li>
-                <li><Link href="/dashboard" className="hover:text-white transition">Dashboard</Link></li>
+                <li><Link href="/chat-predict" className="hover:text-white transition">Chat</Link></li>
+                <li><Link href="/backtest-results" className="hover:text-white transition">Backtest</Link></li>
               </ul>
             </div>
             <div>

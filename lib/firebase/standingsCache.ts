@@ -1,0 +1,135 @@
+import type { NFLStandingsData } from '@/lib/scrapers/nflStandingsScraper';
+
+// Lazy initialization functions to avoid importing at module load time
+function getDb() {
+  // Always use client SDK for better compatibility
+  const config = require('./config');
+  return config.db;
+}
+
+function getFirestoreFunctions() {
+  const firestore = require('firebase/firestore');
+  return {
+    setDoc: firestore.setDoc,
+    getDoc: firestore.getDoc,
+    doc: firestore.doc
+  };
+}
+
+export class StandingsCacheService {
+  /**
+   * Save scraped standings to Firebase
+   */
+  static async saveStandings(
+    season: number,
+    week: number,
+    standings: NFLStandingsData[]
+  ): Promise<void> {
+    const cacheId = `${season}-w${week}`;
+
+    try {
+      console.log(`Saving to Firebase: standings_cache/${cacheId}...`);
+
+      const cleanedStandings = standings.map(team => ({
+        team: team.team || 'Unknown',
+        wins: Number.isFinite(team.wins) ? team.wins : 0,
+        losses: Number.isFinite(team.losses) ? team.losses : 0,
+        ties: Number.isFinite(team.ties) ? team.ties : 0,
+        pointsFor: Number.isFinite(team.pointsFor) ? team.pointsFor : 0,
+        pointsAgainst: Number.isFinite(team.pointsAgainst) ? team.pointsAgainst : 0,
+        homeWins: Number.isFinite(team.homeWins) ? team.homeWins : 0,
+        homeLosses: Number.isFinite(team.homeLosses) ? team.homeLosses : 0,
+        roadWins: Number.isFinite(team.roadWins) ? team.roadWins : 0,
+        roadLosses: Number.isFinite(team.roadLosses) ? team.roadLosses : 0,
+        confWins: Number.isFinite(team.confWins) ? team.confWins : 0,
+        confLosses: Number.isFinite(team.confLosses) ? team.confLosses : 0,
+        last5Wins: Number.isFinite(team.last5Wins) ? team.last5Wins : 0,
+        last5Losses: Number.isFinite(team.last5Losses) ? team.last5Losses : 0,
+        conference: team.conference || 'Unknown',
+        division: team.division || 'Unknown'
+      }));
+
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      const data = {
+        season,
+        week,
+        standings: cleanedStandings,
+        scrapedAt: now.toISOString(),
+        expiresAt: expiresAt.toISOString()
+      };
+
+      const db = getDb();
+      const { setDoc, doc } = getFirestoreFunctions();
+      const cacheRef = doc(db, 'standings_cache', cacheId);
+      await setDoc(cacheRef, data);
+
+      console.log(`✅ Saved standings to Firebase: standings_cache/${cacheId}`);
+    } catch (error: any) {
+      console.error(`❌ Failed to save to Firebase:`);
+      console.error(`Error code: ${error?.code}`);
+      console.error(`Error message: ${error?.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * Get cached standings (returns null if expired or not found)
+   */
+  static async getStandings(
+    season: number,
+    week: number
+  ): Promise<NFLStandingsData[] | null> {
+    const cacheId = `${season}-w${week}`;
+    const db = getDb();
+    const { getDoc, doc } = getFirestoreFunctions();
+    const cacheRef = doc(db, 'standings_cache', cacheId);
+    const cacheDoc = await getDoc(cacheRef);
+
+    if (!cacheDoc.exists()) {
+      console.log(`Cache miss: standings_cache/${cacheId}`);
+      return null;
+    }
+
+    const data = cacheDoc.data();
+
+    // Check if expired
+    if (data.expiresAt && new Date() > new Date(data.expiresAt)) {
+      console.log(`Cache expired: standings_cache/${cacheId}`);
+      return null;
+    }
+
+    console.log(`Cache hit: standings_cache/${cacheId}`);
+    return data.standings as NFLStandingsData[];
+  }
+
+  /**
+   * Get standings for a specific team (with cache check)
+   */
+  static async getTeamStandings(
+    season: number,
+    week: number,
+    teamName: string
+  ): Promise<NFLStandingsData | null> {
+    const standings = await this.getStandings(season, week);
+    if (!standings) return null;
+
+    // Try exact match first
+    let team = standings.find(s => s.team.toLowerCase() === teamName.toLowerCase());
+
+    // If not found, try partial match
+    if (!team) {
+      team = standings.find(s =>
+        s.team.toLowerCase().includes(teamName.toLowerCase()) ||
+        teamName.toLowerCase().includes(s.team.toLowerCase())
+      );
+    }
+
+    if (!team) {
+      console.warn(`Team not found in standings: ${teamName}`);
+    }
+
+    return team || null;
+  }
+}

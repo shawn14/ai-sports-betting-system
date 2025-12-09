@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import GlobalChat from "@/components/GlobalChat";
+import Disclaimer from "@/components/Disclaimer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -85,6 +86,7 @@ export default function RootLayout({
         <link rel="canonical" href="https://predictionmatrix.com" />
       </head>
       <body className={inter.className}>
+        <Disclaimer />
         <div className="pb-24">
           {children}
         </div>

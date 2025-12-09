@@ -84,7 +84,8 @@ export class MatrixPredictor {
       ],
       edgeAnalysis,
       recommendation,
-      vegasSpread: bettingLines?.[0]?.spread.home
+      vegasSpread: bettingLines?.[0]?.spread.home,
+      vegasTotal: bettingLines?.[0]?.total.line
     };
   }
 

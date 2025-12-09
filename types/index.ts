@@ -103,6 +103,7 @@ export interface GamePrediction {
   };
   recommendation: 'strong_bet' | 'value_bet' | 'avoid' | 'wait';
   vegasSpread?: number; // home team spread (saved at prediction time for historical reference)
+  vegasTotal?: number; // over/under line (saved at prediction time for historical reference)
 
   // Model versioning (added Phase 2)
   modelId?: string;      // e.g., "matrix-balanced"

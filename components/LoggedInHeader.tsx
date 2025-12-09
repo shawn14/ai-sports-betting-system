@@ -45,7 +45,7 @@ export default function LoggedInHeader() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
-            <Link href="/games" className="hover:opacity-80 transition-opacity">
+            <Link href="/predictions" className="hover:opacity-80 transition-opacity">
               <div>
                 <h1 className="text-base font-bold tracking-tight text-white">
                   PREDICTION<span className="text-blue-500">MATRIX</span>
@@ -57,12 +57,6 @@ export default function LoggedInHeader() {
             {/* Center Navigation */}
             <nav className="hidden md:flex items-center space-x-1">
               <Link
-                href="/games"
-                className="px-3 py-2 text-gray-300 hover:text-white text-sm font-medium transition"
-              >
-                Games
-              </Link>
-              <Link
                 href="/predictions"
                 className="px-3 py-2 text-gray-300 hover:text-white text-sm font-medium transition"
               >
@@ -73,6 +67,12 @@ export default function LoggedInHeader() {
                 className="px-3 py-2 text-gray-300 hover:text-white text-sm font-medium transition"
               >
                 Rankings
+              </Link>
+              <Link
+                href="/games"
+                className="px-3 py-2 text-gray-300 hover:text-white text-sm font-medium transition"
+              >
+                Games
               </Link>
               <Link
                 href="/how-it-works"
@@ -170,13 +170,6 @@ export default function LoggedInHeader() {
           <div className="md:hidden bg-[#1a1a1a] border-t border-gray-700">
             <nav className="px-4 py-3 space-y-1">
               <Link
-                href="/games"
-                onClick={() => setShowMobileMenu(false)}
-                className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
-              >
-                Games
-              </Link>
-              <Link
                 href="/predictions"
                 onClick={() => setShowMobileMenu(false)}
                 className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
@@ -189,6 +182,13 @@ export default function LoggedInHeader() {
                 className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
               >
                 Rankings
+              </Link>
+              <Link
+                href="/games"
+                onClick={() => setShowMobileMenu(false)}
+                className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
+              >
+                Games
               </Link>
               <Link
                 href="/how-it-works"

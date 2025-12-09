@@ -34,8 +34,8 @@ export default function LoginPage() {
         throw new Error(data.error || 'Login failed');
       }
 
-      // Redirect to games on success
-      router.push('/games');
+      // Redirect to predictions on success
+      router.push('/predictions');
     } catch (err: any) {
       setError(err.message || 'Invalid email or password. Please try again.');
     } finally {
@@ -92,7 +92,7 @@ export default function LoginPage() {
               try {
                 setIsLoading(true);
                 await signInWithGoogle();
-                router.push('/games');
+                router.push('/predictions');
               } catch (error) {
                 console.error('Google login failed:', error);
                 setError('Failed to sign in with Google. Please try again.');

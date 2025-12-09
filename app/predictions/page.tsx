@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import LoggedInHeader from '@/components/LoggedInHeader';
 import { Target, TrendingUp, Activity } from 'lucide-react';
 import { NFLAPI } from '@/lib/api/nfl';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 
 interface GamePrediction {
   gameId: string;
@@ -66,21 +68,30 @@ export default function PredictionsPage() {
   const fetchHistoricalOdds = async (gameId: string, gameTime: Date) => {
     try {
       const response = await fetch(`/api/odds/historical?gameId=${gameId}&gameTime=${gameTime.toISOString()}`);
-      if (!response.ok) return null;
+      if (!response.ok) return { spread: null, total: null };
       const oddsData = await response.json();
 
-      // Extract spread from bookmakers (use consensus or first available)
+      let spread = null;
+      let total = null;
+
+      // Extract spread and total from bookmakers (use consensus or first available)
       if (oddsData.bookmakers && oddsData.bookmakers.length > 0) {
         const spreadMarket = oddsData.bookmakers[0].markets?.find((m: any) => m.key === 'spreads');
+        const totalMarket = oddsData.bookmakers[0].markets?.find((m: any) => m.key === 'totals');
+
         if (spreadMarket && spreadMarket.outcomes) {
           const homeOutcome = spreadMarket.outcomes.find((o: any) => o.name === oddsData.home_team);
-          return homeOutcome?.point || null;
+          spread = homeOutcome?.point || null;
+        }
+
+        if (totalMarket && totalMarket.outcomes && totalMarket.outcomes.length > 0) {
+          total = totalMarket.outcomes[0]?.point || null;
         }
       }
-      return null;
+      return { spread, total };
     } catch (error) {
       console.error('Error fetching historical odds:', error);
-      return null;
+      return { spread: null, total: null };
     }
   };
 
@@ -89,6 +100,76 @@ export default function PredictionsPage() {
       setLoading(true);
       setError(null);
       setSelectedWeek(week);
+
+      // Fetch Vegas lines from Firestore betting_lines collection with fallback to training data
+      const fetchVegasLines = async (gameIds: string[]) => {
+        const vegasLinesMap = new Map<string, { spread: number; total: number }>();
+
+        // First, try Firestore betting_lines
+        for (const gameId of gameIds) {
+          try {
+            const q = query(
+              collection(db, 'betting_lines'),
+              where('gameId', '==', gameId)
+            );
+            const snapshot = await getDocs(q);
+
+            if (!snapshot.empty) {
+              // Aggregate across sportsbooks - take average
+              const spreads: number[] = [];
+              const totals: number[] = [];
+
+              snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.spread?.home !== undefined) {
+                  spreads.push(data.spread.home);
+                }
+                if (data.total?.line !== undefined) {
+                  totals.push(data.total.line);
+                }
+              });
+
+              if (spreads.length > 0 && totals.length > 0) {
+                const avgSpread = spreads.reduce((a, b) => a + b, 0) / spreads.length;
+                const avgTotal = totals.reduce((a, b) => a + b, 0) / totals.length;
+                vegasLinesMap.set(gameId, { spread: avgSpread, total: avgTotal });
+                console.log(`Found Vegas lines for ${gameId}: spread=${avgSpread.toFixed(1)}, total=${avgTotal.toFixed(1)} (from ${spreads.length} books)`);
+              }
+            }
+          } catch (err) {
+            console.warn(`Error fetching Vegas lines for ${gameId}:`, err);
+          }
+        }
+
+        // Fallback: Load training data for games not found in Firestore
+        if (vegasLinesMap.size < gameIds.length) {
+          console.log(`Only found ${vegasLinesMap.size}/${gameIds.length} games in Firestore, trying training data fallback...`);
+          try {
+            const trainingResponse = await fetch('/training/nfl_training_data_2025_with_vegas.json');
+            if (trainingResponse.ok) {
+              const trainingData = await trainingResponse.json();
+              console.log('Loaded training data for fallback');
+
+              gameIds.forEach(gameId => {
+                if (!vegasLinesMap.has(gameId)) {
+                  const trainingGame = trainingData.data.find((g: any) => g.gameId === gameId);
+                  if (trainingGame?.lines?.spread !== undefined && trainingGame?.lines?.total !== undefined) {
+                    vegasLinesMap.set(gameId, {
+                      spread: trainingGame.lines.spread,
+                      total: trainingGame.lines.total
+                    });
+                    console.log(`Found Vegas lines for ${gameId} in training data: spread=${trainingGame.lines.spread}, total=${trainingGame.lines.total}`);
+                  }
+                }
+              });
+            }
+          } catch (err) {
+            console.warn('Could not load training data fallback:', err);
+          }
+        }
+
+        return vegasLinesMap;
+      };
 
       // Get games for the week
       console.log(`Loading games for ${season} week ${week}...`);
@@ -124,6 +205,12 @@ export default function PredictionsPage() {
       console.log('Predictions generated:', data.count);
       console.log('Sample prediction:', Object.values(data.predictions)[0]);
 
+      // Fetch Vegas lines for all games
+      const gameIds = games.map(g => g.id);
+      console.log('Fetching Vegas lines for', gameIds.length, 'games...');
+      const vegasLinesMap = await fetchVegasLines(gameIds);
+      console.log(`Fetched Vegas lines for ${vegasLinesMap.size} games`);
+
       // Convert predictions object to array
       const predictionsArray: GamePrediction[] = await Promise.all(
         Object.entries(data.predictions).map(async ([gameId, pred]: [string, any]) => {
@@ -158,12 +245,10 @@ export default function PredictionsPage() {
             ? game?.awayTeam?.name
             : undefined;
 
-          // Fetch historical Vegas spread for completed games
-          let vegasSpread = undefined;
-          if (game?.status === 'completed' && game?.gameTime) {
-            console.log(`Fetching historical odds for ${gameId}...`);
-            vegasSpread = await fetchHistoricalOdds(gameId, game.gameTime);
-          }
+          // Get Vegas spread and total from Firestore betting_lines
+          const vegasLines = vegasLinesMap.get(gameId);
+          const vegasSpread = vegasLines?.spread;
+          const vegasTotal = vegasLines?.total;
 
           return {
             gameId,
@@ -183,7 +268,8 @@ export default function PredictionsPage() {
             actualHomeScore,
             actualAwayScore,
             actualWinner,
-            vegasSpread
+            vegasSpread,
+            vegasTotal
           };
         })
       );
@@ -258,19 +344,30 @@ export default function PredictionsPage() {
           );
 
           if (completedGames.length > 0) {
+            // Moneyline: Straight-up winner prediction
             const moneylineWins = completedGames.filter(pred => pred.actualWinner === pred.predictedWinner).length;
-            const spreadWins = completedGames.filter(pred => {
+
+            // ATS: Beat or tie Vegas spread error
+            const gamesWithVegasSpread = completedGames.filter(g => g.vegasSpread !== null && g.vegasSpread !== undefined);
+            const spreadWins = gamesWithVegasSpread.filter(pred => {
               const actualSpread = pred.actualHomeScore! - pred.actualAwayScore!;
-              return Math.abs(actualSpread - pred.predictedSpread) < 3;
+              const vegasError = Math.abs(pred.vegasSpread! - actualSpread);
+              const ourError = Math.abs(pred.predictedSpread - actualSpread);
+              return ourError <= vegasError; // Beat or tie Vegas
             }).length;
-            const totalWins = completedGames.filter(pred => {
+
+            // O/U: Predict correct side of Vegas total line
+            const gamesWithVegasTotal = completedGames.filter(g => g.vegasTotal !== null && g.vegasTotal !== undefined);
+            const totalWins = gamesWithVegasTotal.filter(pred => {
               const actualTotal = pred.actualHomeScore! + pred.actualAwayScore!;
-              return Math.abs(actualTotal - pred.predictedTotal) < 3;
+              const predictedOver = pred.predictedTotal > pred.vegasTotal!;
+              const actualOver = actualTotal > pred.vegasTotal!;
+              return predictedOver === actualOver; // Predicted correct side
             }).length;
 
             const moneylinePct = ((moneylineWins / completedGames.length) * 100).toFixed(1);
-            const spreadPct = ((spreadWins / completedGames.length) * 100).toFixed(1);
-            const totalPct = ((totalWins / completedGames.length) * 100).toFixed(1);
+            const spreadPct = gamesWithVegasSpread.length > 0 ? ((spreadWins / gamesWithVegasSpread.length) * 100).toFixed(1) : '0.0';
+            const totalPct = gamesWithVegasTotal.length > 0 ? ((totalWins / gamesWithVegasTotal.length) * 100).toFixed(1) : '0.0';
 
             return (
               <div className="bg-white rounded border border-gray-200 p-4 mb-4">
@@ -288,16 +385,20 @@ export default function PredictionsPage() {
 
                   {/* Spread Stats */}
                   <div className="text-center p-3 bg-white rounded border border-gray-200">
-                    <div className="text-xs text-gray-700 font-semibold mb-1">SPREAD</div>
+                    <div className="text-xs text-gray-700 font-semibold mb-1">SPREAD (ATS)</div>
                     <div className="text-3xl font-bold text-gray-900">{spreadPct}%</div>
-                    <div className="text-xs text-gray-600 mt-1">{spreadWins}-{completedGames.length - spreadWins} Record</div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {spreadWins}-{gamesWithVegasSpread.length - spreadWins} vs Vegas
+                    </div>
                   </div>
 
                   {/* Total Stats */}
                   <div className="text-center p-3 bg-white rounded border border-gray-200">
                     <div className="text-xs text-gray-700 font-semibold mb-1">TOTAL (O/U)</div>
                     <div className="text-3xl font-bold text-gray-900">{totalPct}%</div>
-                    <div className="text-xs text-gray-600 mt-1">{totalWins}-{completedGames.length - totalWins} Record</div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {totalWins}-{gamesWithVegasTotal.length - totalWins} record
+                    </div>
                   </div>
                 </div>
               </div>
@@ -345,8 +446,22 @@ export default function PredictionsPage() {
 
             // Calculate bet results
             const moneylineWin = isComplete && pred.actualWinner === pred.predictedWinner;
-            const spreadWin = isComplete && Math.abs(actualSpread - pred.predictedSpread) < 3;
-            const totalWin = isComplete && Math.abs(actualTotal - pred.predictedTotal) < 3;
+
+            // ATS: Beat or tie Vegas
+            let spreadWin = false;
+            if (isComplete && pred.vegasSpread !== null && pred.vegasSpread !== undefined) {
+              const vegasError = Math.abs(pred.vegasSpread - actualSpread);
+              const ourError = Math.abs(pred.predictedSpread - actualSpread);
+              spreadWin = ourError <= vegasError;
+            }
+
+            // O/U: Predict correct side of line
+            let totalWin = false;
+            if (isComplete && pred.vegasTotal !== null && pred.vegasTotal !== undefined) {
+              const predictedOver = pred.predictedTotal > pred.vegasTotal;
+              const actualOver = actualTotal > pred.vegasTotal;
+              totalWin = predictedOver === actualOver;
+            }
 
             return (
               <div
@@ -392,7 +507,7 @@ export default function PredictionsPage() {
                 {/* Predicted Spread */}
                 <div className="text-center">
                   <div className="font-semibold text-gray-900">
-                    {pred.homeTeam} {pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}
+                    {pred.homeTeam.split(' ').pop()} {pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}
                   </div>
                   {isComplete && (
                     <>
@@ -409,9 +524,12 @@ export default function PredictionsPage() {
                 {/* Vegas Spread */}
                 <div className="text-center">
                   {pred.vegasSpread !== undefined && pred.vegasSpread !== null ? (
-                    <div className="font-semibold text-purple-600">
-                      {pred.vegasSpread > 0 ? '+' : ''}{pred.vegasSpread.toFixed(1)}
-                    </div>
+                    <>
+                      <div className="font-semibold text-purple-600">
+                        {pred.homeTeam.split(' ').pop()} {pred.vegasSpread > 0 ? '+' : ''}{pred.vegasSpread.toFixed(1)}
+                      </div>
+                      <div className="text-[9px] text-gray-500">Vegas Line</div>
+                    </>
                   ) : (
                     <div className="text-[10px] text-gray-400">—</div>
                   )}
@@ -419,7 +537,18 @@ export default function PredictionsPage() {
 
                 {/* Total */}
                 <div className="text-center">
-                  <div className="font-semibold text-gray-900">{pred.predictedTotal.toFixed(1)}</div>
+                  {pred.vegasTotal !== undefined && pred.vegasTotal !== null ? (
+                    <>
+                      <div className="font-semibold text-gray-900">
+                        {pred.predictedTotal > pred.vegasTotal ? 'OVER' : 'UNDER'} {pred.predictedTotal.toFixed(1)}
+                      </div>
+                      <div className="text-[9px] text-gray-500">
+                        Line: {pred.vegasTotal.toFixed(1)}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="font-semibold text-gray-900">{pred.predictedTotal.toFixed(1)}</div>
+                  )}
                   {isComplete && (
                     <>
                       <div className="text-[10px] text-gray-500">

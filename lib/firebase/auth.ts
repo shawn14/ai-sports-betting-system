@@ -1,8 +1,31 @@
-import { getAuth, signOut as firebaseSignOut } from 'firebase/auth';
+import {
+  getAuth,
+  signOut as firebaseSignOut,
+  signInWithPopup,
+  GoogleAuthProvider,
+  UserCredential
+} from 'firebase/auth';
 import app from './config';
 
 // Initialize Firebase Auth
 export const auth = getAuth(app);
+
+// Initialize Google Auth Provider
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
+// Sign in with Google
+export async function signInWithGoogle(): Promise<UserCredential> {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result;
+  } catch (error) {
+    console.error('Error signing in with Google:', error);
+    throw error;
+  }
+}
 
 // Sign out function
 export async function signOut(): Promise<void> {

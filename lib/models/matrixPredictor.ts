@@ -42,9 +42,12 @@ export class MatrixPredictor {
     const homeTSR = this.calculateTSR(homeStandings, true, leagueAvg, config);
     const awayTSR = this.calculateTSR(awayStandings, false, leagueAvg, config);
 
-    // Predicted spread with regression-to-mean dampening
-    // This prevents extreme spreads (like 15.2) by pulling them toward 0
-    const rawSpread = homeTSR - awayTSR;
+    // Predicted spread with scaling and regression-to-mean dampening
+    // TSR differential (~-60 to +60) must be scaled to NFL spread range (~-14 to +14)
+    // Optimized scaling factor: 0.12 (validated via grid search on weeks 11-12, tested on weeks 13-14)
+    // Then apply regression factor to prevent extreme predictions
+    const tsrDiff = homeTSR - awayTSR;
+    const rawSpread = tsrDiff * 0.12;
     const predictedSpread = rawSpread * config.regression_factor;
 
     // Predicted total

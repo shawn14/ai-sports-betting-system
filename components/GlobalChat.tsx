@@ -20,12 +20,6 @@ export default function GlobalChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Don't show chat on homepage or other public pages
-  const publicPages = ['/', '/pricing', '/signup', '/login', '/terms', '/privacy', '/contact'];
-  if (publicPages.includes(pathname)) {
-    return null;
-  }
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -40,6 +34,12 @@ export default function GlobalChat() {
       inputRef.current?.focus();
     }
   }, [isFullScreen]);
+
+  // Don't show chat on homepage or other public pages
+  const publicPages = ['/', '/pricing', '/signup', '/login', '/terms', '/privacy', '/contact'];
+  if (publicPages.includes(pathname)) {
+    return null;
+  }
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;

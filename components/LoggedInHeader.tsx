@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { signOut } from '@/lib/firebase/auth';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
+import ScoresTicker from '@/components/ScoresTicker';
 
 export default function LoggedInHeader() {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -24,79 +25,95 @@ export default function LoggedInHeader() {
   };
 
   return (
-    <header className="bg-slate-900 border-b border-slate-700/50 sticky top-0 z-50 backdrop-blur-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Logo href="/games" size="md" />
+    <header className="bg-[#1a1a1a] sticky top-0 z-50">
+      {/* Scores Ticker */}
+      <ScoresTicker />
 
-          {/* Center Navigation */}
-          <nav className="hidden md:flex items-center space-x-1">
-            <Link
-              href="/games"
-              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
-            >
-              Games
+      {/* Main Header */}
+      <div className="border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14">
+            {/* Logo */}
+            <Link href="/games" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+                <span className="text-white font-bold text-lg">P</span>
+              </div>
+              <div>
+                <h1 className="text-base font-bold tracking-tight text-white">
+                  PREDICTION<span className="text-blue-500">MATRIX</span>
+                </h1>
+                <p className="text-[9px] text-gray-400 tracking-wider uppercase">AI Sports Analytics</p>
+              </div>
             </Link>
-            <Link
-              href="/predictions"
-              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
-            >
-              Predictions
-            </Link>
-            <Link
-              href="/rankings"
-              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
-            >
-              Rankings
-            </Link>
-            <Link
-              href="/how-it-works"
-              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
-            >
-              How It Works
-            </Link>
-            <Link
-              href="/backtest-results"
-              className="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
-            >
-              Backtest
-            </Link>
-          </nav>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
-            {/* User Menu */}
-            <div className="relative">
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg transition"
+            {/* Center Navigation */}
+            <nav className="hidden md:flex items-center space-x-1">
+              <Link
+                href="/games"
+                className="px-3 py-2 text-gray-300 hover:text-white text-sm font-medium transition"
               >
-                <User className="w-5 h-5" />
-                <span className="hidden sm:inline text-sm font-medium">Account</span>
-              </button>
+                Games
+              </Link>
+              <Link
+                href="/predictions"
+                className="px-3 py-2 text-gray-300 hover:text-white text-sm font-medium transition"
+              >
+                Predictions
+              </Link>
+              <Link
+                href="/rankings"
+                className="px-3 py-2 text-gray-300 hover:text-white text-sm font-medium transition"
+              >
+                Rankings
+              </Link>
+              <Link
+                href="/how-it-works"
+                className="px-3 py-2 text-gray-300 hover:text-white text-sm font-medium transition"
+              >
+                How It Works
+              </Link>
+              <Link
+                href="/backtest-results"
+                className="px-3 py-2 text-gray-300 hover:text-white text-sm font-medium transition"
+              >
+                Backtest
+              </Link>
+            </nav>
 
-              {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-1">
-                  <button
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>{isLoggingOut ? 'Logging out...' : 'Log Out'}</span>
-                  </button>
-                </div>
-              )}
+            {/* Right Side Actions */}
+            <div className="flex items-center gap-3">
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white transition"
+                >
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline text-sm font-medium">Account</span>
+                </button>
+
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-[#2a2a2a] border border-gray-700 rounded shadow-lg py-1">
+                    <button
+                      onClick={handleLogout}
+                      disabled={isLoggingOut}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>{isLoggingOut ? 'Logging out...' : 'Log Out'}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Upgrade Button */}
+              <Link
+                href="/pricing"
+                className="hidden lg:flex items-center px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition"
+              >
+                Upgrade
+              </Link>
             </div>
-
-            {/* Upgrade Badge */}
-            <Link
-              href="/pricing"
-              className="hidden lg:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold rounded-lg transition"
-            >
-              Upgrade to Pro
-            </Link>
           </div>
         </div>
       </div>

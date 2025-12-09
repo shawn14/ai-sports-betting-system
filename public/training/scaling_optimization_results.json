@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "optimizedAt": "2025-12-09T14:35:35.372Z",
+    "preset": "balanced",
+    "regressionFactor": 0.85,
+    "totalGames": 192,
+    "trainGames": 133,
+    "validationGames": 29,
+    "testGames": 30
+  },
+  "gridSearch": {
+    "scalingFactorsTested": [
+      0.1,
+      0.11,
+      0.12,
+      0.13,
+      0.14,
+      0.15,
+      0.16,
+      0.17,
+      0.18,
+      0.19,
+      0.2
+    ],
+    "validationResults": [
+      {
+        "scalingFactor": 0.1,
+        "avgSpreadError": 7.260194593720455
+      },
+      {
+        "scalingFactor": 0.11,
+        "avgSpreadError": 7.241386466885604
+      },
+      {
+        "scalingFactor": 0.12,
+        "avgSpreadError": 7.222578340050753
+      },
+      {
+        "scalingFactor": 0.13,
+        "avgSpreadError": 7.268241585808824
+      },
+      {
+        "scalingFactor": 0.14,
+        "avgSpreadError": 7.360493591083246
+      },
+      {
+        "scalingFactor": 0.15,
+        "avgSpreadError": 7.452745596357666
+      },
+      {
+        "scalingFactor": 0.16,
+        "avgSpreadError": 7.544997601632082
+      },
+      {
+        "scalingFactor": 0.17,
+        "avgSpreadError": 7.637249606906504
+      },
+      {
+        "scalingFactor": 0.18,
+        "avgSpreadError": 7.729501612180922
+      },
+      {
+        "scalingFactor": 0.19,
+        "avgSpreadError": 7.821753617455342
+      },
+      {
+        "scalingFactor": 0.2,
+        "avgSpreadError": 7.914005622729759
+      }
+    ]
+  },
+  "bestScalingFactor": 0.12,
+  "validationError": 7.222578340050753,
+  "testError": 9.600415231990231,
+  "baselineError": 9.678827655677654,
+  "improvement": 0.07841242368742307,
+  "improvementPercent": 0.8101438157277818
+}

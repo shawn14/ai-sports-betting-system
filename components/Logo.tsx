@@ -35,20 +35,14 @@ export default function Logo({ href = '/', className = '', size = 'md' }: LogoPr
 
   const content = (
     <>
-      <div className="relative">
-        <div className={`${s.container} bg-gradient-to-br from-emerald-500 via-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-blue-500/50`}>
-          <div className={`${s.inner} bg-slate-900 rounded-full flex items-center justify-center`}>
-            <span className={`${s.letter} font-bold bg-gradient-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent`}>P</span>
-          </div>
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-blue-500 to-purple-600 rounded-full animate-ping opacity-20"></div>
+      <div className={`${s.container} bg-blue-600 rounded flex items-center justify-center`}>
+        <span className={`${s.letter} font-bold text-white`}>P</span>
       </div>
       <div className="flex flex-col">
-        <h1 className={`${s.text} font-black tracking-tight`}>
-          <span className="bg-gradient-to-r from-white via-blue-100 to-white bg-clip-text text-transparent">PREDICTION</span>
-          <span className="bg-gradient-to-r from-emerald-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">MATRIX</span>
+        <h1 className={`${s.text} font-bold tracking-tight text-gray-900`}>
+          PREDICTION<span className="text-blue-600">MATRIX</span>
         </h1>
-        <p className={`${s.subtitle} text-slate-400 tracking-widest uppercase`}>AI Sports Analytics</p>
+        <p className={`${s.subtitle} text-gray-500 tracking-wider uppercase`}>AI Sports Analytics</p>
       </div>
     </>
   );

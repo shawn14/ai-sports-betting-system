@@ -12,7 +12,7 @@ interface TeamRating {
   tsr: number;
   netPoints: number;
   momentum: number;
-  conference: number;
+  conferenceScore: number;
   homeAdvantage: number;
   offensive: number;
   defensive: number;
@@ -39,7 +39,7 @@ export default function RankingsPage() {
   const loadTeamRatings = async () => {
     try {
       // Fetch real TSR rankings from API
-      const response = await fetch('/api/rankings?season=2025&week=15');
+      const response = await fetch('/api/rankings?season=2025&week=14');
 
       if (!response.ok) {
         const error = await response.json();
@@ -67,6 +67,13 @@ export default function RankingsPage() {
     return [...filtered].sort((a, b) => {
       const aVal = a[sortField];
       const bVal = b[sortField];
+
+      // For rank, lower is better (1 is best), so reverse the sort
+      if (sortField === 'rank') {
+        return sortDesc ? aVal - bVal : bVal - aVal;
+      }
+
+      // For other fields, higher is better
       return sortDesc ? bVal - aVal : aVal - bVal;
     });
   };

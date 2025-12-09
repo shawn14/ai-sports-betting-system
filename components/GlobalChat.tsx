@@ -3,8 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, X } from 'lucide-react';
 import { NFLAPI } from '@/lib/api/nfl';
-import { auth } from '@/lib/firebase/auth';
-import { onAuthStateChanged } from 'firebase/auth';
+import { usePathname } from 'next/navigation';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -13,22 +12,19 @@ interface Message {
 }
 
 export default function GlobalChat() {
+  const pathname = usePathname();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Listen for authentication state changes
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsAuthenticated(!!user);
-    });
-
-    return () => unsubscribe();
-  }, []);
+  // Don't show chat on homepage or other public pages
+  const publicPages = ['/', '/pricing', '/signup', '/login', '/terms', '/privacy', '/contact'];
+  if (publicPages.includes(pathname)) {
+    return null;
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -250,10 +246,6 @@ export default function GlobalChat() {
     }
   };
 
-  // Don't render chat if user is not authenticated
-  if (!isAuthenticated) {
-    return null;
-  }
 
   if (isFullScreen) {
     return (

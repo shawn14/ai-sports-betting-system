@@ -2,17 +2,27 @@
 
 import Link from 'next/link';
 import { User, LogOut, Menu, X } from 'lucide-react';
-import { useState } from 'react';
-import { signOut } from '@/lib/firebase/auth';
+import { useState, useEffect } from 'react';
+import { signOut, auth } from '@/lib/firebase/auth';
 import { useRouter } from 'next/navigation';
 import Logo from '@/components/Logo';
 import ScoresTicker from '@/components/ScoresTicker';
+import { onAuthStateChanged } from 'firebase/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
 
 export default function LoggedInHeader() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -95,12 +105,43 @@ export default function LoggedInHeader() {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 px-3 py-2 text-gray-300 hover:text-white transition"
                 >
-                  <User className="w-4 h-4" />
+                  {user?.photoURL ? (
+                    <img
+                      src={user.photoURL}
+                      alt={user.displayName || 'User'}
+                      className="w-7 h-7 rounded-full object-cover border border-gray-600"
+                    />
+                  ) : (
+                    <User className="w-4 h-4" />
+                  )}
                   <span className="hidden sm:inline text-sm font-medium">Account</span>
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-[#2a2a2a] border border-gray-700 rounded shadow-lg py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-[#2a2a2a] border border-gray-700 rounded shadow-lg py-1 z-50">
+                    {user && (
+                      <div className="px-4 py-3 border-b border-gray-700">
+                        <div className="flex items-center gap-3">
+                          {user.photoURL && (
+                            <img
+                              src={user.photoURL}
+                              alt={user.displayName || 'User'}
+                              className="w-10 h-10 rounded-full object-cover border border-gray-600"
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            {user.displayName && (
+                              <p className="text-white text-sm font-medium truncate">
+                                {user.displayName}
+                              </p>
+                            )}
+                            <p className="text-gray-400 text-xs truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     <button
                       onClick={handleLogout}
                       disabled={isLoggingOut}

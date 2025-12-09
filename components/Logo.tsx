@@ -36,7 +36,7 @@ export default function Logo({ href = '/', className = '', size = 'md' }: LogoPr
   const content = (
     <div className="flex flex-col">
       <h1 className={`${s.text} font-bold tracking-tight text-gray-900`}>
-        PREDICTIO<span className="text-blue-600">N</span><span className="text-blue-600">MATRIX</span>
+        PREDICTION<span className="text-blue-600">MATRIX</span>
       </h1>
       <p className={`${s.subtitle} text-gray-500 tracking-wider uppercase`}>AI Sports Analytics</p>
     </div>

@@ -115,7 +115,7 @@ export default function LoggedInHeader() {
 
               {/* Upgrade Button */}
               <Link
-                href="/pricing"
+                href="/coming-soon"
                 className="hidden lg:flex items-center px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded transition"
               >
                 Upgrade
@@ -164,7 +164,7 @@ export default function LoggedInHeader() {
                 Backtest
               </Link>
               <Link
-                href="/pricing"
+                href="/coming-soon"
                 onClick={() => setShowMobileMenu(false)}
                 className="block px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold transition text-center mt-2"
               >

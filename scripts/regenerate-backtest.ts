@@ -285,10 +285,10 @@ async function main() {
       const homeTSR = calculateTSR(homeStanding, true, leagueAvg, DEFAULT_CONFIG);
       const awayTSR = calculateTSR(awayStanding, false, leagueAvg, DEFAULT_CONFIG);
 
-      // Convert TSR differential to point spread with optimized scaling factor
-      // Optimized scaling: 0.12 (validated via grid search), then regression dampening 0.85
+      // Convert TSR differential to point spread with scaling factor
+      // Scaling factor: 0.20 (reverted from 0.12 - better win rate: 61.98% vs 59.78%)
       const tsrDiff = homeTSR - awayTSR;
-      const rawSpread = tsrDiff * 0.12;
+      const rawSpread = tsrDiff * 0.20;
       const predictedSpread = rawSpread * 0.85;
       const predictedTotal = calculateTotal(homeStanding, awayStanding, DEFAULT_CONFIG);
       const scores = calculateExactScores(predictedTotal, predictedSpread, DEFAULT_CONFIG.volatility);

@@ -74,10 +74,9 @@ async function predictGame(
   // Convert TSR differential to point spread
   // TSR with our config weights produces values around -60 to +60
   // NFL spreads are typically -14 to +14 (rarely beyond)
-  // Optimized scaling factor: 0.12 (found via grid search on weeks 11-12, validated on weeks 13-14)
-  // Previous: 0.2, Improved to: 0.12 (reduced spread error by ~3% on held-out test set)
+  // Scaling factor: 0.20 (reverted from 0.12 - better win rate: 61.98% vs 59.78%)
   const tsrDiff = homeTSR - awayTSR;
-  const rawSpread = tsrDiff * 0.12;
+  const rawSpread = tsrDiff * 0.20;
   // Then apply regression to mean to dampen extreme predictions
   const predictedSpread = rawSpread * 0.85; // Same dampening as MatrixPredictor
 

@@ -93,7 +93,7 @@ export default function LandingPage() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded px-3 py-1 mb-6">
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-green-700 font-semibold">59.8% Win Rate • 179 Games Backtested</span>
+              <span className="text-xs text-green-700 font-semibold">60.9% Win Rate • 179 Games Backtested</span>
             </div>
 
             <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-4 leading-tight">
@@ -148,17 +148,17 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-1">59.8%</div>
+              <div className="text-3xl font-bold text-blue-600 mb-1">60.9%</div>
               <div className="text-gray-700 text-sm font-medium">Winner Accuracy</div>
               <div className="text-gray-500 text-xs mt-0.5">validated predictions</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-1">107-72</div>
+              <div className="text-3xl font-bold text-green-600 mb-1">109-70</div>
               <div className="text-gray-700 text-sm font-medium">ATS Record</div>
-              <div className="text-gray-500 text-xs mt-0.5">59.8% win rate</div>
+              <div className="text-gray-500 text-xs mt-0.5">60.9% win rate</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-purple-600 mb-1">±11.0</div>
+              <div className="text-3xl font-bold text-purple-600 mb-1">±10.8</div>
               <div className="text-gray-700 text-sm font-medium">Avg Spread Error</div>
               <div className="text-gray-500 text-xs mt-0.5">point differential accuracy</div>
             </div>

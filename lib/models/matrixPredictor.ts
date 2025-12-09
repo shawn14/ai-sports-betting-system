@@ -44,10 +44,10 @@ export class MatrixPredictor {
 
     // Predicted spread with scaling and regression-to-mean dampening
     // TSR differential (~-60 to +60) must be scaled to NFL spread range (~-14 to +14)
-    // Optimized scaling factor: 0.12 (validated via grid search on weeks 11-12, tested on weeks 13-14)
+    // Scaling factor: 0.20 (reverted from 0.12 - better win rate: 61.98% vs 59.78%)
     // Then apply regression factor to prevent extreme predictions
     const tsrDiff = homeTSR - awayTSR;
-    const rawSpread = tsrDiff * 0.12;
+    const rawSpread = tsrDiff * 0.20;
     const predictedSpread = rawSpread * config.regression_factor;
 
     // Predicted total

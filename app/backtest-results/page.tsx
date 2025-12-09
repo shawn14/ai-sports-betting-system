@@ -99,14 +99,12 @@ export default function BacktestResultsPage() {
     return data.allResults.filter(r => r.week === week);
   };
 
-  const calculateProfit = () => {
-    if (!data) return 0;
-    const totalGames = data.totalGames;
-    const winRate = data.overallWinnerAccuracy / 100;
-    const wins = winRate * totalGames;
-    const losses = totalGames - wins;
-    // At -110 odds: win $100 on wins, lose $110 on losses
-    return (wins * 100) - (losses * 110);
+  const calculateWinLoss = () => {
+    if (!data) return { wins: 0, losses: 0, winRate: 0 };
+    const wins = data.totalWinnerCorrect;
+    const losses = data.totalGames - data.totalWinnerCorrect;
+    const winRate = data.overallWinnerAccuracy;
+    return { wins, losses, winRate };
   };
 
   if (loading) {
@@ -125,7 +123,7 @@ export default function BacktestResultsPage() {
     );
   }
 
-  const profit = calculateProfit();
+  const { wins, losses, winRate } = calculateWinLoss();
   const filteredWeeks = getFilteredWeeks();
 
   return (
@@ -199,30 +197,30 @@ export default function BacktestResultsPage() {
             </div>
           </div>
 
-          {/* Estimated Profit */}
+          {/* ATS Record */}
           <div className={`bg-white rounded border p-3 ${
-            profit > 0 ? 'border-blue-200' : 'border-red-200'
+            winRate >= 52.4 ? 'border-green-200' : 'border-gray-200'
           }`}>
             <div className="mb-2">
-              <span className={`text-[10px] font-semibold ${profit > 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                PROFIT
+              <span className={`text-[10px] font-semibold ${winRate >= 52.4 ? 'text-green-600' : 'text-gray-600'}`}>
+                ATS RECORD
               </span>
             </div>
-            <div className={`text-2xl font-bold ${profit > 0 ? 'text-gray-900' : 'text-gray-900'} mb-1`}>
-              ${profit > 0 ? '+' : ''}{profit.toFixed(0)}
+            <div className="text-2xl font-bold text-gray-900 mb-1">
+              {wins}-{losses}
             </div>
-            <div className={`text-xs ${profit > 0 ? 'text-gray-600' : 'text-gray-600'}`}>
-              $100/game @ -110
+            <div className="text-xs text-gray-600">
+              {winRate.toFixed(1)}% win rate
             </div>
-            <div className={`text-[10px] mt-1 ${profit > 0 ? 'text-gray-500' : 'text-gray-500'}`}>
-              {data.totalGames} total bets
+            <div className="text-[10px] mt-1 text-gray-500">
+              {data.totalGames} total games
             </div>
           </div>
         </div>
 
-        {/* Profitability Analysis */}
+        {/* Performance Analysis */}
         <div className="bg-white rounded border border-gray-200 p-3 mb-4">
-          <h2 className="text-sm font-bold text-gray-900 mb-3">Profitability Analysis</h2>
+          <h2 className="text-sm font-bold text-gray-900 mb-3">Performance Analysis</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <div className="text-xs text-gray-600 mb-1">Breakeven (at -110 odds)</div>

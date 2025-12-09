@@ -114,9 +114,9 @@ export default function LandingPage() {
               <div className="text-slate-500 text-sm mt-1">validated predictions</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-green-400 mb-2">$3,770</div>
-              <div className="text-slate-400">Estimated Profit</div>
-              <div className="text-slate-500 text-sm mt-1">$100/game @ -110 odds</div>
+              <div className="text-4xl font-bold text-green-400 mb-2">104-87</div>
+              <div className="text-slate-400">ATS Record</div>
+              <div className="text-slate-500 text-sm mt-1">54.5% win rate</div>
             </div>
             <div className="text-center">
               <div className="text-4xl font-bold text-purple-400 mb-2">±7.5</div>

@@ -80,6 +80,83 @@ export default function GlobalChat() {
   const analyzeQuestion = async (question: string): Promise<{ message: string; prediction?: any }> => {
     const lowerQ = question.toLowerCase();
 
+    // Check if question is about rankings/stats
+    if (lowerQ.includes('best offense') || lowerQ.includes('top offense')) {
+      try {
+        const response = await fetch('/api/rankings?season=2025&week=15');
+        const data = await response.json();
+        const teams = data.teams;
+
+        // Sort by offensive rating
+        teams.sort((a: any, b: any) => b.offensive - a.offensive);
+        const topOffenses = teams.slice(0, 5);
+
+        const message = `**Top 5 Offenses (by Offensive Rating):**\n\n${topOffenses.map((t: any, i: number) =>
+          `${i + 1}. ${t.team} - ${t.offensive.toFixed(2)} offensive rating`
+        ).join('\n')}`;
+
+        return { message };
+      } catch (error) {
+        return { message: "I had trouble loading the rankings data. Please try again." };
+      }
+    }
+
+    if (lowerQ.includes('best defense') || lowerQ.includes('top defense')) {
+      try {
+        const response = await fetch('/api/rankings?season=2025&week=15');
+        const data = await response.json();
+        const teams = data.teams;
+
+        teams.sort((a: any, b: any) => b.defensive - a.defensive);
+        const topDefenses = teams.slice(0, 5);
+
+        const message = `**Top 5 Defenses (by Defensive Rating):**\n\n${topDefenses.map((t: any, i: number) =>
+          `${i + 1}. ${t.team} - ${t.defensive.toFixed(2)} defensive rating`
+        ).join('\n')}`;
+
+        return { message };
+      } catch (error) {
+        return { message: "I had trouble loading the rankings data. Please try again." };
+      }
+    }
+
+    if (lowerQ.includes('hot') || lowerQ.includes('momentum')) {
+      try {
+        const response = await fetch('/api/rankings?season=2025&week=15');
+        const data = await response.json();
+        const teams = data.teams;
+
+        teams.sort((a: any, b: any) => b.momentum - a.momentum);
+        const hotTeams = teams.slice(0, 5);
+
+        const message = `**Hottest Teams (by Momentum):**\n\n${hotTeams.map((t: any, i: number) =>
+          `${i + 1}. ${t.team} - ${t.momentum.toFixed(2)} momentum rating`
+        ).join('\n')}`;
+
+        return { message };
+      } catch (error) {
+        return { message: "I had trouble loading the rankings data. Please try again." };
+      }
+    }
+
+    if (lowerQ.includes('rankings') || lowerQ.includes('power rankings')) {
+      try {
+        const response = await fetch('/api/rankings?season=2025&week=15');
+        const data = await response.json();
+        const teams = data.teams;
+
+        const topTeams = teams.slice(0, 10);
+
+        const message = `**Top 10 Power Rankings (by TSR):**\n\n${topTeams.map((t: any) =>
+          `${t.rank}. ${t.team} (${t.record}) - ${t.tsr.toFixed(2)} TSR`
+        ).join('\n')}`;
+
+        return { message };
+      } catch (error) {
+        return { message: "I had trouble loading the rankings data. Please try again." };
+      }
+    }
+
     // Extract week number
     let week: number | null = null;
     const weekMatch = lowerQ.match(/week\s+(\d+)/);
@@ -153,7 +230,7 @@ export default function GlobalChat() {
 
     // Default response if we can't parse the question
     return {
-      message: "I can help you analyze NFL games! Try asking something like:\n\n• 'What do you think about the Eagles Week 14?'\n• 'Give me predictions for Chiefs vs Bills'\n• 'Analyze the Cowboys game this week'\n\nWhich game would you like me to look at?"
+      message: "I can help you with:\n\n• Game predictions ('Eagles Week 14')\n• Team rankings ('Show me the power rankings')\n• Best offenses ('What's the best offense?')\n• Best defenses ('Top defenses')\n• Hot teams ('Which teams have momentum?')\n\nWhat would you like to know?"
     };
   };
 

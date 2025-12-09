@@ -37,29 +37,24 @@ export default function RankingsPage() {
   }, []);
 
   const loadTeamRatings = async () => {
-    // TODO: In production, this would fetch from an API endpoint that calculates TSR for all teams
-    // For now, we'll use mock data based on actual 2025 standings
-    const mockTeams: TeamRating[] = [
-      { team: 'Detroit Lions', conference: 'NFC', division: 'North', record: '13-2', tsr: 24.5, netPoints: 12.3, momentum: 3.2, conference: 1.8, homeAdvantage: 3.5, offensive: 8.2, defensive: 6.8, rank: 1, trend: 'up' },
-      { team: 'Kansas City Chiefs', conference: 'AFC', division: 'West', record: '13-2', tsr: 23.1, netPoints: 9.8, momentum: 2.8, conference: 2.1, homeAdvantage: 3.2, offensive: 6.5, defensive: 7.5, rank: 2, trend: 'same' },
-      { team: 'Buffalo Bills', conference: 'AFC', division: 'East', record: '12-3', tsr: 22.7, netPoints: 11.2, momentum: 3.5, conference: 1.9, homeAdvantage: 2.8, offensive: 7.8, defensive: 6.3, rank: 3, trend: 'up' },
-      { team: 'Philadelphia Eagles', conference: 'NFC', division: 'East', record: '12-3', tsr: 22.3, netPoints: 10.5, momentum: 4.1, conference: 2.2, homeAdvantage: 3.1, offensive: 7.2, defensive: 6.7, rank: 4, trend: 'up' },
-      { team: 'Minnesota Vikings', conference: 'NFC', division: 'North', record: '13-2', tsr: 21.8, netPoints: 8.7, momentum: 2.9, conference: 1.7, homeAdvantage: 2.9, offensive: 7.5, defensive: 6.1, rank: 5, trend: 'same' },
-      { team: 'Baltimore Ravens', conference: 'AFC', division: 'North', record: '11-4', tsr: 20.5, netPoints: 9.2, momentum: 1.8, conference: 2.0, homeAdvantage: 2.7, offensive: 8.1, defensive: 5.4, rank: 6, trend: 'down' },
-      { team: 'Green Bay Packers', conference: 'NFC', division: 'North', record: '11-4', tsr: 19.8, netPoints: 7.8, momentum: 2.5, conference: 1.9, homeAdvantage: 3.3, offensive: 6.8, defensive: 5.9, rank: 7, trend: 'up' },
-      { team: 'Pittsburgh Steelers', conference: 'AFC', division: 'North', record: '10-5', tsr: 18.9, netPoints: 6.5, momentum: 1.2, conference: 2.3, homeAdvantage: 3.1, offensive: 5.2, defensive: 7.8, rank: 8, trend: 'down' },
-      { team: 'Los Angeles Rams', conference: 'NFC', division: 'West', record: '9-6', tsr: 18.2, netPoints: 5.9, momentum: 3.7, conference: 1.5, homeAdvantage: 2.5, offensive: 6.7, defensive: 5.4, rank: 9, trend: 'up' },
-      { team: 'Tampa Bay Buccaneers', conference: 'NFC', division: 'South', record: '9-6', tsr: 17.6, netPoints: 5.2, momentum: 2.1, conference: 1.8, homeAdvantage: 2.8, offensive: 6.5, defensive: 5.3, rank: 10, trend: 'same' },
-      { team: 'Houston Texans', conference: 'AFC', division: 'South', record: '9-6', tsr: 17.1, netPoints: 4.8, momentum: 1.9, conference: 2.1, homeAdvantage: 2.6, offensive: 6.2, defensive: 5.7, rank: 11, trend: 'down' },
-      { team: 'Los Angeles Chargers', conference: 'AFC', division: 'West', record: '9-6', tsr: 16.8, netPoints: 4.5, momentum: 2.3, conference: 1.7, homeAdvantage: 2.4, offensive: 5.9, defensive: 6.3, rank: 12, trend: 'up' },
-      { team: 'Washington Commanders', conference: 'NFC', division: 'East', record: '10-5', tsr: 16.3, netPoints: 5.1, momentum: 2.8, conference: 1.4, homeAdvantage: 2.3, offensive: 6.8, defensive: 4.2, rank: 13, trend: 'up' },
-      { team: 'Seattle Seahawks', conference: 'NFC', division: 'West', record: '9-6', tsr: 15.9, netPoints: 3.9, momentum: 2.1, conference: 1.6, homeAdvantage: 3.5, offensive: 6.1, defensive: 4.6, rank: 14, trend: 'same' },
-      { team: 'Denver Broncos', conference: 'AFC', division: 'West', record: '9-6', tsr: 15.2, netPoints: 3.2, momentum: 1.8, conference: 1.9, homeAdvantage: 3.2, offensive: 4.8, defensive: 6.5, rank: 15, trend: 'up' },
-      { team: 'Atlanta Falcons', conference: 'NFC', division: 'South', record: '8-7', tsr: 14.5, netPoints: 2.8, momentum: 1.5, conference: 1.7, homeAdvantage: 2.6, offensive: 6.2, defensive: 4.3, rank: 16, trend: 'down' },
-    ];
+    try {
+      // Fetch real TSR rankings from API
+      const response = await fetch('/api/rankings?season=2025&week=15');
 
-    setTeams(mockTeams);
-    setLoading(false);
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('Failed to load rankings:', error);
+        setLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      setTeams(data.teams);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading team ratings:', error);
+      setLoading(false);
+    }
   };
 
   const getSortedTeams = () => {

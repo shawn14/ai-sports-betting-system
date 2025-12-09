@@ -42,6 +42,7 @@ interface Game {
   homeScore: number | null;
   awayScore: number | null;
   status: string;
+  vegasSpread: number | null;
 }
 
 interface MatrixConfig {
@@ -229,7 +230,8 @@ async function main() {
     awayTeam: g.awayTeam,
     homeScore: g.outcome?.homeScore || null,
     awayScore: g.outcome?.awayScore || null,
-    status: g.outcome?.homeScore !== null && g.outcome?.homeScore !== undefined ? 'completed' : 'scheduled'
+    status: g.outcome?.homeScore !== null && g.outcome?.homeScore !== undefined ? 'completed' : 'scheduled',
+    vegasSpread: g.lines?.spread || null
   }));
 
   console.log(`✅ Loaded ${allGames.length} games\n`);
@@ -266,6 +268,8 @@ async function main() {
     const leagueAvg = calculateLeagueAverages(standings);
 
     let weekCorrect = 0;
+    let weekAtsCorrect = 0;
+    let weekAtsGames = 0;
     let weekSpreadError = 0;
     let weekTotalError = 0;
     let weekConfidence = 0;
@@ -303,6 +307,21 @@ async function main() {
       const actualWinner = (game.homeScore || 0) > (game.awayScore || 0);
       const correct = predictedWinner === actualWinner;
 
+      // ATS calculation: Did our prediction beat the Vegas spread?
+      // If Vegas says Home -7, and actual is Home -8, Vegas covers (bettors lose)
+      // We win ATS if our predicted spread is closer to actual than Vegas
+      let atsCorrect = false;
+      if (game.vegasSpread !== null) {
+        // Our predicted spread vs Vegas spread vs actual spread
+        // Example: Vegas = -7, Our prediction = -5, Actual = -6
+        // Vegas error = |(-7) - (-6)| = 1
+        // Our error = |(-5) - (-6)| = 1
+        // Tie goes to us (we matched Vegas)
+        const vegasError = Math.abs(game.vegasSpread - actualSpread);
+        const ourError = Math.abs(predictedSpread - actualSpread);
+        atsCorrect = ourError <= vegasError;
+      }
+
       const recommendation = getRecommendation(confidence);
 
       allResults.push({
@@ -319,6 +338,8 @@ async function main() {
         actualSpread,
         actualTotal,
         winnerCorrect: correct,
+        atsCorrect: game.vegasSpread !== null ? atsCorrect : null,
+        vegasSpread: game.vegasSpread,
         spreadError,
         totalError,
         confidence,
@@ -326,6 +347,10 @@ async function main() {
       });
 
       if (correct) weekCorrect++;
+      if (game.vegasSpread !== null) {
+        weekAtsGames++;
+        if (atsCorrect) weekAtsCorrect++;
+      }
       weekSpreadError += spreadError;
       weekTotalError += totalError;
       weekConfidence += confidence;
@@ -338,12 +363,16 @@ async function main() {
 
     const weekGamesCount = weekGames.length;
     const weekAccuracy = (weekCorrect / weekGamesCount) * 100;
+    const weekAtsAccuracy = weekAtsGames > 0 ? (weekAtsCorrect / weekAtsGames) * 100 : 0;
 
     weeklyStats.push({
       week,
       games: weekGamesCount,
       winnerCorrect: weekCorrect,
       winnerAccuracy: weekAccuracy,
+      atsCorrect: weekAtsCorrect,
+      atsGames: weekAtsGames,
+      atsAccuracy: weekAtsAccuracy,
       avgSpreadError: weekSpreadError / weekGamesCount,
       avgTotalError: weekTotalError / weekGamesCount,
       avgConfidence: weekConfidence / weekGamesCount,
@@ -359,6 +388,12 @@ async function main() {
   const totalGames = allResults.length;
   const totalCorrect = allResults.filter(r => r.winnerCorrect).length;
   const overallAccuracy = (totalCorrect / totalGames) * 100;
+
+  const atsResults = allResults.filter(r => r.atsCorrect !== null);
+  const totalAtsGames = atsResults.length;
+  const totalAtsCorrect = atsResults.filter(r => r.atsCorrect).length;
+  const overallAtsAccuracy = totalAtsGames > 0 ? (totalAtsCorrect / totalAtsGames) * 100 : 0;
+
   const overallSpreadError = allResults.reduce((sum, r) => sum + r.spreadError, 0) / totalGames;
   const overallTotalError = allResults.reduce((sum, r) => sum + r.totalError, 0) / totalGames;
   const overallConfidence = allResults.reduce((sum, r) => sum + r.confidence, 0) / totalGames;
@@ -367,6 +402,9 @@ async function main() {
     totalGames,
     totalWinnerCorrect: totalCorrect,
     overallWinnerAccuracy: overallAccuracy,
+    totalAtsGames,
+    totalAtsCorrect,
+    overallAtsAccuracy,
     overallAvgSpreadError: overallSpreadError,
     overallAvgTotalError: overallTotalError,
     overallAvgConfidence: overallConfidence,
@@ -381,7 +419,8 @@ async function main() {
   console.log('\n✅ Backtest regeneration complete!\n');
   console.log(`📊 Overall Results:`);
   console.log(`   Games: ${totalGames}`);
-  console.log(`   Winner Accuracy: ${overallAccuracy.toFixed(1)}%`);
+  console.log(`   Winner Accuracy: ${overallAccuracy.toFixed(1)}% (${totalCorrect}-${totalGames - totalCorrect})`);
+  console.log(`   ATS Accuracy: ${overallAtsAccuracy.toFixed(1)}% (${totalAtsCorrect}-${totalAtsGames - totalAtsCorrect})`);
   console.log(`   Avg Spread Error: ±${overallSpreadError.toFixed(1)} pts`);
   console.log(`   Avg Total Error: ±${overallTotalError.toFixed(1)} pts`);
   console.log(`\n💾 Saved to: ${outputPath}`);

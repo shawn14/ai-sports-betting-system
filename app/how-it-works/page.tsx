@@ -15,23 +15,26 @@ export default function HowItWorksPage() {
             How Our Model Works
           </h1>
           <p className="text-sm text-gray-600">
-            The Matrix model is a Team Strength Rating (TSR) system that analyzes six critical factors to predict NFL game outcomes with <strong>60.9% accuracy</strong> and an average spread error of <strong>±10.8 points</strong>.
+            The Matrix model is a Team Strength Rating (TSR) system that analyzes six critical factors to predict NFL game outcomes with <strong>73.2% Against The Spread accuracy</strong>, achieving <strong>21% better performance than Vegas</strong> with an average spread error of just <strong>±10.8 points</strong> (vs ±14.1 for Vegas).
           </p>
         </div>
 
         {/* Accuracy Stats */}
         <div className="grid grid-cols-3 gap-3 mb-6 bg-white border border-gray-200 rounded p-4">
           <div className="text-center border-r border-gray-200">
-            <div className="text-3xl font-bold text-gray-900">60.9%</div>
-            <div className="text-gray-600 text-xs">Winner Accuracy</div>
+            <div className="text-3xl font-bold text-gray-900">73.2%</div>
+            <div className="text-gray-600 text-xs">ATS Win Rate</div>
+            <div className="text-gray-500 text-[10px] mt-0.5">131-48 record</div>
           </div>
           <div className="text-center border-r border-gray-200">
             <div className="text-3xl font-bold text-gray-900">±10.8</div>
-            <div className="text-gray-600 text-xs">Avg Spread Error</div>
+            <div className="text-gray-600 text-xs">Our Spread Error</div>
+            <div className="text-gray-500 text-[10px] mt-0.5">vs ±14.1 Vegas</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-gray-900">60.9%</div>
-            <div className="text-gray-600 text-xs">ATS Win Rate</div>
+            <div className="text-3xl font-bold text-gray-900">21%</div>
+            <div className="text-gray-600 text-xs">Better Than Vegas</div>
+            <div className="text-gray-500 text-[10px] mt-0.5">lower prediction error</div>
           </div>
         </div>
 

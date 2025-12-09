@@ -1,6 +1,8 @@
 import type { NFLStandingsData } from '@/lib/scrapers/nflStandingsScraper';
 import { db } from './config';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class StandingsCacheService {
   /**
@@ -90,16 +92,34 @@ export class StandingsCacheService {
     // Fallback to JSON file
     try {
       console.log(`📁 Reading from file: standings_${season}_w${week}.json`);
-      const response = await fetch(`/training/standings_${season}_w${week}.json`);
 
-      if (!response.ok) {
-        console.log(`File not found: standings_${season}_w${week}.json`);
-        return null;
+      // Check if we're on server-side (Node.js) or client-side (browser)
+      if (typeof window === 'undefined') {
+        // Server-side: use fs
+        const filePath = path.join(process.cwd(), 'public', 'training', `standings_${season}_w${week}.json`);
+
+        if (!fs.existsSync(filePath)) {
+          console.log(`File not found: ${filePath}`);
+          return null;
+        }
+
+        const fileContents = fs.readFileSync(filePath, 'utf-8');
+        const standings = JSON.parse(fileContents);
+        console.log(`✅ Loaded ${standings.length} teams from file (server-side)`);
+        return standings as NFLStandingsData[];
+      } else {
+        // Client-side: use fetch
+        const response = await fetch(`/training/standings_${season}_w${week}.json`);
+
+        if (!response.ok) {
+          console.log(`File not found: standings_${season}_w${week}.json`);
+          return null;
+        }
+
+        const standings = await response.json();
+        console.log(`✅ Loaded ${standings.length} teams from file (client-side)`);
+        return standings as NFLStandingsData[];
       }
-
-      const standings = await response.json();
-      console.log(`✅ Loaded ${standings.length} teams from file`);
-      return standings as NFLStandingsData[];
     } catch (error) {
       console.error(`Failed to load standings file:`, error);
       return null;

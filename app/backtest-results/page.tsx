@@ -154,7 +154,7 @@ export default function BacktestResultsPage() {
             <div className="mb-2">
               <span className="text-[10px] text-green-600 font-semibold">WINNER</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
               {data.overallWinnerAccuracy.toFixed(1)}%
             </div>
             <div className="text-xs text-gray-600">
@@ -170,7 +170,7 @@ export default function BacktestResultsPage() {
             <div className="mb-2">
               <span className="text-[10px] text-purple-600 font-semibold">SPREAD</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
               ±{data.overallAvgSpreadError.toFixed(1)}
             </div>
             <div className="text-xs text-gray-600">
@@ -186,7 +186,7 @@ export default function BacktestResultsPage() {
             <div className="mb-2">
               <span className="text-[10px] text-orange-600 font-semibold">TOTAL</span>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
               ±{data.overallAvgTotalError.toFixed(1)}
             </div>
             <div className="text-xs text-gray-600">
@@ -206,7 +206,7 @@ export default function BacktestResultsPage() {
                 ATS RECORD
               </span>
             </div>
-            <div className="text-2xl font-bold text-gray-900 mb-1">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
               {wins}-{losses}
             </div>
             <div className="text-xs text-gray-600">
@@ -224,12 +224,12 @@ export default function BacktestResultsPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <div className="text-xs text-gray-600 mb-1">Breakeven (at -110 odds)</div>
-              <div className="text-xl font-bold text-yellow-600">52.4%</div>
+              <div className="text-2xl font-bold text-yellow-600">52.4%</div>
               <div className="text-[10px] text-gray-500 mt-1">Industry standard</div>
             </div>
             <div>
               <div className="text-xs text-gray-600 mb-1">Your System</div>
-              <div className={`text-xl font-bold ${
+              <div className={`text-2xl font-bold ${
                 data.overallWinnerAccuracy >= 52.4 ? 'text-green-600' : 'text-red-600'
               }`}>
                 {data.overallWinnerAccuracy.toFixed(1)}%
@@ -240,7 +240,7 @@ export default function BacktestResultsPage() {
             </div>
             <div>
               <div className="text-xs text-gray-600 mb-1">Edge Over Breakeven</div>
-              <div className={`text-xl font-bold ${
+              <div className={`text-2xl font-bold ${
                 data.overallWinnerAccuracy >= 52.4 ? 'text-green-600' : 'text-red-600'
               }`}>
                 +{(data.overallWinnerAccuracy - 52.4).toFixed(1)}%

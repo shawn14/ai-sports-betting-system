@@ -109,7 +109,7 @@ export default function LoggedInHeader() {
                     <img
                       src={user.photoURL}
                       alt={user.displayName || 'User'}
-                      className="w-7 h-7 rounded-full object-cover border border-gray-600"
+                      className="w-6 h-6 rounded-full object-cover border border-gray-600"
                     />
                   ) : (
                     <User className="w-4 h-4" />

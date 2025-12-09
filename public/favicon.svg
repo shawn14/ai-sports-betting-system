@@ -1,33 +1,44 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- Gradient Background -->
+  <!-- Dark Matrix Background -->
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#1e40af;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    <linearGradient id="matrixBg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e0a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#030703;stop-opacity:1" />
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="12" fill="url(#bgGrad)"/>
+  <rect width="64" height="64" rx="12" fill="url(#matrixBg)"/>
 
-  <!-- Matrix grid pattern (3x3 grid with highlighted cells) -->
-  <g opacity="0.4">
-    <rect x="10" y="10" width="12" height="12" rx="2" fill="#60a5fa"/>
-    <rect x="26" y="10" width="12" height="12" rx="2" fill="#60a5fa"/>
-    <rect x="42" y="10" width="12" height="12" rx="2" fill="#60a5fa"/>
-    <rect x="10" y="26" width="12" height="12" rx="2" fill="#60a5fa"/>
-    <rect x="26" y="26" width="12" height="12" rx="2" fill="#60a5fa"/>
-    <rect x="42" y="26" width="12" height="12" rx="2" fill="#60a5fa"/>
-    <rect x="10" y="42" width="12" height="12" rx="2" fill="#60a5fa"/>
-    <rect x="26" y="42" width="12" height="12" rx="2" fill="#60a5fa"/>
-    <rect x="42" y="42" width="12" height="12" rx="2" fill="#60a5fa"/>
+  <!-- Matrix code rain effect - vertical lines -->
+  <g opacity="0.3">
+    <text x="8" y="14" font-family="monospace" font-size="8" fill="#00ff41">01</text>
+    <text x="8" y="28" font-family="monospace" font-size="8" fill="#00ff41">10</text>
+    <text x="8" y="42" font-family="monospace" font-size="8" fill="#00ff41">11</text>
+    <text x="8" y="56" font-family="monospace" font-size="8" fill="#00ff41">00</text>
+
+    <text x="22" y="18" font-family="monospace" font-size="8" fill="#00ff41">11</text>
+    <text x="22" y="32" font-family="monospace" font-size="8" fill="#00ff41">01</text>
+    <text x="22" y="46" font-family="monospace" font-size="8" fill="#00ff41">10</text>
+
+    <text x="36" y="12" font-family="monospace" font-size="8" fill="#00ff41">10</text>
+    <text x="36" y="26" font-family="monospace" font-size="8" fill="#00ff41">00</text>
+    <text x="36" y="40" font-family="monospace" font-size="8" fill="#00ff41">11</text>
+    <text x="36" y="54" font-family="monospace" font-size="8" fill="#00ff41">01</text>
+
+    <text x="50" y="16" font-family="monospace" font-size="8" fill="#00ff41">01</text>
+    <text x="50" y="30" font-family="monospace" font-size="8" fill="#00ff41">11</text>
+    <text x="50" y="44" font-family="monospace" font-size="8" fill="#00ff41">10</text>
   </g>
 
-  <!-- Highlighted active cells -->
-  <g opacity="1">
-    <rect x="10" y="10" width="12" height="12" rx="2" fill="#93c5fd"/>
-    <rect x="42" y="26" width="12" height="12" rx="2" fill="#93c5fd"/>
-    <rect x="26" y="42" width="12" height="12" rx="2" fill="#93c5fd"/>
+  <!-- Brighter falling code -->
+  <g opacity="0.6">
+    <text x="15" y="22" font-family="monospace" font-size="8" fill="#0f0" font-weight="bold">1</text>
+    <text x="29" y="38" font-family="monospace" font-size="8" fill="#0f0" font-weight="bold">0</text>
+    <text x="43" y="24" font-family="monospace" font-size="8" fill="#0f0" font-weight="bold">1</text>
   </g>
 
-  <!-- PM letters with shadow -->
-  <text x="32" y="44" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="900" fill="#ffffff" text-anchor="middle" opacity="0.95">PM</text>
+  <!-- Center "M" in Matrix style -->
+  <text x="32" y="42" font-family="monospace" font-size="32" font-weight="900" fill="#00ff41" text-anchor="middle" stroke="#00ff41" stroke-width="0.5">M</text>
+
+  <!-- Glow effect on M -->
+  <text x="32" y="42" font-family="monospace" font-size="32" font-weight="900" fill="#00ff41" text-anchor="middle" opacity="0.3" filter="blur(2px)">M</text>
 </svg>

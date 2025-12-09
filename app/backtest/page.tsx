@@ -130,6 +130,9 @@ export default function BacktestPage() {
             <Link href="/predictions" className="text-slate-400 hover:text-white transition pb-1">
               Predictions
             </Link>
+            <Link href="/rankings" className="text-slate-400 hover:text-white transition pb-1">
+              Rankings
+            </Link>
             <Link href="/analytics" className="text-slate-400 hover:text-white transition pb-1">
               Analytics
             </Link>

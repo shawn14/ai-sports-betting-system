@@ -220,6 +220,120 @@ export default function HowItWorksPage() {
           </div>
         </div>
 
+        {/* TSR Formula Section */}
+        <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-xl p-8 mb-16 border-2 border-slate-300">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">The TSR Formula</h2>
+
+          <div className="bg-white rounded-lg p-6 mb-6 border border-slate-200">
+            <div className="text-center mb-4">
+              <span className="text-sm font-semibold text-slate-600 uppercase tracking-wide">Mathematical Structure</span>
+            </div>
+            <div className="bg-slate-900 text-white rounded-lg p-6 font-mono text-sm overflow-x-auto">
+              <div className="mb-4">
+                <span className="text-blue-400">TSR</span> =
+                <span className="text-green-400"> (w_net</span> × <span className="text-yellow-400">Net_Points</span><span className="text-green-400">)</span> +
+              </div>
+              <div className="ml-8 mb-4">
+                <span className="text-green-400">(w_momentum</span> × <span className="text-yellow-400">Momentum</span><span className="text-green-400">)</span> +
+              </div>
+              <div className="ml-8 mb-4">
+                <span className="text-green-400">(w_conf</span> × <span className="text-yellow-400">Conference</span><span className="text-green-400">)</span> +
+              </div>
+              <div className="ml-8 mb-4">
+                <span className="text-green-400">(w_home</span> × <span className="text-yellow-400">Home_Advantage</span><span className="text-green-400">)</span> +
+              </div>
+              <div className="ml-8 mb-4">
+                <span className="text-green-400">(w_off</span> × <span className="text-yellow-400">Offensive</span><span className="text-green-400">)</span> +
+              </div>
+              <div className="ml-8">
+                <span className="text-green-400">(w_def</span> × <span className="text-yellow-400">Defensive</span><span className="text-green-400">)</span>
+              </div>
+            </div>
+            <div className="mt-4 text-sm text-slate-600 text-center">
+              <strong>Note:</strong> Exact weight values are proprietary, but typical ranges are shown in each component above.
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white rounded-lg p-6 border border-slate-200">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">Component Calculation Example</h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <div className="font-semibold text-blue-900 mb-1">Net Point Performance:</div>
+                  <div className="bg-blue-50 rounded p-3 font-mono text-xs">
+                    Team PF/game: 28.5<br/>
+                    Team PA/game: 19.2<br/>
+                    Team Net: <span className="text-blue-600 font-bold">+9.3 ppg</span><br/>
+                    League Avg Net: +0.0<br/>
+                    <span className="text-green-600 font-bold">Contribution: +9.3 points</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="font-semibold text-green-900 mb-1">Momentum (Last 5):</div>
+                  <div className="bg-green-50 rounded p-3 font-mono text-xs">
+                    Last 5 Win%: 80% (4-1)<br/>
+                    Season Win%: 64%<br/>
+                    Difference: <span className="text-green-600 font-bold">+16%</span><br/>
+                    <span className="text-green-600 font-bold">Contribution: +0.48 points</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-6 border border-slate-200">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">From TSR to Prediction</h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <div className="font-semibold text-purple-900 mb-1">Spread Calculation:</div>
+                  <div className="bg-purple-50 rounded p-3 font-mono text-xs">
+                    Home TSR: +18.5<br/>
+                    Away TSR: +6.2<br/>
+                    Raw Spread: <span className="text-purple-600 font-bold">+12.3</span><br/>
+                    Regression Factor: 0.85<br/>
+                    <span className="text-green-600 font-bold">Final Spread: +10.5</span>
+                  </div>
+                </div>
+                <div className="bg-yellow-50 rounded p-3 text-xs">
+                  <strong className="text-yellow-900">Regression Dampening:</strong> Reduces extreme predictions by 15% to prevent overconfidence and align closer to market reality.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-indigo-900 text-white rounded-lg p-6">
+            <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+              <Brain className="w-5 h-5" />
+              Unique Enhancements
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <div className="font-semibold text-indigo-200 mb-2">1. Regression-to-Mean Dampening</div>
+                <div className="text-indigo-100">
+                  Multiplies raw spread predictions by 0.85 (15% reduction) to prevent extreme outliers and improve market alignment. This brings predictions closer to realistic game outcomes.
+                </div>
+              </div>
+              <div>
+                <div className="font-semibold text-indigo-200 mb-2">2. Efficiency-Based Totals</div>
+                <div className="text-indigo-100">
+                  Cross-multiplies each team's offensive efficiency with opponent's defensive efficiency, normalized to league average. Includes 5% dampening to prevent systematic drift.
+                </div>
+              </div>
+              <div>
+                <div className="font-semibold text-indigo-200 mb-2">3. Recency Weighting</div>
+                <div className="text-indigo-100">
+                  Recent performance (Last 5 games) is weighted more heavily in total calculations to capture current team form and scoring trends.
+                </div>
+              </div>
+              <div>
+                <div className="font-semibold text-indigo-200 mb-2">4. Volatility Adjustment</div>
+                <div className="text-indigo-100">
+                  Configurable volatility factor (0-2) adjusts score distribution based on expected game flow - higher for shootouts, lower for defensive battles.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Example Prediction */}
         <div className="bg-white rounded-xl p-8 mb-16 border-2 border-gray-200">
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center">Example: Eagles vs. Cowboys</h2>

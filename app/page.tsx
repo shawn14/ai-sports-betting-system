@@ -8,27 +8,25 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen bg-gray-100">
       {/* Header */}
-      <header className="bg-white border-b border-gray-300 sticky top-0 z-50">
+      <header className="sticky top-0 z-50">
         {/* Scores Ticker */}
         <ScoresTicker />
 
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
-            <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                <span className="text-white font-bold text-lg">P</span>
-              </div>
+        <div className="bg-gradient-to-r from-[#1a1a1a] via-[#2a2a2a] to-[#1a1a1a] border-b border-gray-800 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between h-14">
+            <Link href="/" className="hover:opacity-80 transition-opacity">
               <div>
-                <h1 className="text-base font-bold tracking-tight text-gray-900">
-                  PREDICTION<span className="text-blue-600">MATRIX</span>
+                <h1 className="text-base font-bold tracking-tight text-white">
+                  PREDICTION<span className="text-blue-500">MATRIX</span>
                 </h1>
-                <p className="text-[9px] text-gray-500 tracking-wider uppercase">AI Sports Analytics</p>
+                <p className="text-[9px] text-gray-400 tracking-wider uppercase">AI Sports Analytics</p>
               </div>
             </Link>
             <nav className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-gray-700 hover:text-gray-900 text-sm font-medium">Features</a>
-              <a href="#how-it-works" className="text-gray-700 hover:text-gray-900 text-sm font-medium">How It Works</a>
-              <a href="#pricing" className="text-gray-700 hover:text-gray-900 text-sm font-medium">Pricing</a>
+              <a href="#features" className="text-gray-300 hover:text-white text-sm font-medium">Features</a>
+              <a href="#how-it-works" className="text-gray-300 hover:text-white text-sm font-medium">How It Works</a>
+              <a href="#pricing" className="text-gray-300 hover:text-white text-sm font-medium">Pricing</a>
               <Link
                 href="/login"
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-sm font-semibold"

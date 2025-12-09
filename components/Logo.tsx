@@ -34,17 +34,12 @@ export default function Logo({ href = '/', className = '', size = 'md' }: LogoPr
   const s = sizes[size];
 
   const content = (
-    <>
-      <div className={`${s.container} bg-blue-600 rounded flex items-center justify-center`}>
-        <span className={`${s.letter} font-bold text-white`}>P</span>
-      </div>
-      <div className="flex flex-col">
-        <h1 className={`${s.text} font-bold tracking-tight text-gray-900`}>
-          PREDICTION<span className="text-blue-600">MATRIX</span>
-        </h1>
-        <p className={`${s.subtitle} text-gray-500 tracking-wider uppercase`}>AI Sports Analytics</p>
-      </div>
-    </>
+    <div className="flex flex-col">
+      <h1 className={`${s.text} font-bold tracking-tight text-gray-900`}>
+        PREDICTION<span className="text-blue-600">MATRIX</span>
+      </h1>
+      <p className={`${s.subtitle} text-gray-500 tracking-wider uppercase`}>AI Sports Analytics</p>
+    </div>
   );
 
   if (href) {

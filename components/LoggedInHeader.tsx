@@ -25,19 +25,16 @@ export default function LoggedInHeader() {
   };
 
   return (
-    <header className="bg-[#1a1a1a] sticky top-0 z-50">
+    <header className="sticky top-0 z-50">
       {/* Scores Ticker */}
       <ScoresTicker />
 
       {/* Main Header */}
-      <div className="border-b border-gray-800">
+      <div className="bg-gradient-to-r from-[#1a1a1a] via-[#2a2a2a] to-[#1a1a1a] border-b border-gray-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             {/* Logo */}
-            <Link href="/games" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
-                <span className="text-white font-bold text-lg">P</span>
-              </div>
+            <Link href="/games" className="hover:opacity-80 transition-opacity">
               <div>
                 <h1 className="text-base font-bold tracking-tight text-white">
                   PREDICTION<span className="text-blue-500">MATRIX</span>

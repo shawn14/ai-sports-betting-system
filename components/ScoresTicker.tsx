@@ -89,9 +89,9 @@ export default function ScoresTicker() {
   if (loading || games.length === 0) return null;
 
   return (
-    <div className="bg-[#2a2a2a] border-b border-gray-800">
+    <div className="bg-gradient-to-b from-[#2a2a2a] to-[#1f1f1f] border-b border-gray-800 shadow-lg">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="relative flex items-center py-2">
+        <div className="relative flex items-center py-2.5">
           {/* Left Scroll Button */}
           <button
             onClick={() => scroll('left')}
@@ -111,7 +111,7 @@ export default function ScoresTicker() {
               {games.map(game => (
                 <div
                   key={game.id}
-                  className="flex-shrink-0 bg-[#3a3a3a] border border-gray-700 rounded px-3 py-1.5 min-w-[200px]"
+                  className="flex-shrink-0 bg-gradient-to-br from-[#3a3a3a] to-[#2f2f2f] border border-gray-700 rounded px-3 py-1.5 min-w-[200px] hover:border-gray-600 hover:shadow-md transition-all duration-200"
                 >
                   {/* Status */}
                   <div className="text-[10px] text-gray-400 font-semibold mb-1">

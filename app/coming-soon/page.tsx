@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Mail, CheckCircle2 } from 'lucide-react';
+import { Mail, CheckCircle2, Sparkles } from 'lucide-react';
+import Logo from '@/components/Logo';
 
 export default function ComingSoonPage() {
   const [email, setEmail] = useState('');
@@ -40,82 +41,59 @@ export default function ComingSoonPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0a0e0a] via-[#1a1a1a] to-[#0a0e0a]">
-      {/* Matrix Rain Background Effect */}
-      <div className="fixed inset-0 opacity-10 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00ff41]/5 to-transparent animate-pulse" />
-      </div>
+    <main className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Logo */}
+        <Logo href="/" className="justify-center mb-8" size="md" />
 
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
-        {/* Back Button */}
-        <Link
-          href="/"
-          className="absolute top-8 left-8 flex items-center gap-2 text-gray-400 hover:text-[#00ff41] transition"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back to Home</span>
-        </Link>
-
-        <div className="max-w-2xl w-full">
-          {/* Matrix Logo */}
+        {/* Main Card */}
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-8">
           <div className="text-center mb-8">
-            <div className="inline-block relative">
-              <div className="text-6xl font-black text-[#00ff41] font-mono tracking-wider drop-shadow-[0_0_10px_rgba(0,255,65,0.5)]">
-                M
-              </div>
-              <div className="absolute -inset-2 bg-[#00ff41]/10 blur-xl rounded-full -z-10" />
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600/10 rounded-full mb-4">
+              <Sparkles className="w-8 h-8 text-blue-500" />
             </div>
+            <h2 className="text-3xl font-bold text-white mb-2">Premium Access</h2>
+            <p className="text-slate-400">Coming Soon</p>
           </div>
 
-          {/* Main Content */}
-          <div className="bg-[#1a1a1a]/80 backdrop-blur-sm border border-[#00ff41]/20 rounded-lg p-8 md:p-12 shadow-2xl">
-            <h1 className="text-4xl md:text-5xl font-black text-white text-center mb-4">
-              Premium Access
-              <span className="block text-[#00ff41] mt-2">Coming Soon</span>
-            </h1>
+          {!isSuccess ? (
+            <>
+              {/* Features Preview */}
+              <div className="space-y-3 mb-8">
+                <div className="flex items-start gap-3 text-slate-300 text-sm">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                  <div>
+                    <strong className="text-white">Advanced ML Models:</strong> 56%+ ATS accuracy predictions
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 text-slate-300 text-sm">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                  <div>
+                    <strong className="text-white">Real-Time Edge Detection:</strong> Live betting opportunities
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 text-slate-300 text-sm">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                  <div>
+                    <strong className="text-white">Premium Analytics:</strong> Advanced dashboards and ROI tracking
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 text-slate-300 text-sm">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-1.5 flex-shrink-0" />
+                  <div>
+                    <strong className="text-white">Multi-Sport Coverage:</strong> NBA, MLB, NHL coming Q1 2026
+                  </div>
+                </div>
+              </div>
 
-            <p className="text-gray-300 text-center text-lg mb-8 leading-relaxed">
-              We're building something extraordinary. Advanced AI predictions, exclusive betting insights,
-              and premium analytics tools are on the way.
-            </p>
-
-            {/* Features Preview */}
-            <div className="grid gap-4 mb-10">
-              <div className="flex items-start gap-3 text-gray-300">
-                <div className="w-2 h-2 bg-[#00ff41] rounded-full mt-2 flex-shrink-0" />
+              {/* Email Form */}
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <strong className="text-white">Advanced ML Models:</strong> Next-generation XGBoost predictions with 56%+ ATS accuracy
-                </div>
-              </div>
-              <div className="flex items-start gap-3 text-gray-300">
-                <div className="w-2 h-2 bg-[#00ff41] rounded-full mt-2 flex-shrink-0" />
-                <div>
-                  <strong className="text-white">Real-Time Edge Detection:</strong> Live betting opportunities updated every 5 minutes
-                </div>
-              </div>
-              <div className="flex items-start gap-3 text-gray-300">
-                <div className="w-2 h-2 bg-[#00ff41] rounded-full mt-2 flex-shrink-0" />
-                <div>
-                  <strong className="text-white">Premium Analytics:</strong> Advanced dashboards, line movement tracking, and ROI optimization
-                </div>
-              </div>
-              <div className="flex items-start gap-3 text-gray-300">
-                <div className="w-2 h-2 bg-[#00ff41] rounded-full mt-2 flex-shrink-0" />
-                <div>
-                  <strong className="text-white">Multi-Sport Coverage:</strong> NBA, MLB, and NHL predictions coming Q1 2026
-                </div>
-              </div>
-            </div>
-
-            {/* Email Form */}
-            {!isSuccess ? (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
                     Join the Waitlist
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <input
                       type="email"
                       id="email"
@@ -123,53 +101,69 @@ export default function ComingSoonPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="your@email.com"
                       required
-                      className="w-full pl-12 pr-4 py-3 bg-[#0a0e0a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#00ff41] focus:ring-1 focus:ring-[#00ff41] transition"
+                      className="w-full pl-11 pr-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
                 </div>
 
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
-                    {error}
+                  <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
+                    <p className="text-red-400 text-sm">{error}</p>
                   </div>
                 )}
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-[#00ff41] hover:bg-[#00ff41]/90 text-black font-bold py-3 px-6 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#00ff41]/20"
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2"
                 >
-                  {isSubmitting ? 'Joining...' : 'Get Early Access'}
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Joining...
+                    </>
+                  ) : (
+                    'Get Early Access'
+                  )}
                 </button>
 
-                <p className="text-xs text-gray-500 text-center">
+                <p className="text-xs text-slate-400 text-center">
                   Be the first to know when we launch. No spam, ever.
                 </p>
               </form>
-            ) : (
-              <div className="text-center py-8">
-                <CheckCircle2 className="w-16 h-16 text-[#00ff41] mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-white mb-2">You're on the list!</h3>
-                <p className="text-gray-300 mb-6">
-                  We'll notify you as soon as premium features are available.
-                </p>
-                <button
-                  onClick={() => setIsSuccess(false)}
-                  className="text-[#00ff41] hover:text-[#00ff41]/80 transition"
-                >
-                  Add another email
-                </button>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-500/10 rounded-full mb-4">
+                <CheckCircle2 className="w-8 h-8 text-green-500" />
               </div>
-            )}
-          </div>
-
-          {/* Additional Info */}
-          <div className="mt-8 text-center text-gray-500 text-sm">
-            <p>Expected Launch: Q1 2026</p>
-            <p className="mt-2">Questions? <a href="mailto:support@predictionmatrix.com" className="text-[#00ff41] hover:underline">Contact us</a></p>
-          </div>
+              <h3 className="text-2xl font-bold text-white mb-2">You're on the list!</h3>
+              <p className="text-slate-300 mb-6">
+                We'll notify you as soon as premium features are available.
+              </p>
+              <button
+                onClick={() => setIsSuccess(false)}
+                className="text-blue-400 hover:text-blue-300 font-semibold"
+              >
+                Add another email
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Launch Date */}
+        <p className="text-center text-slate-400 mt-6 text-sm">
+          Expected Launch: Q1 2026
+        </p>
+
+        {/* Back to Home */}
+        <Link
+          href="/"
+          className="block text-center text-slate-400 hover:text-slate-300 mt-4 text-sm"
+        >
+          ← Back to home
+        </Link>
       </div>
-    </div>
+    </main>
   );
 }

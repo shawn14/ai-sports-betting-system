@@ -153,9 +153,9 @@ export default function LandingPage() {
               <div className="text-gray-500 text-xs mt-0.5">validated predictions</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-green-600 mb-1">104-87</div>
+              <div className="text-3xl font-bold text-green-600 mb-1">118-73</div>
               <div className="text-gray-700 text-sm font-medium">ATS Record</div>
-              <div className="text-gray-500 text-xs mt-0.5">54.5% win rate</div>
+              <div className="text-gray-500 text-xs mt-0.5">61.8% win rate</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-600 mb-1">±7.5</div>

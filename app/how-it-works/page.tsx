@@ -30,7 +30,7 @@ export default function HowItWorksPage() {
             <div className="text-gray-600 text-xs">Avg Spread Error</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl font-bold text-gray-900">54%+</div>
+            <div className="text-3xl font-bold text-gray-900">60.9%</div>
             <div className="text-gray-600 text-xs">ATS Win Rate</div>
           </div>
         </div>

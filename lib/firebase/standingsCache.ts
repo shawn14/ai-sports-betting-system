@@ -1,20 +1,6 @@
 import type { NFLStandingsData } from '@/lib/scrapers/nflStandingsScraper';
-
-// Lazy initialization functions to avoid importing at module load time
-function getDb() {
-  // Always use client SDK for better compatibility
-  const config = require('./config');
-  return config.db;
-}
-
-function getFirestoreFunctions() {
-  const firestore = require('firebase/firestore');
-  return {
-    setDoc: firestore.setDoc,
-    getDoc: firestore.getDoc,
-    doc: firestore.doc
-  };
-}
+import { db } from './config';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 export class StandingsCacheService {
   /**
@@ -60,8 +46,6 @@ export class StandingsCacheService {
         expiresAt: expiresAt.toISOString()
       };
 
-      const db = getDb();
-      const { setDoc, doc } = getFirestoreFunctions();
       const cacheRef = doc(db, 'standings_cache', cacheId);
       await setDoc(cacheRef, data);
 
@@ -75,33 +59,51 @@ export class StandingsCacheService {
   }
 
   /**
-   * Get cached standings (returns null if expired or not found)
+   * Get cached standings (with fallback to JSON files)
    */
   static async getStandings(
     season: number,
     week: number
   ): Promise<NFLStandingsData[] | null> {
-    const cacheId = `${season}-w${week}`;
-    const db = getDb();
-    const { getDoc, doc } = getFirestoreFunctions();
-    const cacheRef = doc(db, 'standings_cache', cacheId);
-    const cacheDoc = await getDoc(cacheRef);
+    // First try Firestore cache
+    try {
+      const cacheId = `${season}-w${week}`;
+      const cacheRef = doc(db, 'standings_cache', cacheId);
+      const cacheDoc = await getDoc(cacheRef);
 
-    if (!cacheDoc.exists()) {
-      console.log(`Cache miss: standings_cache/${cacheId}`);
-      return null;
+      if (cacheDoc.exists()) {
+        const data = cacheDoc.data();
+
+        // Check if expired
+        if (!data.expiresAt || new Date() <= new Date(data.expiresAt)) {
+          console.log(`✅ Firestore cache hit: standings_cache/${cacheId}`);
+          return data.standings as NFLStandingsData[];
+        }
+        console.log(`Cache expired: standings_cache/${cacheId}`);
+      } else {
+        console.log(`Firestore cache miss: standings_cache/${cacheId}`);
+      }
+    } catch (error) {
+      console.log('Firestore read failed, falling back to file system');
     }
 
-    const data = cacheDoc.data();
+    // Fallback to JSON file
+    try {
+      console.log(`📁 Reading from file: standings_${season}_w${week}.json`);
+      const response = await fetch(`/training/standings_${season}_w${week}.json`);
 
-    // Check if expired
-    if (data.expiresAt && new Date() > new Date(data.expiresAt)) {
-      console.log(`Cache expired: standings_cache/${cacheId}`);
+      if (!response.ok) {
+        console.log(`File not found: standings_${season}_w${week}.json`);
+        return null;
+      }
+
+      const standings = await response.json();
+      console.log(`✅ Loaded ${standings.length} teams from file`);
+      return standings as NFLStandingsData[];
+    } catch (error) {
+      console.error(`Failed to load standings file:`, error);
       return null;
     }
-
-    console.log(`Cache hit: standings_cache/${cacheId}`);
-    return data.standings as NFLStandingsData[];
   }
 
   /**

@@ -10,6 +10,8 @@ interface GamePrediction {
   week: number;
   homeTeam: string;
   awayTeam: string;
+  homeTeamLogo?: string;
+  awayTeamLogo?: string;
   predictedHomeScore: number;
   predictedAwayScore: number;
   predictedSpread: number;
@@ -18,6 +20,9 @@ interface GamePrediction {
   confidence: number;
   gameTime: Date;
   status: string;
+  actualHomeScore?: number;
+  actualAwayScore?: number;
+  actualWinner?: string;
 }
 
 export default function PredictionsPage() {
@@ -93,23 +98,59 @@ export default function PredictionsPage() {
 
       const data = await response.json();
       console.log('Predictions generated:', data.count);
+      console.log('Sample prediction:', Object.values(data.predictions)[0]);
 
       // Convert predictions object to array
       const predictionsArray: GamePrediction[] = Object.entries(data.predictions).map(([gameId, pred]: [string, any]) => {
         const game = games.find(g => g.id === gameId);
+
+        // Handle different possible field names from API
+        const homeScore = pred.predictedScore?.home ?? pred.predictedHome ?? pred.homeScore ?? 0;
+        const awayScore = pred.predictedScore?.away ?? pred.predictedAway ?? pred.awayScore ?? 0;
+
+        // Extract spread and total from factors array if needed
+        let spread = 0;
+        let total = 0;
+        if (pred.factors && Array.isArray(pred.factors)) {
+          const spreadFactor = pred.factors.find((f: string) => f.includes('Predicted Spread:'));
+          const totalFactor = pred.factors.find((f: string) => f.includes('Predicted Total:'));
+          if (spreadFactor) {
+            const match = spreadFactor.match(/([+-]?\d+\.?\d*)/);
+            if (match) spread = parseFloat(match[1]);
+          }
+          if (totalFactor) {
+            const match = totalFactor.match(/(\d+\.?\d*)/);
+            if (match) total = parseFloat(match[1]);
+          }
+        }
+
+        // Get actual scores if game is complete
+        const actualHomeScore = game?.homeTeam?.score;
+        const actualAwayScore = game?.awayTeam?.score;
+        const actualWinner = actualHomeScore !== undefined && actualAwayScore !== undefined && actualHomeScore > actualAwayScore
+          ? game?.homeTeam?.name
+          : actualAwayScore !== undefined && actualHomeScore !== undefined && actualAwayScore > actualHomeScore
+          ? game?.awayTeam?.name
+          : undefined;
+
         return {
           gameId,
           week,
-          homeTeam: pred.homeTeam,
-          awayTeam: pred.awayTeam,
-          predictedHomeScore: pred.predictedHome,
-          predictedAwayScore: pred.predictedAway,
-          predictedSpread: pred.spread,
-          predictedTotal: pred.total,
-          predictedWinner: pred.predictedHome > pred.predictedAway ? pred.homeTeam : pred.awayTeam,
+          homeTeam: pred.homeTeam || game?.homeTeam?.name || 'Unknown',
+          awayTeam: pred.awayTeam || game?.awayTeam?.name || 'Unknown',
+          homeTeamLogo: game?.homeTeam?.logo,
+          awayTeamLogo: game?.awayTeam?.logo,
+          predictedHomeScore: homeScore,
+          predictedAwayScore: awayScore,
+          predictedSpread: spread,
+          predictedTotal: total,
+          predictedWinner: homeScore > awayScore ? (pred.homeTeam || game?.homeTeam?.name) : (pred.awayTeam || game?.awayTeam?.name),
           confidence: pred.confidence || 75,
           gameTime: game?.gameTime || new Date(),
-          status: game?.status || 'scheduled'
+          status: game?.status || 'scheduled',
+          actualHomeScore,
+          actualAwayScore,
+          actualWinner
         };
       });
 
@@ -192,77 +233,147 @@ export default function PredictionsPage() {
 
         {/* Predictions List */}
         <div className="space-y-3">
-          {currentPredictions.map((pred) => (
-            <div
-              key={pred.gameId}
-              className="bg-white rounded border border-gray-200 p-4"
-            >
-              {/* Game Header */}
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <div className="text-gray-900 font-bold text-base">
-                    {pred.awayTeam} @ {pred.homeTeam}
+          {currentPredictions.map((pred) => {
+            const isComplete = pred.status === 'completed' && pred.actualHomeScore !== undefined && pred.actualAwayScore !== undefined;
+            const actualTotal = isComplete ? (pred.actualHomeScore! + pred.actualAwayScore!) : 0;
+            const actualSpread = isComplete ? (pred.actualHomeScore! - pred.actualAwayScore!) : 0;
+
+            // Calculate bet results
+            const moneylineWin = isComplete && pred.actualWinner === pred.predictedWinner;
+            const spreadWin = isComplete && Math.abs(actualSpread - pred.predictedSpread) < 3;
+            const totalWin = isComplete && Math.abs(actualTotal - pred.predictedTotal) < 3;
+
+            return (
+              <div
+                key={pred.gameId}
+                className="bg-white rounded border border-gray-200 p-4"
+              >
+                {/* Game Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      {pred.awayTeamLogo && (
+                        <img src={pred.awayTeamLogo} alt={pred.awayTeam} className="w-6 h-6" />
+                      )}
+                      <span className="text-gray-900 font-bold text-base">{pred.awayTeam}</span>
+                    </div>
+                    <span className="text-gray-500">@</span>
+                    <div className="flex items-center gap-2">
+                      {pred.homeTeamLogo && (
+                        <img src={pred.homeTeamLogo} alt={pred.homeTeam} className="w-6 h-6" />
+                      )}
+                      <span className="text-gray-900 font-bold text-base">{pred.homeTeam}</span>
+                    </div>
                   </div>
-                  <div className="text-gray-600 text-xs mt-1">
-                    {formatGameTime(pred.gameTime)}
+                  <div className="text-right">
+                    <div className="text-blue-600 font-semibold text-xs">
+                      {pred.confidence}% CONFIDENCE
+                    </div>
+                    <div className="text-gray-500 text-[10px] uppercase mt-0.5">
+                      {isComplete ? 'COMPLETED' : pred.status}
+                    </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-blue-600 font-semibold text-xs">
-                    {pred.confidence}% CONFIDENCE
+
+                {isComplete && (
+                  <div className="mb-3 p-2 bg-gray-50 rounded border border-gray-200">
+                    <div className="text-xs text-gray-600 mb-1">ACTUAL RESULT</div>
+                    <div className="text-gray-900 font-bold">
+                      {pred.awayTeam} {pred.actualAwayScore} - {pred.actualHomeScore} {pred.homeTeam}
+                    </div>
                   </div>
-                  <div className="text-gray-500 text-[10px] uppercase mt-0.5">
-                    {pred.status}
+                )}
+
+                {/* Prediction Details */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Winner Prediction */}
+                  <div className={`rounded border p-3 ${
+                    !isComplete ? 'bg-blue-50 border-blue-200' :
+                    moneylineWin ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Target className={`w-4 h-4 ${
+                        !isComplete ? 'text-blue-600' :
+                        moneylineWin ? 'text-green-600' : 'text-red-600'
+                      }`} />
+                      <div className={`text-[10px] font-bold ${
+                        !isComplete ? 'text-blue-700' :
+                        moneylineWin ? 'text-green-700' : 'text-red-700'
+                      }`}>
+                        PREDICTED WINNER {isComplete && (moneylineWin ? '✓' : '✗')}
+                      </div>
+                    </div>
+                    <div className="text-gray-900 font-bold text-lg">
+                      {pred.predictedWinner}
+                    </div>
+                    <div className="text-gray-600 text-xs mt-1">
+                      {pred.predictedAwayScore.toFixed(1)} - {pred.predictedHomeScore.toFixed(1)}
+                    </div>
+                  </div>
+
+                  {/* Spread Prediction */}
+                  <div className={`rounded border p-3 ${
+                    !isComplete ? 'bg-purple-50 border-purple-200' :
+                    spreadWin ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <TrendingUp className={`w-4 h-4 ${
+                        !isComplete ? 'text-purple-600' :
+                        spreadWin ? 'text-green-600' : 'text-red-600'
+                      }`} />
+                      <div className={`text-[10px] font-bold ${
+                        !isComplete ? 'text-purple-700' :
+                        spreadWin ? 'text-green-700' : 'text-red-700'
+                      }`}>
+                        SPREAD {isComplete && (spreadWin ? '✓' : '✗')}
+                      </div>
+                    </div>
+                    <div className="text-gray-900 font-bold text-lg">
+                      {pred.homeTeam}
+                    </div>
+                    <div className="text-gray-600 text-xs mt-1">
+                      Predicted: {pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}
+                    </div>
+                    {isComplete && (
+                      <div className="text-gray-600 text-xs">
+                        Actual: {actualSpread > 0 ? '+' : ''}{actualSpread.toFixed(1)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Total Prediction */}
+                  <div className={`rounded border p-3 ${
+                    !isComplete ? 'bg-orange-50 border-orange-200' :
+                    totalWin ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'
+                  }`}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Activity className={`w-4 h-4 ${
+                        !isComplete ? 'text-orange-600' :
+                        totalWin ? 'text-green-600' : 'text-red-600'
+                      }`} />
+                      <div className={`text-[10px] font-bold ${
+                        !isComplete ? 'text-orange-700' :
+                        totalWin ? 'text-green-700' : 'text-red-700'
+                      }`}>
+                        TOTAL (O/U) {isComplete && (totalWin ? '✓' : '✗')}
+                      </div>
+                    </div>
+                    <div className="text-gray-900 font-bold text-lg">
+                      {pred.predictedTotal.toFixed(1)} pts
+                    </div>
+                    <div className="text-gray-600 text-xs mt-1">
+                      Predicted total
+                    </div>
+                    {isComplete && (
+                      <div className="text-gray-600 text-xs">
+                        Actual: {actualTotal.toFixed(1)} pts
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
-
-              {/* Prediction Details */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {/* Winner Prediction */}
-                <div className="bg-blue-50 rounded border border-blue-200 p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Target className="w-4 h-4 text-blue-600" />
-                    <div className="text-blue-700 text-[10px] font-bold">PREDICTED WINNER</div>
-                  </div>
-                  <div className="text-gray-900 font-bold text-lg">
-                    {pred.predictedWinner}
-                  </div>
-                  <div className="text-gray-600 text-xs mt-1">
-                    {pred.predictedAwayScore.toFixed(1)} - {pred.predictedHomeScore.toFixed(1)}
-                  </div>
-                </div>
-
-                {/* Spread Prediction */}
-                <div className="bg-purple-50 rounded border border-purple-200 p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="w-4 h-4 text-purple-600" />
-                    <div className="text-purple-700 text-[10px] font-bold">SPREAD</div>
-                  </div>
-                  <div className="text-gray-900 font-bold text-lg">
-                    {pred.homeTeam}
-                  </div>
-                  <div className="text-gray-600 text-xs mt-1">
-                    {pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}
-                  </div>
-                </div>
-
-                {/* Total Prediction */}
-                <div className="bg-orange-50 rounded border border-orange-200 p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Activity className="w-4 h-4 text-orange-600" />
-                    <div className="text-orange-700 text-[10px] font-bold">TOTAL (O/U)</div>
-                  </div>
-                  <div className="text-gray-900 font-bold text-lg">
-                    {pred.predictedTotal.toFixed(1)} pts
-                  </div>
-                  <div className="text-gray-600 text-xs mt-1">
-                    Combined score
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {error && currentPredictions.length === 0 && (

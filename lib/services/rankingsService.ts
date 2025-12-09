@@ -1,5 +1,6 @@
+import { upsertDocument } from '@/lib/firebase/restClient';
 import { db } from '@/lib/firebase/config';
-import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { StandingsCacheService } from '@/lib/firebase/standingsCache';
 import { MatrixPredictor, LeagueAverages } from '@/lib/models/matrixPredictor';
 import { getPreset } from '@/lib/models/matrixPresets';
@@ -203,8 +204,8 @@ export class RankingsService {
       expiresAt: expiresAt.toISOString()
     };
 
-    const rankingsRef = doc(db, 'team_rankings', cacheId);
-    await setDoc(rankingsRef, rankingsData);
+    // Use REST API for write operations (Firebase SDK is broken)
+    await upsertDocument('team_rankings', cacheId, rankingsData);
 
     console.log(`✅ Saved rankings to Firestore: team_rankings/${cacheId}`);
 
@@ -216,8 +217,7 @@ export class RankingsService {
    */
   static async getCachedRankings(season: number, week: number): Promise<TeamRating[] | null> {
     const cacheId = `${season}-w${week}`;
-    const rankingsRef = doc(db, 'team_rankings', cacheId);
-    const rankingsDoc = await getDoc(rankingsRef);
+    const rankingsDoc = await getDoc(doc(db, 'team_rankings', cacheId));
 
     if (!rankingsDoc.exists()) {
       console.log(`Rankings cache miss: team_rankings/${cacheId}`);

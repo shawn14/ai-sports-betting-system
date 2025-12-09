@@ -1,6 +1,6 @@
 import type { NFLStandingsData } from '@/lib/scrapers/nflStandingsScraper';
 import { db } from './config';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -18,6 +18,7 @@ export class StandingsCacheService {
     try {
       console.log(`Saving to Firebase: standings_cache/${cacheId}...`);
 
+      // Clean data - Firebase doesn't like empty strings, NaN, Infinity, or undefined
       const cleanedStandings = standings.map(team => ({
         team: team.team || 'Unknown',
         wins: Number.isFinite(team.wins) ? team.wins : 0,
@@ -33,8 +34,8 @@ export class StandingsCacheService {
         confLosses: Number.isFinite(team.confLosses) ? team.confLosses : 0,
         last5Wins: Number.isFinite(team.last5Wins) ? team.last5Wins : 0,
         last5Losses: Number.isFinite(team.last5Losses) ? team.last5Losses : 0,
-        conference: team.conference || 'Unknown',
-        division: team.division || 'Unknown'
+        conference: (team.conference && team.conference !== '') ? team.conference : 'Unknown',
+        division: (team.division && team.division !== '') ? team.division : 'Unknown'
       }));
 
       const now = new Date();
@@ -44,8 +45,8 @@ export class StandingsCacheService {
         season,
         week,
         standings: cleanedStandings,
-        scrapedAt: now.toISOString(),
-        expiresAt: expiresAt.toISOString()
+        scrapedAt: Timestamp.fromDate(now),
+        expiresAt: Timestamp.fromDate(expiresAt)
       };
 
       const cacheRef = doc(db, 'standings_cache', cacheId);

@@ -2,6 +2,7 @@ import { Game, GamePrediction, BettingLine } from '@/types';
 import { MatrixPredictor, LeagueAverages } from './matrixPredictor';
 import { MATRIX_PRESETS, getPreset } from './matrixPresets';
 import { StandingsCacheService } from '@/lib/firebase/standingsCache';
+import { generateModelId } from './modelRegistry';
 import type { NFLStandingsData } from '@/lib/scrapers/nflStandingsScraper';
 
 /**
@@ -78,6 +79,11 @@ export class MatrixHelper {
         config,
         bettingLines
       );
+
+      // Add model versioning (Phase 2)
+      prediction.modelId = generateModelId('matrix', presetName);
+      prediction.modelVersion = '1.0.0';
+      prediction.presetName = presetName;
 
       return prediction;
     } catch (error) {
@@ -181,6 +187,11 @@ export class MatrixHelper {
           config,
           bettingLines
         );
+
+        // Add model versioning (Phase 2)
+        prediction.modelId = generateModelId('matrix', presetName);
+        prediction.modelVersion = '1.0.0';
+        prediction.presetName = presetName;
 
         predictions.set(game.id, prediction);
       } catch (error) {

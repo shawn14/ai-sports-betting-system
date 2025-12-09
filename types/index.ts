@@ -103,6 +103,11 @@ export interface GamePrediction {
   };
   recommendation: 'strong_bet' | 'value_bet' | 'avoid' | 'wait';
   vegasSpread?: number; // home team spread (saved at prediction time for historical reference)
+
+  // Model versioning (added Phase 2)
+  modelId?: string;      // e.g., "matrix-balanced"
+  modelVersion?: string; // e.g., "1.0.0"
+  presetName?: string;   // e.g., "balanced" (for Matrix models)
 }
 
 export interface PredictionFactor {

@@ -37,19 +37,19 @@ export async function GET(request: NextRequest) {
     const season = parseInt(searchParams.get('season') || '2025');
     const week = parseInt(searchParams.get('week') || '14');
 
-    // Skip cache for now (cache has old data structure)
-    // const cached = await getCachedRankings(season, week);
-    // if (cached) {
-    //   console.log(`✅ Returning cached rankings for ${season} week ${week}`);
-    //   return NextResponse.json({ teams: cached, season, week, source: 'cache' });
-    // }
+    // Try to get cached rankings first
+    const cached = await getCachedRankings(season, week);
+    if (cached) {
+      console.log(`✅ Returning cached rankings for ${season} week ${week}`);
+      return NextResponse.json({ teams: cached, season, week, source: 'cache' });
+    }
 
     // Calculate rankings from file
     console.log(`Calculating rankings for ${season} week ${week}...`);
     const teams = await calculateRankings(season, week);
 
-    // Skip caching (not working with current Firestore setup)
-    // await cacheRankings(season, week, teams);
+    // Cache the results
+    await cacheRankings(season, week, teams);
 
     return NextResponse.json({ teams, season, week, source: 'calculated' });
   } catch (error) {
@@ -94,12 +94,12 @@ async function cacheRankings(season: number, week: number, teams: TeamRating[]):
     const now = new Date();
     const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    const rankingsData: RankingsCache = {
+    const rankingsData = {
       season,
       week,
       teams,
-      calculatedAt: now.toISOString(),
-      expiresAt: expiresAt.toISOString()
+      calculatedAt: Timestamp.fromDate(now),
+      expiresAt: Timestamp.fromDate(expiresAt)
     };
 
     const rankingsRef = doc(db, 'team_rankings', cacheId);

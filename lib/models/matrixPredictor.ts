@@ -11,6 +11,7 @@ export interface MatrixConfig {
   w_recency_total: number; // 0-1: Recency weight for total calculation
   total_boost: number;    // -10 to +10: Manual boost/penalty for totals
   volatility: number;     // 0-2: Score volatility multiplier
+  regression_factor: number; // 0-1: Dampening factor for extreme TSR gaps (0.85 = 15% dampening)
 }
 
 export interface LeagueAverages {
@@ -41,11 +42,13 @@ export class MatrixPredictor {
     const homeTSR = this.calculateTSR(homeStandings, true, leagueAvg, config);
     const awayTSR = this.calculateTSR(awayStandings, false, leagueAvg, config);
 
-    // Predicted spread (positive = home favored)
-    const predictedSpread = homeTSR - awayTSR;
+    // Predicted spread with regression-to-mean dampening
+    // This prevents extreme spreads (like 15.2) by pulling them toward 0
+    const rawSpread = homeTSR - awayTSR;
+    const predictedSpread = rawSpread * config.regression_factor;
 
     // Predicted total
-    const predictedTotal = this.calculateTotal(homeStandings, awayStandings, config);
+    const predictedTotal = this.calculateTotal(homeStandings, awayStandings, leagueAvg, config);
 
     // Calculate exact scores
     const scores = this.calculateExactScores(predictedTotal, predictedSpread, config.volatility);
@@ -140,11 +143,13 @@ export class MatrixPredictor {
   }
 
   /**
-   * Calculate predicted total score (from PRD)
+   * Calculate predicted total score with improved normalization
+   * Uses a more mathematically precise formula to prevent total drift
    */
   private static calculateTotal(
     homeStandings: NFLStandingsData,
     awayStandings: NFLStandingsData,
+    leagueAvg: LeagueAverages,
     config: MatrixConfig
   ): number {
     const homeGP = homeStandings.wins + homeStandings.losses + homeStandings.ties;
@@ -152,39 +157,34 @@ export class MatrixPredictor {
 
     if (homeGP === 0 || awayGP === 0) return 45; // Default total
 
-    // Season averages
-    const home_PF_season = homeStandings.pointsFor / homeGP;
-    const home_PA_season = homeStandings.pointsAgainst / homeGP;
-    const away_PF_season = awayStandings.pointsFor / awayGP;
-    const away_PA_season = awayStandings.pointsAgainst / awayGP;
+    // Calculate team scoring rates
+    const home_PF_ppg = homeStandings.pointsFor / homeGP;
+    const home_PA_ppg = homeStandings.pointsAgainst / homeGP;
+    const away_PF_ppg = awayStandings.pointsFor / awayGP;
+    const away_PA_ppg = awayStandings.pointsAgainst / awayGP;
 
-    // Last 5 averages (if available)
-    const home_last5GP = homeStandings.last5Wins + homeStandings.last5Losses;
-    const away_last5GP = awayStandings.last5Wins + awayStandings.last5Losses;
+    // Normalize to league average to get efficiency multipliers
+    const homeOffEff = home_PF_ppg / leagueAvg.avgPFpg;
+    const homeDefEff = leagueAvg.avgPApg / home_PA_ppg; // Inverted - higher is better
+    const awayOffEff = away_PF_ppg / leagueAvg.avgPFpg;
+    const awayDefEff = leagueAvg.avgPApg / away_PA_ppg;
 
-    // For MVP: use season averages since we don't have Last5 scoring splits from NFL.com
-    // In future enhancement, could scrape game-by-game data for true Last5 scoring
-    const home_PF_recent = home_PF_season;
-    const home_PA_recent = home_PA_season;
-    const away_PF_recent = away_PF_season;
-    const away_PA_recent = away_PA_season;
+    // Expected points using cross-multiplication of efficiencies
+    // Home team expected = league avg * home offense efficiency * away defense efficiency
+    const homeExpected = leagueAvg.avgPFpg * homeOffEff * (1 / awayDefEff);
+    const awayExpected = leagueAvg.avgPFpg * awayOffEff * (1 / homeDefEff);
 
-    // Blend recent with season (w_recency_total controls the blend)
-    const w = config.w_recency_total;
-    const home_PF_eff = w * home_PF_recent + (1 - w) * home_PF_season;
-    const home_PA_eff = w * home_PA_recent + (1 - w) * home_PA_season;
-    const away_PF_eff = w * away_PF_recent + (1 - w) * away_PF_season;
-    const away_PA_eff = w * away_PA_recent + (1 - w) * away_PA_season;
+    // Calculate raw total
+    const rawTotal = homeExpected + awayExpected;
 
-    // Cross-blend: Home offense vs Away defense, Away offense vs Home defense
-    const homeView = (home_PF_eff + away_PA_eff) / 2;
-    const awayView = (away_PF_eff + home_PA_eff) / 2;
+    // Apply slight dampening to prevent total drift (5% reduction is typical)
+    const dampenedTotal = rawTotal * 0.95;
 
-    // Calculate total with manual boost
-    const total = homeView + awayView + config.total_boost;
+    // Add manual boost/penalty
+    const finalTotal = dampenedTotal + config.total_boost;
 
-    // Clamp to reasonable range
-    return Math.max(30, Math.min(70, total));
+    // Clamp to reasonable NFL scoring range
+    return Math.max(30, Math.min(70, finalTotal));
   }
 
   /**

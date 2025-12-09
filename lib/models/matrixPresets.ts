@@ -21,7 +21,8 @@ export const MATRIX_PRESETS: Record<string, MatrixConfig> = {
     w_def: 4.0,
     w_recency_total: 0.3,
     total_boost: 0,
-    volatility: 1.0
+    volatility: 1.0,
+    regression_factor: 0.85  // 15% dampening prevents extreme spreads
   },
 
   /**
@@ -37,7 +38,8 @@ export const MATRIX_PRESETS: Record<string, MatrixConfig> = {
     w_def: 2.0,
     w_recency_total: 0.5,
     total_boost: 2.0,
-    volatility: 1.5
+    volatility: 1.5,
+    regression_factor: 0.85
   },
 
   /**
@@ -53,7 +55,8 @@ export const MATRIX_PRESETS: Record<string, MatrixConfig> = {
     w_def: 8.0,
     w_recency_total: 0.3,
     total_boost: -2.0,
-    volatility: 0.8
+    volatility: 0.8,
+    regression_factor: 0.85
   },
 
   /**
@@ -69,7 +72,8 @@ export const MATRIX_PRESETS: Record<string, MatrixConfig> = {
     w_def: 4.0,
     w_recency_total: 0.7,
     total_boost: 0,
-    volatility: 1.2
+    volatility: 1.2,
+    regression_factor: 0.85
   },
 
   /**
@@ -85,7 +89,8 @@ export const MATRIX_PRESETS: Record<string, MatrixConfig> = {
     w_def: 3.0,
     w_recency_total: 0.3,
     total_boost: 0,
-    volatility: 1.0
+    volatility: 1.0,
+    regression_factor: 0.85
   },
 
   /**
@@ -101,7 +106,8 @@ export const MATRIX_PRESETS: Record<string, MatrixConfig> = {
     w_def: 4.0,
     w_recency_total: 0.3,
     total_boost: 0,
-    volatility: 1.0
+    volatility: 1.0,
+    regression_factor: 0.85
   }
 };
 
@@ -133,7 +139,7 @@ export function validateConfig(config: MatrixConfig): { valid: boolean; errors: 
   // Check required fields exist
   const requiredFields: (keyof MatrixConfig)[] = [
     'w_net', 'w_momentum', 'w_conf', 'w_home',
-    'w_off', 'w_def', 'w_recency_total', 'total_boost', 'volatility'
+    'w_off', 'w_def', 'w_recency_total', 'total_boost', 'volatility', 'regression_factor'
   ];
 
   for (const field of requiredFields) {
@@ -152,6 +158,7 @@ export function validateConfig(config: MatrixConfig): { valid: boolean; errors: 
   if (config.w_recency_total < 0 || config.w_recency_total > 1) errors.push('w_recency_total must be between 0 and 1');
   if (config.total_boost < -10 || config.total_boost > 10) errors.push('total_boost must be between -10 and 10');
   if (config.volatility < 0 || config.volatility > 2) errors.push('volatility must be between 0 and 2');
+  if (config.regression_factor < 0 || config.regression_factor > 1) errors.push('regression_factor must be between 0 and 1');
 
   return {
     valid: errors.length === 0,

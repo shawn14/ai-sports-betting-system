@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, X } from 'lucide-react';
 import { NFLAPI } from '@/lib/api/nfl';
+import { auth } from '@/lib/firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -15,8 +17,18 @@ export default function GlobalChat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Listen for authentication state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -160,6 +172,11 @@ export default function GlobalChat() {
       setIsFullScreen(true);
     }
   };
+
+  // Don't render chat if user is not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (isFullScreen) {
     return (

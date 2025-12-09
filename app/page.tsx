@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, TrendingUp, Target, Shield, CheckCircle, BarChart3 } from 'lucide-react';
+import { ArrowRight, TrendingUp, Target, Shield, CheckCircle, BarChart3, Menu, X } from 'lucide-react';
 import ScoresTicker from '@/components/ScoresTicker';
 
 export default function LandingPage() {
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
   return (
     <main className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -34,8 +37,52 @@ export default function LandingPage() {
                   Log In
                 </Link>
               </nav>
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="md:hidden p-2 text-gray-300 hover:text-white transition"
+                aria-label="Toggle menu"
+              >
+                {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
             </div>
           </div>
+
+          {/* Mobile Menu */}
+          {showMobileMenu && (
+            <div className="md:hidden bg-[#1a1a1a] border-t border-gray-700">
+              <nav className="px-4 py-3 space-y-1">
+                <a
+                  href="#features"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
+                >
+                  Features
+                </a>
+                <a
+                  href="#how-it-works"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
+                >
+                  How It Works
+                </a>
+                <a
+                  href="#pricing"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
+                >
+                  Pricing
+                </a>
+                <Link
+                  href="/login"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="block px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold transition text-center mt-2"
+                >
+                  Log In
+                </Link>
+              </nav>
+            </div>
+          )}
         </div>
       </header>
 

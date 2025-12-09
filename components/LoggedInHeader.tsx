@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { User, LogOut } from 'lucide-react';
+import { User, LogOut, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { signOut } from '@/lib/firebase/auth';
 import { useRouter } from 'next/navigation';
@@ -10,6 +10,7 @@ import ScoresTicker from '@/components/ScoresTicker';
 
 export default function LoggedInHeader() {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
 
@@ -79,6 +80,15 @@ export default function LoggedInHeader() {
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-3">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="md:hidden p-2 text-gray-300 hover:text-white transition"
+                aria-label="Toggle menu"
+              >
+                {showMobileMenu ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+
               {/* User Menu */}
               <div className="relative">
                 <button
@@ -90,7 +100,7 @@ export default function LoggedInHeader() {
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-48 bg-[#2a2a2a] border border-gray-700 rounded shadow-lg py-1">
+                  <div className="absolute right-0 mt-2 w-48 bg-[#2a2a2a] border border-gray-700 rounded shadow-lg py-1 z-50">
                     <button
                       onClick={handleLogout}
                       disabled={isLoggingOut}
@@ -113,6 +123,56 @@ export default function LoggedInHeader() {
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div className="md:hidden bg-[#1a1a1a] border-t border-gray-700">
+            <nav className="px-4 py-3 space-y-1">
+              <Link
+                href="/games"
+                onClick={() => setShowMobileMenu(false)}
+                className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
+              >
+                Games
+              </Link>
+              <Link
+                href="/predictions"
+                onClick={() => setShowMobileMenu(false)}
+                className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
+              >
+                Predictions
+              </Link>
+              <Link
+                href="/rankings"
+                onClick={() => setShowMobileMenu(false)}
+                className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
+              >
+                Rankings
+              </Link>
+              <Link
+                href="/how-it-works"
+                onClick={() => setShowMobileMenu(false)}
+                className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
+              >
+                How It Works
+              </Link>
+              <Link
+                href="/backtest-results"
+                onClick={() => setShowMobileMenu(false)}
+                className="block px-3 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded text-sm font-medium transition"
+              >
+                Backtest
+              </Link>
+              <Link
+                href="/pricing"
+                onClick={() => setShowMobileMenu(false)}
+                className="block px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold transition text-center mt-2"
+              >
+                Upgrade
+              </Link>
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

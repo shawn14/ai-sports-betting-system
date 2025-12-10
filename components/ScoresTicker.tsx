@@ -23,6 +23,7 @@ interface GameScore {
   isLive: boolean;
   clock?: string;
   period?: string;
+  gameTime?: Date;
 }
 
 export default function ScoresTicker() {
@@ -62,7 +63,8 @@ export default function ScoresTicker() {
                 !game.status.toLowerCase().includes('scheduled') &&
                 game.homeScore !== null,
         clock: game.clock,
-        period: game.period
+        period: game.period,
+        gameTime: game.gameTime
       }));
 
       setGames(scores);
@@ -121,7 +123,18 @@ export default function ScoresTicker() {
                         {game.period} {game.clock}
                       </span>
                     )}
-                    {!game.isFinal && !game.isLive && 'Scheduled'}
+                    {!game.isFinal && !game.isLive && game.gameTime && (
+                      <span>
+                        {new Date(game.gameTime).toLocaleDateString('en-US', {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    )}
+                    {!game.isFinal && !game.isLive && !game.gameTime && 'Scheduled'}
                   </div>
 
                   {/* Away Team */}

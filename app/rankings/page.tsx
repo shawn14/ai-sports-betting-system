@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import LoggedInHeader from '@/components/LoggedInHeader';
-import { TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Shield, Home, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Shield, Home, BarChart3, Info } from 'lucide-react';
 
 interface TeamRating {
   team: string;
@@ -241,51 +241,90 @@ export default function RankingsPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Team</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Record</th>
                   <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort('tsr')}
-                      className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
-                    >
-                      TSR
-                      {sortField === 'tsr' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleSort('tsr')}
+                        className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
+                      >
+                        TSR
+                        {sortField === 'tsr' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
+                      </button>
+                      <div className="group relative">
+                        <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-20 top-5">
+                          Team Strength Rating - Overall team power score based on all metrics
+                        </div>
+                      </div>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort('offensive')}
-                      className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
-                    >
-                      <Zap className="w-3 h-3" /> OFF
-                      {sortField === 'offensive' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleSort('offensive')}
+                        className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
+                      >
+                        <Zap className="w-3 h-3" /> OFF
+                        {sortField === 'offensive' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
+                      </button>
+                      <div className="group relative">
+                        <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-20 top-5">
+                          Offensive Rating - Points scored per game vs league average
+                        </div>
+                      </div>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort('defensive')}
-                      className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
-                    >
-                      <Shield className="w-3 h-3" /> DEF
-                      {sortField === 'defensive' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleSort('defensive')}
+                        className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
+                      >
+                        <Shield className="w-3 h-3" /> DEF
+                        {sortField === 'defensive' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
+                      </button>
+                      <div className="group relative">
+                        <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-20 top-5">
+                          Defensive Rating - Points allowed per game vs league average
+                        </div>
+                      </div>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort('momentum')}
-                      className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
-                    >
-                      <TrendingUp className="w-3 h-3" /> MOM
-                      {sortField === 'momentum' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleSort('momentum')}
+                        className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
+                      >
+                        <TrendingUp className="w-3 h-3" /> MOM
+                        {sortField === 'momentum' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
+                      </button>
+                      <div className="group relative">
+                        <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-20 top-5">
+                          Momentum - How the team's last 5 games compare to their season average
+                        </div>
+                      </div>
+                    </div>
                   </th>
                   <th className="px-4 py-3 text-left">
-                    <button
-                      onClick={() => handleSort('homeAdvantage')}
-                      className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
-                    >
-                      <Home className="w-3 h-3" /> HOME
-                      {sortField === 'homeAdvantage' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleSort('homeAdvantage')}
+                        className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
+                      >
+                        <Home className="w-3 h-3" /> HOME
+                        {sortField === 'homeAdvantage' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
+                      </button>
+                      <div className="group relative">
+                        <Info className="w-3 h-3 text-gray-400 cursor-help" />
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -right-2 top-5">
+                          Home Advantage - Difference between home and away win percentages
+                        </div>
+                      </div>
+                    </div>
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-700 uppercase">Trend</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -315,11 +354,6 @@ export default function RankingsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-orange-600 font-semibold">+{team.homeAdvantage.toFixed(1)}</span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      {team.trend === 'up' && <TrendingUp className="w-4 h-4 text-green-600 mx-auto" />}
-                      {team.trend === 'down' && <TrendingDown className="w-4 h-4 text-red-600 mx-auto" />}
-                      {team.trend === 'same' && <Minus className="w-4 h-4 text-gray-400 mx-auto" />}
                     </td>
                   </tr>
                 ))}

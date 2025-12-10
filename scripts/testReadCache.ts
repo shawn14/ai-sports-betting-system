@@ -1,24 +1,40 @@
-import { getAdminDb } from '../lib/firebase/adminConfig';
+import { db } from '../lib/firebase/config';
+import { doc, getDoc } from 'firebase/firestore';
 
-async function test() {
-  const adminDb = getAdminDb();
-  const cacheId = '2025_w14';
+async function testReadCache() {
+  try {
+    const cacheId = '2025-w15';
+    console.log(`\n🔍 Attempting to read: standings_cache/${cacheId}`);
 
-  console.log('Checking team_rankings collection...');
-  const rankingsDoc = await adminDb.collection('team_rankings').doc(cacheId).get();
+    const cacheRef = doc(db, 'standings_cache', cacheId);
+    const cacheDoc = await getDoc(cacheRef);
 
-  if (rankingsDoc.exists) {
-    const data = rankingsDoc.data();
-    console.log('✅ Found rankings!');
-    console.log(`Teams count: ${data?.teams?.length}`);
-    console.log(`Calculated at: ${data?.calculatedAt}`);
-    console.log(`Expires at: ${data?.expiresAt}`);
-    if (data?.teams?.[0]) {
-      console.log(`First team: ${data.teams[0].team} - TSR: ${data.teams[0].tsr}`);
+    if (cacheDoc.exists()) {
+      const data = cacheDoc.data();
+      console.log('\n✅ Document exists!');
+      console.log(`   Season: ${data.season}`);
+      console.log(`   Week: ${data.week}`);
+      console.log(`   Teams: ${data.standings?.length || 0}`);
+      console.log(`   ScrapedAt: ${data.scrapedAt?.toDate()}`);
+      console.log(`   ExpiresAt: ${data.expiresAt?.toDate()}`);
+      console.log(`   Now: ${new Date()}`);
+      console.log(`   Is expired? ${new Date() > data.expiresAt?.toDate()}`);
+
+      if (data.standings && data.standings.length > 0) {
+        console.log(`\n📋 First 3 teams:`);
+        data.standings.slice(0, 3).forEach((team: any) => {
+          console.log(`   - ${team.team} (${team.wins}-${team.losses})`);
+        });
+      }
+    } else {
+      console.log('\n❌ Document does NOT exist!');
+      console.log('   This means the upload failed or went to wrong collection/document');
     }
-  } else {
-    console.log('❌ No rankings found');
+  } catch (error: any) {
+    console.error('\n❌ Error reading from Firestore:');
+    console.error(`   Code: ${error?.code}`);
+    console.error(`   Message: ${error?.message}`);
   }
 }
 
-test();
+testReadCache().catch(console.error);

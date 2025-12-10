@@ -138,7 +138,7 @@ async function calculateRankings(season: number, week: number): Promise<TeamRati
     return {
       team: standings.team,
       conference,
-      division: division || standings.division || 'Unknown',
+      division: division || 'Unknown', // Don't use standings.division - it contains win pct!
       record: `${standings.wins}-${standings.losses}${standings.ties > 0 ? `-${standings.ties}` : ''}`,
       tsr: components.tsr,
       netPoints: components.netPoints,
@@ -157,6 +157,9 @@ async function calculateRankings(season: number, week: number): Promise<TeamRati
   teamRatings.forEach((team, index) => {
     team.rank = index + 1;
   });
+
+  // Calculate trends by comparing to previous week
+  await calculateTrends(teamRatings, season, week);
 
   console.log(`✅ Calculated rankings for ${teamRatings.length} teams`);
   return teamRatings;
@@ -257,4 +260,52 @@ function determineDivision(teamName: string): string {
   }
 
   return '';
+}
+
+async function calculateTrends(currentRankings: TeamRating[], season: number, week: number): Promise<void> {
+  // Week 1 has no previous week to compare
+  if (week === 1) {
+    return;
+  }
+
+  try {
+    // Try to get previous week's rankings
+    const prevWeek = week - 1;
+    const previousRankings = await getCachedRankings(season, prevWeek);
+
+    if (!previousRankings) {
+      console.log(`No previous week rankings found for trend calculation`);
+      return;
+    }
+
+    // Create a map of previous rankings by team name
+    const prevRankMap = new Map<string, number>();
+    previousRankings.forEach(team => {
+      prevRankMap.set(team.team, team.rank);
+    });
+
+    // Calculate trends
+    currentRankings.forEach(team => {
+      const prevRank = prevRankMap.get(team.team);
+
+      if (prevRank === undefined) {
+        team.trend = 'same';
+        return;
+      }
+
+      // Lower rank number is better (1 is best)
+      if (team.rank < prevRank) {
+        team.trend = 'up'; // Improved
+      } else if (team.rank > prevRank) {
+        team.trend = 'down'; // Declined
+      } else {
+        team.trend = 'same';
+      }
+    });
+
+    console.log(`✅ Calculated trends by comparing to week ${prevWeek}`);
+  } catch (error) {
+    console.error('Error calculating trends:', error);
+    // Don't throw - trending is optional
+  }
 }

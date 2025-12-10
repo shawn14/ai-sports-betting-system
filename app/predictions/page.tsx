@@ -168,6 +168,52 @@ export default function PredictionsPage() {
           }
         }
 
+        // Tier 3: Fetch live odds from The Odds API for remaining games
+        if (vegasLinesMap.size < gameIds.length) {
+          console.log(`Still missing ${gameIds.length - vegasLinesMap.size} games, fetching live odds from API...`);
+          try {
+            const oddsResponse = await fetch('/api/odds');
+            if (oddsResponse.ok) {
+              const liveOdds = await oddsResponse.json();
+              console.log(`Got ${liveOdds.length} live odds from API`);
+
+              // Match live odds to our games by team names
+              games.forEach(game => {
+                if (!vegasLinesMap.has(game.id)) {
+                  const matchingOdds = liveOdds.find((odds: any) => {
+                    const homeMatch = odds.home_team?.toLowerCase().includes(game.homeTeam.name.toLowerCase()) ||
+                                     game.homeTeam.name.toLowerCase().includes(odds.home_team?.toLowerCase());
+                    const awayMatch = odds.away_team?.toLowerCase().includes(game.awayTeam.name.toLowerCase()) ||
+                                     game.awayTeam.name.toLowerCase().includes(odds.away_team?.toLowerCase());
+                    return homeMatch && awayMatch;
+                  });
+
+                  if (matchingOdds && matchingOdds.bookmakers?.length > 0) {
+                    const bookmaker = matchingOdds.bookmakers[0];
+                    const spreadsMarket = bookmaker.markets?.find((m: any) => m.key === 'spreads');
+                    const totalsMarket = bookmaker.markets?.find((m: any) => m.key === 'totals');
+
+                    if (spreadsMarket && totalsMarket) {
+                      const homeSpread = spreadsMarket.outcomes?.find((o: any) =>
+                        o.name.toLowerCase().includes(game.homeTeam.name.toLowerCase())
+                      )?.point || 0;
+                      const totalLine = totalsMarket.outcomes?.[0]?.point || 0;
+
+                      vegasLinesMap.set(game.id, {
+                        spread: homeSpread,
+                        total: totalLine
+                      });
+                      console.log(`Found live odds for ${game.id}: spread=${homeSpread}, total=${totalLine}`);
+                    }
+                  }
+                }
+              });
+            }
+          } catch (err) {
+            console.warn('Could not fetch live odds from API:', err);
+          }
+        }
+
         return vegasLinesMap;
       };
 

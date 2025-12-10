@@ -121,19 +121,32 @@ export class MatrixHelper {
 
     for (const game of games) {
       try {
-        // Find team standings
-        const homeStandings = allStandings.find(s =>
-          s.team.toLowerCase().includes(game.homeTeam.name.toLowerCase()) ||
-          game.homeTeam.name.toLowerCase().includes(s.team.toLowerCase())
-        );
+        // Find team standings - use team abbreviation for more reliable matching
+        const homeStandings = allStandings.find(s => {
+          const teamLower = s.team.toLowerCase();
+          const homeName = game.homeTeam.name.toLowerCase();
+          const homeAbbr = game.homeTeam.abbreviation?.toLowerCase();
 
-        const awayStandings = allStandings.find(s =>
-          s.team.toLowerCase().includes(game.awayTeam.name.toLowerCase()) ||
-          game.awayTeam.name.toLowerCase().includes(s.team.toLowerCase())
-        );
+          return teamLower.includes(homeName) ||
+                 homeName.includes(teamLower) ||
+                 (homeAbbr && teamLower.includes(homeAbbr));
+        });
+
+        const awayStandings = allStandings.find(s => {
+          const teamLower = s.team.toLowerCase();
+          const awayName = game.awayTeam.name.toLowerCase();
+          const awayAbbr = game.awayTeam.abbreviation?.toLowerCase();
+
+          return teamLower.includes(awayName) ||
+                 awayName.includes(teamLower) ||
+                 (awayAbbr && teamLower.includes(awayAbbr));
+        });
 
         if (!homeStandings || !awayStandings) {
-          console.warn(`Skipping ${game.homeTeam.name} vs ${game.awayTeam.name} - missing standings`);
+          console.error(`❌ SKIPPING GAME: ${game.homeTeam.name} vs ${game.awayTeam.name}`);
+          console.error(`  Home team: "${game.homeTeam.name}" (${game.homeTeam.abbreviation}) - Found: ${!!homeStandings}`);
+          console.error(`  Away team: "${game.awayTeam.name}" (${game.awayTeam.abbreviation}) - Found: ${!!awayStandings}`);
+          console.error(`  Available teams in standings:`, allStandings.map(s => s.team).join(', '));
           continue;
         }
 

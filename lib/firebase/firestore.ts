@@ -26,7 +26,9 @@ const COLLECTIONS = {
   BETS: 'bets',
   TRAINING_DATA: 'training_data',
   TRAINING_DATASETS: 'training_datasets',
-  ODDS_CACHE: 'odds_cache', // NEW: Cache odds data
+  ODDS_CACHE: 'odds_cache', // Cache odds data
+  GAME_INTELLIGENCE_CACHE: 'game_intelligence_cache', // NEW: Cache game intelligence
+  ANALYST_REPORTS: 'analyst_reports', // NEW: Weekly analyst reports
 };
 
 export class FirestoreService {
@@ -599,6 +601,121 @@ export class FirestoreService {
     } catch (error) {
       console.error('Error getting cached odds:', error);
       return null;
+    }
+  }
+
+  /**
+   * Save game intelligence to cache
+   */
+  static async saveGameIntelligence(gameId: string, intelligenceData: any): Promise<void> {
+    try {
+      const cacheRef = doc(db, COLLECTIONS.GAME_INTELLIGENCE_CACHE, gameId);
+      await setDoc(cacheRef, {
+        ...intelligenceData,
+        generatedAt: Timestamp.now(),
+        expiresAt: Timestamp.fromDate(new Date(Date.now() + 24 * 60 * 60 * 1000)) // 24 hours
+      });
+      console.log(`✅ Cached game intelligence for game ${gameId}`);
+    } catch (error) {
+      console.error('Error saving game intelligence:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get cached game intelligence for a specific game
+   */
+  static async getCachedGameIntelligence(gameId: string): Promise<any | null> {
+    try {
+      const cacheRef = doc(db, COLLECTIONS.GAME_INTELLIGENCE_CACHE, gameId);
+      const docSnap = await getDoc(cacheRef);
+
+      if (!docSnap.exists()) {
+        return null;
+      }
+
+      const data = docSnap.data();
+      const expiresAt = data.expiresAt?.toDate();
+
+      // Check if cache is expired
+      if (new Date() > expiresAt) {
+        console.log(`Game intelligence cache expired for ${gameId}`);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting cached game intelligence:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all cached game intelligence for a week
+   */
+  static async getGameIntelligenceForWeek(season: number, week: number): Promise<any[]> {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.GAME_INTELLIGENCE_CACHE),
+        where('season', '==', season),
+        where('week', '==', week)
+      );
+
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error('Error getting week intelligence:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Save weekly analyst report
+   */
+  static async saveAnalystReport(reportId: string, reportData: any): Promise<void> {
+    try {
+      const reportRef = doc(db, COLLECTIONS.ANALYST_REPORTS, reportId);
+      await setDoc(reportRef, {
+        ...reportData,
+        generatedAt: Timestamp.now()
+      });
+      console.log(`✅ Saved analyst report: ${reportId}`);
+    } catch (error) {
+      console.error('Error saving analyst report:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analyst report by ID (e.g., "2025-w14")
+   */
+  static async getAnalystReport(reportId: string): Promise<any | null> {
+    try {
+      const reportRef = doc(db, COLLECTIONS.ANALYST_REPORTS, reportId);
+      const docSnap = await getDoc(reportRef);
+
+      if (!docSnap.exists()) {
+        return null;
+      }
+
+      return docSnap.data();
+    } catch (error) {
+      console.error('Error getting analyst report:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get all analyst reports (for historical view)
+   */
+  static async getAllAnalystReports(): Promise<any[]> {
+    try {
+      const reportsRef = collection(db, COLLECTIONS.ANALYST_REPORTS);
+      const querySnapshot = await getDocs(reportsRef);
+      return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error('Error getting all analyst reports:', error);
+      return [];
     }
   }
 }

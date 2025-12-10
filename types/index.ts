@@ -293,3 +293,71 @@ export interface TrainingDataset {
   };
   data: TrainingDataPoint[];
 }
+
+// Game Intelligence Types
+export interface GameIntelligence {
+  injuries: {
+    summary: string;
+    keyInjuries: string[];
+    impact: 'high' | 'medium' | 'low';
+  };
+  weather: {
+    summary: string;
+    conditions: string;
+    impact: 'high' | 'medium' | 'low';
+  };
+  news: {
+    summary: string;
+    keyStorylines: string[];
+    impact: 'high' | 'medium' | 'low';
+  };
+  overall: {
+    confidenceAdjustment: number; // -20 to +20 percentage points
+    recommendation: string;
+  };
+}
+
+export interface GameIntelligenceCache {
+  gameId: string;
+  season: number;
+  week: number;
+  homeTeam: string;
+  awayTeam: string;
+  gameTime: string; // ISO string
+  intelligence: GameIntelligence;
+  minutesBeforeKickoff: number;
+  generatedAt: string; // ISO string
+  expiresAt: string; // ISO string
+}
+
+// Weekly Analyst Report Types
+export interface AnalystReportSection {
+  title: string;
+  content: string;
+  keyMetrics?: Record<string, string | number>;
+  insights?: string[];
+  recommendations?: Array<{
+    priority: 'HIGH' | 'MEDIUM' | 'LOW';
+    action: string;
+    reasoning: string;
+  }>;
+}
+
+export interface WeeklyAnalystReport {
+  reportId: string; // e.g., "2025-w14"
+  season: number;
+  week: number;
+  generatedAt: string; // ISO string
+  executiveSummary: string;
+  sections: AnalystReportSection[];
+  dataSnapshot: {
+    totalGames: number;
+    dateRange: {
+      from: string; // ISO string
+      to: string; // ISO string
+    };
+    bestPerformingTeams: string[];
+    worstPerformingTeams: string[];
+    overallROI: number;
+  };
+}

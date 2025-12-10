@@ -109,75 +109,72 @@ export default function RankingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-50">
       <LoggedInHeader />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-3">
-            <Trophy className="w-8 h-8 text-yellow-600" />
-            <h1 className="text-4xl font-bold text-gray-900">Team Power Rankings</h1>
-          </div>
-          <p className="text-lg text-gray-600">
-            Matrix TSR ratings for all NFL teams, updated weekly based on performance across six key metrics.
+      <div className="max-w-[1400px] mx-auto px-4 py-4">
+        {/* Compact Header */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-900">Power Rankings</h1>
+          <p className="text-xs text-gray-600">
+            Team Strength Ratings based on six key performance metrics
           </p>
         </div>
 
         {/* Top Performers */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
           {/* Top Offense */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Zap className="w-5 h-5 text-red-600" />
-              <h3 className="font-bold text-gray-900">Top Offenses</h3>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Zap className="w-3.5 h-3.5 text-red-600" />
+              <h3 className="text-sm font-semibold text-gray-900">Top Offenses</h3>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {getTopTeams('offensive', 5).map((team, idx) => (
-                <div key={team.team} className="flex items-center justify-between text-sm">
+                <div key={team.team} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500 font-mono w-4">{idx + 1}</span>
                     <span className="text-gray-900">{team.team}</span>
                   </div>
-                  <span className="font-bold text-red-600">+{team.offensive.toFixed(1)}</span>
+                  <span className="text-red-600">+{team.offensive.toFixed(1)}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Top Defense */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Shield className="w-5 h-5 text-blue-600" />
-              <h3 className="font-bold text-gray-900">Top Defenses</h3>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Shield className="w-3.5 h-3.5 text-blue-600" />
+              <h3 className="text-sm font-semibold text-gray-900">Top Defenses</h3>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {getTopTeams('defensive', 5).map((team, idx) => (
-                <div key={team.team} className="flex items-center justify-between text-sm">
+                <div key={team.team} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500 font-mono w-4">{idx + 1}</span>
                     <span className="text-gray-900">{team.team}</span>
                   </div>
-                  <span className="font-bold text-blue-600">+{team.defensive.toFixed(1)}</span>
+                  <span className="text-blue-600">+{team.defensive.toFixed(1)}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Hottest Teams */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-              <h3 className="font-bold text-gray-900">Hottest Teams (Momentum)</h3>
+          <div className="bg-white rounded border border-gray-200 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <TrendingUp className="w-3.5 h-3.5 text-green-600" />
+              <h3 className="text-sm font-semibold text-gray-900">Hottest Teams</h3>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {getTopTeams('momentum', 5).map((team, idx) => (
-                <div key={team.team} className="flex items-center justify-between text-sm">
+                <div key={team.team} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500 font-mono w-4">{idx + 1}</span>
                     <span className="text-gray-900">{team.team}</span>
                   </div>
-                  <span className="font-bold text-green-600">+{team.momentum.toFixed(1)}</span>
+                  <span className="text-green-600">+{team.momentum.toFixed(1)}</span>
                 </div>
               ))}
             </div>
@@ -185,13 +182,13 @@ export default function RankingsPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-semibold text-gray-700">Filter:</span>
-            <div className="flex gap-2">
+        <div className="bg-white rounded border border-gray-200 p-2 mb-3">
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-600">Filter:</span>
+            <div className="flex gap-1.5">
               <button
                 onClick={() => setFilterConf('ALL')}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                className={`px-3 py-1 rounded text-xs font-medium transition ${
                   filterConf === 'ALL'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -201,7 +198,7 @@ export default function RankingsPage() {
               </button>
               <button
                 onClick={() => setFilterConf('AFC')}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                className={`px-3 py-1 rounded text-xs font-medium transition ${
                   filterConf === 'AFC'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -211,7 +208,7 @@ export default function RankingsPage() {
               </button>
               <button
                 onClick={() => setFilterConf('NFC')}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                className={`px-3 py-1 rounded text-xs font-medium transition ${
                   filterConf === 'NFC'
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -224,12 +221,12 @@ export default function RankingsPage() {
         </div>
 
         {/* Rankings Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden mb-8">
+        <div className="bg-white rounded border border-gray-200 overflow-hidden mb-4">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-3 py-2 text-left">
                     <button
                       onClick={() => handleSort('rank')}
                       className="flex items-center gap-1 text-xs font-semibold text-gray-700 uppercase hover:text-gray-900"
@@ -238,9 +235,9 @@ export default function RankingsPage() {
                       {sortField === 'rank' && (sortDesc ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />)}
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Team</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Record</th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase">Team</th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-700 uppercase">Record</th>
+                  <th className="px-3 py-2 text-left">
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleSort('tsr')}
@@ -251,13 +248,13 @@ export default function RankingsPage() {
                       </button>
                       <div className="group relative">
                         <Info className="w-3 h-3 text-gray-400 cursor-help" />
-                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-20 top-5">
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded shadow-lg -left-20 top-5">
                           Team Strength Rating - Overall team power score based on all metrics
                         </div>
                       </div>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-3 py-2 text-left">
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleSort('offensive')}
@@ -268,13 +265,13 @@ export default function RankingsPage() {
                       </button>
                       <div className="group relative">
                         <Info className="w-3 h-3 text-gray-400 cursor-help" />
-                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-20 top-5">
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded shadow-lg -left-20 top-5">
                           Offensive Rating - Points scored per game vs league average
                         </div>
                       </div>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-3 py-2 text-left">
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleSort('defensive')}
@@ -285,13 +282,13 @@ export default function RankingsPage() {
                       </button>
                       <div className="group relative">
                         <Info className="w-3 h-3 text-gray-400 cursor-help" />
-                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-20 top-5">
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded shadow-lg -left-20 top-5">
                           Defensive Rating - Points allowed per game vs league average
                         </div>
                       </div>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-3 py-2 text-left">
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleSort('momentum')}
@@ -302,13 +299,13 @@ export default function RankingsPage() {
                       </button>
                       <div className="group relative">
                         <Info className="w-3 h-3 text-gray-400 cursor-help" />
-                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -left-20 top-5">
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded shadow-lg -left-20 top-5">
                           Momentum - How the team's last 5 games compare to their season average
                         </div>
                       </div>
                     </div>
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-3 py-2 text-left">
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleSort('homeAdvantage')}
@@ -319,7 +316,7 @@ export default function RankingsPage() {
                       </button>
                       <div className="group relative">
                         <Info className="w-3 h-3 text-gray-400 cursor-help" />
-                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded-lg shadow-lg -right-2 top-5">
+                        <div className="invisible group-hover:visible absolute z-10 w-48 p-2 text-xs text-white bg-gray-900 rounded shadow-lg -right-2 top-5">
                           Home Advantage - Difference between home and away win percentages
                         </div>
                       </div>
@@ -330,30 +327,30 @@ export default function RankingsPage() {
               <tbody className="divide-y divide-gray-200">
                 {sortedTeams.map((team) => (
                   <tr key={team.team} className="hover:bg-gray-50 transition">
-                    <td className="px-4 py-3">
-                      <span className="font-bold text-gray-900">#{team.rank}</span>
+                    <td className="px-3 py-2">
+                      <span className="text-sm text-gray-900">#{team.rank}</span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-2">
                       <div>
-                        <div className="font-semibold text-gray-900">{team.team}</div>
+                        <div className="text-sm text-gray-900">{team.team}</div>
                         <div className="text-xs text-gray-500">{team.conference} {team.division}</div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{team.record}</td>
-                    <td className="px-4 py-3">
-                      <span className="font-bold text-blue-600">{team.tsr.toFixed(1)}</span>
+                    <td className="px-3 py-2 text-xs text-gray-700">{team.record}</td>
+                    <td className="px-3 py-2">
+                      <span className="text-sm text-blue-600">{team.tsr.toFixed(1)}</span>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-red-600 font-semibold">+{team.offensive.toFixed(1)}</span>
+                    <td className="px-3 py-2">
+                      <span className="text-xs text-red-600">+{team.offensive.toFixed(1)}</span>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-blue-600 font-semibold">+{team.defensive.toFixed(1)}</span>
+                    <td className="px-3 py-2">
+                      <span className="text-xs text-blue-600">+{team.defensive.toFixed(1)}</span>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-green-600 font-semibold">+{team.momentum.toFixed(1)}</span>
+                    <td className="px-3 py-2">
+                      <span className="text-xs text-green-600">+{team.momentum.toFixed(1)}</span>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-orange-600 font-semibold">+{team.homeAdvantage.toFixed(1)}</span>
+                    <td className="px-3 py-2">
+                      <span className="text-xs text-orange-600">+{team.homeAdvantage.toFixed(1)}</span>
                     </td>
                   </tr>
                 ))}
@@ -363,16 +360,16 @@ export default function RankingsPage() {
         </div>
 
         {/* Team Comparison */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Compare Teams</h2>
+        <div className="bg-white rounded border border-gray-200 p-3">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3">Compare Teams</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Team 1</label>
+              <label className="block text-xs text-gray-600 mb-1">Team 1</label>
               <select
                 value={compareTeam1}
                 onChange={(e) => setCompareTeam1(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select a team...</option>
                 {teams.map((team) => (
@@ -382,11 +379,11 @@ export default function RankingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Team 2</label>
+              <label className="block text-xs text-gray-600 mb-1">Team 2</label>
               <select
                 value={compareTeam2}
                 onChange={(e) => setCompareTeam2(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-2 py-1.5 border border-gray-300 rounded text-xs text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select a team...</option>
                 {teams.map((team) => (
@@ -397,63 +394,63 @@ export default function RankingsPage() {
           </div>
 
           {team1Data && team2Data && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
-                <h3 className="text-xl font-bold text-blue-900 mb-4">{team1Data.team}</h3>
-                <div className="space-y-2 text-sm">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="bg-gray-50 rounded border border-gray-200 p-3">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">{team1Data.team}</h3>
+                <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-blue-800">Overall TSR:</span>
-                    <strong className="text-blue-900">{team1Data.tsr.toFixed(1)}</strong>
+                    <span className="text-gray-600">Overall TSR:</span>
+                    <span className="text-gray-900">{team1Data.tsr.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-800">Offensive:</span>
-                    <strong className="text-blue-900">+{team1Data.offensive.toFixed(1)}</strong>
+                    <span className="text-gray-600">Offensive:</span>
+                    <span className="text-gray-900">+{team1Data.offensive.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-800">Defensive:</span>
-                    <strong className="text-blue-900">+{team1Data.defensive.toFixed(1)}</strong>
+                    <span className="text-gray-600">Defensive:</span>
+                    <span className="text-gray-900">+{team1Data.defensive.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-800">Momentum:</span>
-                    <strong className="text-blue-900">+{team1Data.momentum.toFixed(1)}</strong>
+                    <span className="text-gray-600">Momentum:</span>
+                    <span className="text-gray-900">+{team1Data.momentum.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-800">Net Points:</span>
-                    <strong className="text-blue-900">+{team1Data.netPoints.toFixed(1)}</strong>
+                    <span className="text-gray-600">Net Points:</span>
+                    <span className="text-gray-900">+{team1Data.netPoints.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-800">Home Advantage:</span>
-                    <strong className="text-blue-900">+{team1Data.homeAdvantage.toFixed(1)}</strong>
+                    <span className="text-gray-600">Home Advantage:</span>
+                    <span className="text-gray-900">+{team1Data.homeAdvantage.toFixed(1)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-red-50 rounded-lg p-6 border border-red-200">
-                <h3 className="text-xl font-bold text-red-900 mb-4">{team2Data.team}</h3>
-                <div className="space-y-2 text-sm">
+              <div className="bg-gray-50 rounded border border-gray-200 p-3">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">{team2Data.team}</h3>
+                <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-red-800">Overall TSR:</span>
-                    <strong className="text-red-900">{team2Data.tsr.toFixed(1)}</strong>
+                    <span className="text-gray-600">Overall TSR:</span>
+                    <span className="text-gray-900">{team2Data.tsr.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-red-800">Offensive:</span>
-                    <strong className="text-red-900">+{team2Data.offensive.toFixed(1)}</strong>
+                    <span className="text-gray-600">Offensive:</span>
+                    <span className="text-gray-900">+{team2Data.offensive.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-red-800">Defensive:</span>
-                    <strong className="text-red-900">+{team2Data.defensive.toFixed(1)}</strong>
+                    <span className="text-gray-600">Defensive:</span>
+                    <span className="text-gray-900">+{team2Data.defensive.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-red-800">Momentum:</span>
-                    <strong className="text-red-900">+{team2Data.momentum.toFixed(1)}</strong>
+                    <span className="text-gray-600">Momentum:</span>
+                    <span className="text-gray-900">+{team2Data.momentum.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-red-800">Net Points:</span>
-                    <strong className="text-red-900">+{team2Data.netPoints.toFixed(1)}</strong>
+                    <span className="text-gray-600">Net Points:</span>
+                    <span className="text-gray-900">+{team2Data.netPoints.toFixed(1)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-red-800">Home Advantage:</span>
-                    <strong className="text-red-900">+{team2Data.homeAdvantage.toFixed(1)}</strong>
+                    <span className="text-gray-600">Home Advantage:</span>
+                    <span className="text-gray-900">+{team2Data.homeAdvantage.toFixed(1)}</span>
                   </div>
                 </div>
               </div>

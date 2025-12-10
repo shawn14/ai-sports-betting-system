@@ -485,7 +485,21 @@ export default function PredictionsPage() {
           </div>
 
           {/* Table Rows */}
-          {currentPredictions.map((pred) => {
+          {currentPredictions
+            .sort((a, b) => {
+              const now = new Date();
+              const aTime = new Date(a.gameTime).getTime();
+              const bTime = new Date(b.gameTime).getTime();
+
+              // Primary sort: by game time (earliest first)
+              if (aTime !== bTime) {
+                return aTime - bTime;
+              }
+
+              // Secondary sort: by confidence (highest first) for games at same time
+              return b.confidence - a.confidence;
+            })
+            .map((pred) => {
             const isComplete = pred.status === 'completed' && pred.actualHomeScore !== undefined && pred.actualAwayScore !== undefined;
             const actualTotal = isComplete ? (pred.actualHomeScore! + pred.actualAwayScore!) : 0;
             const actualSpread = isComplete ? (pred.actualHomeScore! - pred.actualAwayScore!) : 0;

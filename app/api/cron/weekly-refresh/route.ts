@@ -33,6 +33,7 @@ export async function GET(request: NextRequest) {
       week,
       standings: null as any,
       odds: null as any,
+      predictions: null as any,
       errors: [] as string[]
     };
 
@@ -94,6 +95,38 @@ export async function GET(request: NextRequest) {
     } catch (error: any) {
       results.errors.push(`Odds: ${error.message}`);
       results.odds = { success: false, error: error.message };
+    }
+
+    // Step 3: Generate predictions and results for completed games
+    try {
+      console.log('🎯 Generating predictions for completed games...');
+
+      const predictionsUrl = new URL('/api/cron/generate-predictions', request.url);
+      const predictionsResponse = await fetch(predictionsUrl.toString(), {
+        method: 'POST',
+        headers: {
+          'authorization': authHeader!
+        }
+      });
+
+      const predictionsData = await predictionsResponse.json();
+
+      if (predictionsData.success) {
+        results.predictions = {
+          success: true,
+          ...predictionsData.summary
+        };
+        console.log(`✅ Predictions: ${predictionsData.summary.predictionsCreated} created, ${predictionsData.summary.resultsCreated} results`);
+      } else {
+        results.predictions = {
+          success: false,
+          error: predictionsData.error
+        };
+        results.errors.push(`Predictions: ${predictionsData.error}`);
+      }
+    } catch (error: any) {
+      results.errors.push(`Predictions: ${error.message}`);
+      results.predictions = { success: false, error: error.message };
     }
 
     return NextResponse.json({

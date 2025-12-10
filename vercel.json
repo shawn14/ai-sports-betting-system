@@ -3,6 +3,18 @@
     {
       "path": "/api/cron/weekly-refresh",
       "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/generate-predictions",
+      "schedule": "0 10 * * 2"
+    },
+    {
+      "path": "/api/cron/generate-game-intelligence",
+      "schedule": "0 */2 * * 0,1,4,6"
+    },
+    {
+      "path": "/api/cron/weekly-analyst-report",
+      "schedule": "0 8 * * 3"
     }
   ]
 }

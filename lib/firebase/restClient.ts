@@ -82,6 +82,66 @@ function toFirestoreDocument(data: any): any {
 }
 
 /**
+ * Convert Firestore value to JavaScript value
+ */
+function fromFirestoreValue(value: any): any {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  if ('nullValue' in value) {
+    return null;
+  }
+
+  if ('stringValue' in value) {
+    return value.stringValue;
+  }
+
+  if ('integerValue' in value) {
+    return parseInt(value.integerValue, 10);
+  }
+
+  if ('doubleValue' in value) {
+    return value.doubleValue;
+  }
+
+  if ('booleanValue' in value) {
+    return value.booleanValue;
+  }
+
+  if ('timestampValue' in value) {
+    return value.timestampValue;
+  }
+
+  if ('arrayValue' in value) {
+    const values = value.arrayValue.values || [];
+    return values.map(fromFirestoreValue);
+  }
+
+  if ('mapValue' in value) {
+    const fields = value.mapValue.fields || {};
+    return fromFirestoreDocument(fields);
+  }
+
+  return null;
+}
+
+/**
+ * Convert Firestore document fields to JavaScript object
+ */
+function fromFirestoreDocument(fields: any): any {
+  if (!fields || typeof fields !== 'object') {
+    return null;
+  }
+
+  const result: any = {};
+  for (const [key, value] of Object.entries(fields)) {
+    result[key] = fromFirestoreValue(value);
+  }
+  return result;
+}
+
+/**
  * Write document to Firestore (creates new document)
  */
 export async function setDocument(
@@ -213,4 +273,122 @@ export async function batchWrite(writes: Array<{
   for (const write of writes) {
     await setDocument(write.collection, write.documentId, write.data);
   }
+}
+
+/**
+ * Query documents from Firestore with filters
+ */
+export async function getDocuments(
+  collection: string,
+  filters?: Array<{ field: string; operator: string; value: any }>
+): Promise<any[]> {
+  return new Promise((resolve, reject) => {
+    // Build structured query
+    const structuredQuery: any = {
+      from: [{ collectionId: collection }]
+    };
+
+    // Add filters if provided
+    if (filters && filters.length > 0) {
+      const fieldFilters = filters.map(filter => ({
+        fieldFilter: {
+          field: { fieldPath: filter.field },
+          op: filter.operator.toUpperCase().replace('==', 'EQUAL'),
+          value: toFirestoreValue(filter.value)
+        }
+      }));
+
+      structuredQuery.where = {
+        compositeFilter: {
+          op: 'AND',
+          filters: fieldFilters
+        }
+      };
+    }
+
+    const body = JSON.stringify({ structuredQuery });
+    const path = `/v1/projects/${PROJECT_ID}/databases/(default)/documents:runQuery?key=${API_KEY}`;
+
+    const options = {
+      hostname: 'firestore.googleapis.com',
+      port: 443,
+      path,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(body)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let responseData = '';
+
+      res.on('data', (chunk) => {
+        responseData += chunk;
+      });
+
+      res.on('end', () => {
+        if (res.statusCode === 200) {
+          try {
+            // Handle empty results
+            if (!responseData || responseData.trim() === '' || responseData.trim() === '[]') {
+              resolve([]);
+              return;
+            }
+
+            // Try parsing as array first
+            try {
+              const jsonArray = JSON.parse(responseData);
+              if (Array.isArray(jsonArray)) {
+                const documents = jsonArray
+                  .map(result => {
+                    if (result.document && result.document.fields) {
+                      return fromFirestoreDocument(result.document.fields);
+                    }
+                    return null;
+                  })
+                  .filter(doc => doc !== null);
+                console.log(`✅ Parsed ${documents.length} documents from query`);
+                resolve(documents);
+                return;
+              }
+            } catch (e) {
+              // Not a JSON array, try newline-delimited
+            }
+
+            // Parse as newline-delimited JSON
+            const lines = responseData.trim().split('\n');
+            const documents = lines
+              .map(line => {
+                try {
+                  const result = JSON.parse(line);
+                  if (result.document && result.document.fields) {
+                    return fromFirestoreDocument(result.document.fields);
+                  }
+                  return null;
+                } catch (e) {
+                  return null;
+                }
+              })
+              .filter(doc => doc !== null);
+
+            console.log(`✅ Parsed ${documents.length} documents from query`);
+            resolve(documents);
+          } catch (parseError) {
+            console.error('Parse error:', parseError);
+            reject(new Error(`Failed to parse query response: ${parseError}`));
+          }
+        } else {
+          reject(new Error(`Firebase query failed (${res.statusCode}): ${responseData}`));
+        }
+      });
+    });
+
+    req.on('error', (error) => {
+      reject(error);
+    });
+
+    req.write(body);
+    req.end();
+  });
 }

@@ -19,233 +19,134 @@ export default async function Image() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
-          position: 'relative',
+          backgroundColor: '#0a0a0a',
+          backgroundImage: 'radial-gradient(circle at 25px 25px, #1a1a1a 2%, transparent 0%), radial-gradient(circle at 75px 75px, #1a1a1a 2%, transparent 0%)',
+          backgroundSize: '100px 100px',
         }}
       >
-        {/* Subtle grid pattern background */}
+        {/* Gradient overlay */}
         <div
           style={{
             position: 'absolute',
-            inset: 0,
-            backgroundImage: 'linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px)',
-            backgroundSize: '50px 50px',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(16, 185, 129, 0.05) 100%)',
           }}
         />
 
-        {/* Blue accent glow */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '-10%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '800px',
-            height: '400px',
-            background: 'radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)',
-            filter: 'blur(60px)',
-          }}
-        />
-
-        {/* Main content container */}
+        {/* Main content */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 1,
             padding: '80px',
+            zIndex: 1,
           }}
         >
-          {/* Brand name */}
+          {/* Logo/Brand */}
           <div
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              marginBottom: '48px',
+              fontSize: '80px',
+              fontWeight: 'bold',
+              letterSpacing: '-0.05em',
+              textAlign: 'center',
+              color: 'white',
+              marginBottom: '16px',
             }}
           >
-            <div
-              style={{
-                fontSize: '96px',
-                fontWeight: 'bold',
-                letterSpacing: '-0.05em',
-                textAlign: 'center',
-                color: 'white',
-                marginBottom: '8px',
-              }}
-            >
-              PREDICTION<span style={{ color: '#3b82f6' }}>MATRIX</span>
-            </div>
-            <div
-              style={{
-                fontSize: '32px',
-                color: '#9ca3af',
-                letterSpacing: '0.2em',
-                textTransform: 'uppercase',
-              }}
-            >
-              AI Sports Analytics
-            </div>
+            PREDICTION<span style={{ color: '#3b82f6' }}>MATRIX</span>
           </div>
 
-          {/* Value proposition */}
+          {/* Tagline */}
           <div
             style={{
-              fontSize: '42px',
-              color: '#d1d5db',
-              textAlign: 'center',
-              maxWidth: '900px',
-              lineHeight: 1.4,
+              fontSize: '28px',
+              color: '#9ca3af',
+              letterSpacing: '0.15em',
+              textTransform: 'uppercase',
               marginBottom: '60px',
             }}
           >
-            Machine learning models find profitable edges before the market moves
+            AI Sports Analytics
           </div>
 
-          {/* Key stats */}
+          {/* Stats Grid */}
           <div
             style={{
               display: 'flex',
-              gap: '48px',
-              marginBottom: '48px',
+              gap: '32px',
             }}
           >
-            {/* Accuracy stat */}
+            {/* Accuracy */}
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                padding: '24px 40px',
-                background: 'rgba(59, 130, 246, 0.08)',
-                border: '2px solid rgba(59, 130, 246, 0.2)',
+                padding: '32px 48px',
+                background: 'rgba(59, 130, 246, 0.1)',
+                border: '2px solid rgba(59, 130, 246, 0.3)',
                 borderRadius: '16px',
+                backdropFilter: 'blur(10px)',
               }}
             >
               <div
                 style={{
-                  fontSize: '72px',
+                  fontSize: '64px',
                   fontWeight: 'bold',
                   color: '#3b82f6',
                   lineHeight: 1,
                 }}
               >
-                54%+
+                57%
               </div>
               <div
                 style={{
-                  fontSize: '22px',
+                  fontSize: '20px',
                   color: '#9ca3af',
-                  marginTop: '12px',
+                  marginTop: '8px',
                 }}
               >
-                ATS Accuracy
+                Model Accuracy
               </div>
             </div>
 
-            {/* Real-time indicator */}
+            {/* Hot Picks */}
             <div
               style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                justifyContent: 'center',
-                padding: '24px 40px',
-                background: 'rgba(16, 185, 129, 0.08)',
-                border: '2px solid rgba(16, 185, 129, 0.2)',
+                padding: '32px 48px',
+                background: 'rgba(16, 185, 129, 0.1)',
+                border: '2px solid rgba(16, 185, 129, 0.3)',
                 borderRadius: '16px',
+                backdropFilter: 'blur(10px)',
               }}
             >
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  marginBottom: '8px',
+                  fontSize: '64px',
+                  fontWeight: 'bold',
+                  color: '#10b981',
+                  lineHeight: 1,
                 }}
               >
-                <div
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '999px',
-                    background: '#10b981',
-                  }}
-                />
-                <div
-                  style={{
-                    fontSize: '28px',
-                    fontWeight: 'bold',
-                    color: '#10b981',
-                  }}
-                >
-                  LIVE
-                </div>
+                3
               </div>
               <div
                 style={{
-                  fontSize: '22px',
+                  fontSize: '20px',
                   color: '#9ca3af',
+                  marginTop: '8px',
                 }}
               >
-                Real-Time Analysis
+                Hot Picks Today
               </div>
-            </div>
-
-            {/* Model indicator */}
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                padding: '24px 40px',
-                background: 'rgba(168, 85, 247, 0.08)',
-                border: '2px solid rgba(168, 85, 247, 0.2)',
-                borderRadius: '16px',
-              }}
-            >
-              <div
-                style={{
-                  fontSize: '52px',
-                  marginBottom: '8px',
-                }}
-              >
-                🤖
-              </div>
-              <div
-                style={{
-                  fontSize: '22px',
-                  color: '#9ca3af',
-                }}
-              >
-                AI-Powered
-              </div>
-            </div>
-          </div>
-
-          {/* Call to action badge */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '18px 36px',
-              background: 'rgba(59, 130, 246, 0.1)',
-              borderRadius: '999px',
-              border: '2px solid rgba(59, 130, 246, 0.3)',
-            }}
-          >
-            <div
-              style={{
-                fontSize: '26px',
-                color: '#3b82f6',
-                fontWeight: 'bold',
-              }}
-            >
-              Week 15 Predictions Available Now
             </div>
           </div>
         </div>

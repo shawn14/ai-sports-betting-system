@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Target, Brain, TrendingUp, Shield, Users, Lightbulb } from 'lucide-react';
+import LoggedInHeader from '@/components/LoggedInHeader';
 
 export const metadata = {
   title: 'About PredictionMatrix',
@@ -9,14 +10,7 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-slate-900 border-b border-slate-700/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <Link href="/" className="text-2xl font-bold text-white hover:text-blue-400 transition">
-            PredictionMatrix
-          </Link>
-        </div>
-      </header>
+      <LoggedInHeader />
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Hero Section */}

@@ -17,8 +17,8 @@ const navCategories = [
     title: 'This Week',
     items: [
       { label: 'Predictions', href: '/predictions', description: 'AI picks for upcoming games' },
-      { label: 'Games', href: '/games', description: 'Schedule & scores' },
       { label: 'Intelligence', href: '/intelligence', description: 'Pre-game analysis' },
+      { label: 'AI Analyst', href: '/analyst', description: 'Weekly performance' },
     ]
   },
   {
@@ -26,13 +26,6 @@ const navCategories = [
     items: [
       { label: 'Rankings', href: '/rankings', description: 'Power rankings' },
       { label: 'Analytics', href: '/analytics', description: 'Team stats' },
-    ]
-  },
-  {
-    title: 'Reports',
-    items: [
-      { label: 'AI Analyst', href: '/analyst', description: 'Weekly performance' },
-      { label: 'Backtest Results', href: '/backtest-results', description: 'Historical validation' },
     ]
   },
   {

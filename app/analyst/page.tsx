@@ -225,61 +225,79 @@ export default function AnalystPage() {
                     </div>
                   )}
 
-                  {/* Content - More Compact */}
-                  <div className="prose max-w-none mb-2 space-y-1.5">
-                    {section.content.split('\n').filter(line => line.trim()).map((line, pIdx) => {
+                  {/* Content - Quick Hits Only */}
+                  <div className="prose max-w-none mb-2 space-y-1">
+                    {section.content.split('\n').filter(line => {
+                      const trimmed = line.trim();
+                      // Only show bullet points, headers, or very short sentences
+                      return trimmed && (
+                        trimmed.startsWith('•') ||
+                        trimmed.startsWith('-') ||
+                        trimmed.startsWith('*') ||
+                        trimmed.startsWith('###') ||
+                        trimmed.length < 100
+                      );
+                    }).map((line, pIdx) => {
+                      const trimmed = line.trim();
+
                       // Check if it's a markdown header (###)
-                      if (line.trim().startsWith('###')) {
-                        const headerText = line.replace(/^###\s*/, '').trim();
+                      if (trimmed.startsWith('###')) {
+                        const headerText = trimmed.replace(/^###\s*/, '').trim();
                         return (
-                          <h4 key={pIdx} className="font-semibold text-gray-900 mt-2 mb-1 text-xs">
+                          <h4 key={pIdx} className="font-semibold text-gray-900 mt-1.5 mb-0.5 text-xs">
                             {headerText}
                           </h4>
                         );
                       }
-                      // Skip lines that are just dashes or asterisks
-                      if (line.match(/^[-*\s]+$/)) {
-                        return null;
+
+                      // Bullet points
+                      if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
+                        const text = trimmed.replace(/^[•\-*]\s*/, '').replace(/\*\*/g, '');
+                        return (
+                          <div key={pIdx} className="flex items-start gap-1.5 text-gray-700">
+                            <span className="text-blue-600 text-xs mt-0.5">•</span>
+                            <span className="text-xs leading-snug">{text}</span>
+                          </div>
+                        );
                       }
-                      // Regular paragraph - remove all bold markers
-                      const text = line.trim().replace(/\*\*/g, '');
+
+                      // Short statements
+                      const text = trimmed.replace(/\*\*/g, '');
                       return (
-                        <p key={pIdx} className="text-gray-700 leading-snug text-xs">
+                        <p key={pIdx} className="text-gray-700 leading-tight text-xs font-medium">
                           {text}
                         </p>
                       );
                     })}
                   </div>
 
-                  {/* Insights - Compact */}
+                  {/* Insights - Quick Bullets */}
                   {section.insights && section.insights.length > 0 && (
-                    <div className="bg-gray-50 rounded p-2 mb-2">
-                      <h4 className="font-semibold text-gray-900 mb-1.5 text-xs">Key Insights</h4>
-                      <ul className="space-y-1">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mb-2">
+                      <ul className="space-y-0.5">
                         {section.insights.map((insight, iIdx) => (
                           <li key={iIdx} className="flex items-start gap-1.5 text-gray-700">
-                            <span className="text-blue-600 text-xs">•</span>
-                            <span className="text-xs leading-snug">{insight}</span>
+                            <span className="text-yellow-600 text-sm">💡</span>
+                            <span className="text-xs leading-snug font-medium">{insight}</span>
                           </li>
                         ))}
                       </ul>
                     </div>
                   )}
 
-                  {/* Recommendations - Compact */}
+                  {/* Recommendations - Action Items */}
                   {section.recommendations && section.recommendations.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-gray-900 text-xs">Model Insights</h4>
+                    <div className="space-y-1.5">
                       {section.recommendations.map((rec, rIdx) => (
                         <div key={rIdx} className={`border rounded p-2 ${getPriorityColor(rec.priority)}`}>
-                          <div className="flex items-start gap-1.5">
-                            <span className="text-sm">{getPriorityIcon(rec.priority)}</span>
-                            <div className="flex-1">
-                              <div className="font-semibold mb-0.5 text-xs">
-                                {rec.priority}: {rec.action}
+                          <div className="flex items-start gap-2">
+                            <span className="text-base mt-0.5">{getPriorityIcon(rec.priority)}</span>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-xs leading-tight mb-0.5">
+                                {rec.action}
                               </div>
-                              <div className="text-xs opacity-90 leading-snug">
-                                {rec.reasoning}
+                              <div className="text-xs opacity-80 leading-tight">
+                                {rec.reasoning.split('.')[0]}.
                               </div>
                             </div>
                           </div>

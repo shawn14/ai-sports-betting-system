@@ -582,9 +582,8 @@ export default function PredictionsPage() {
 
                 {/* Moneyline - Predicted Winner */}
                 <div className="text-center">
-                  <div className="font-semibold text-gray-900">{pred.predictedWinner}</div>
-                  <div className="text-[10px] text-gray-500">
-                    {pred.predictedAwayScore.toFixed(0)}-{pred.predictedHomeScore.toFixed(0)}
+                  <div className="font-semibold text-gray-900">
+                    {pred.predictedWinner.split(' ').pop()}
                   </div>
                   {isComplete && (
                     <div className={`text-[10px] font-bold mt-0.5 ${moneylineWin ? 'text-green-600' : 'text-red-600'}`}>
@@ -682,25 +681,29 @@ export default function PredictionsPage() {
                   )}
                 </div>
 
-                {/* Result Status */}
+                {/* Game Time / Result Status */}
                 <div className="text-center">
-                  <div className={`text-[10px] font-semibold uppercase px-2 py-1 rounded ${
-                    isComplete ? 'bg-gray-100 text-gray-700' : 'bg-blue-50 text-blue-700'
-                  }`}>
-                    {isComplete ? 'Final' : pred.status}
-                  </div>
-                  {isComplete && (
-                    <div className="text-[10px] font-bold mt-1 flex gap-1 justify-center">
-                      <span className={moneylineWin ? 'text-green-600' : 'text-red-600'}>
-                        {moneylineWin ? '✓' : '✗'}
-                      </span>
-                      <span className={spreadWin ? 'text-green-600' : 'text-red-600'}>
-                        {spreadWin ? '✓' : '✗'}
-                      </span>
-                      <span className={totalWin ? 'text-green-600' : 'text-red-600'}>
-                        {totalWin ? '✓' : '✗'}
-                      </span>
+                  {!isComplete ? (
+                    <div className="text-xs text-gray-700">
+                      {formatGameTime(pred.gameTime)}
                     </div>
+                  ) : (
+                    <>
+                      <div className={`text-[10px] font-semibold uppercase px-2 py-1 rounded bg-gray-100 text-gray-700`}>
+                        Final
+                      </div>
+                      <div className="text-[10px] font-bold mt-1 flex gap-1 justify-center">
+                        <span className={moneylineWin ? 'text-green-600' : 'text-red-600'}>
+                          {moneylineWin ? '✓' : '✗'}
+                        </span>
+                        <span className={spreadWin ? 'text-green-600' : 'text-red-600'}>
+                          {spreadWin ? '✓' : '✗'}
+                        </span>
+                        <span className={totalWin ? 'text-green-600' : 'text-red-600'}>
+                          {totalWin ? '✓' : '✗'}
+                        </span>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

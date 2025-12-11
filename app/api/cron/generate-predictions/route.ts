@@ -82,6 +82,31 @@ async function handleRequest(request: NextRequest) {
     let skipped = 0;
     const errors: string[] = [];
 
+    // Fetch Vegas odds from ESPN for all games
+    console.log('📊 Fetching Vegas odds from ESPN...');
+    let vegasOddsMap = new Map<string, { spread: number; total: number }>();
+    try {
+      const oddsResponse = await fetch(`${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/api/odds`);
+      if (oddsResponse.ok) {
+        const oddsData = await oddsResponse.json();
+        oddsData.forEach((game: any) => {
+          if (game.gameId) {
+            const spread = game.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'spreads')
+              ?.outcomes?.find((o: any) => o.name === game.home_team)?.point;
+            const total = game.bookmakers?.[0]?.markets?.find((m: any) => m.key === 'totals')
+              ?.outcomes?.[0]?.point;
+
+            if (spread !== undefined && total !== undefined) {
+              vegasOddsMap.set(game.gameId, { spread, total });
+            }
+          }
+        });
+        console.log(`✅ Loaded Vegas odds for ${vegasOddsMap.size} games`);
+      }
+    } catch (error: any) {
+      console.warn('⚠️  Could not fetch Vegas odds from ESPN:', error.message);
+    }
+
     // Process each completed game
     for (const game of completedGames) {
       try {
@@ -107,7 +132,10 @@ async function handleRequest(request: NextRequest) {
         const scores = calculateExactScores(predictedTotal, predictedSpread, DEFAULT_CONFIG.volatility);
         const confidence = calculateConfidence(homeTSR, awayTSR);
 
-        // Save prediction to Firestore
+        // Get Vegas odds for this game
+        const vegasOdds = vegasOddsMap.get(game.id);
+
+        // Save prediction to Firestore (including Vegas spreads)
         await upsertDocument('predictions', game.id, {
           gameId: game.id,
           season,
@@ -123,6 +151,8 @@ async function handleRequest(request: NextRequest) {
           predictedWinner: scores.home > scores.away ? 'home' : 'away',
           confidence,
           gameTime: game.gameTime.toISOString(),
+          vegasSpread: vegasOdds?.spread || null,
+          vegasTotal: vegasOdds?.total || null,
           timestamp: new Date().toISOString()
         });
         predictionsCreated++;

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { User, LogOut, Menu, X, ChevronDown } from 'lucide-react';
+import { User, LogOut, Menu, X, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { signOut, auth } from '@/lib/firebase/auth';
 import { useRouter, usePathname } from 'next/navigation';
@@ -10,6 +10,7 @@ import ScoresTicker from '@/components/ScoresTicker';
 import { onAuthStateChanged } from 'firebase/auth';
 import type { User as FirebaseUser } from 'firebase/auth';
 import NavDropdown from './NavDropdown';
+import { useUserPreferences } from '@/lib/hooks/useUserPreferences';
 
 // Navigation categories configuration
 const navCategories = [
@@ -45,6 +46,7 @@ export default function LoggedInHeader() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const { preferences, updatePreference } = useUserPreferences();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -69,10 +71,14 @@ export default function LoggedInHeader() {
     return category.items.some(item => pathname === item.href);
   };
 
+  const handleToggleTicker = async () => {
+    await updatePreference('showTicker', !preferences.showTicker);
+  };
+
   return (
     <header className="sticky top-0 z-50">
-      {/* Scores Ticker */}
-      <ScoresTicker />
+      {/* Scores Ticker - Conditionally rendered */}
+      {preferences.showTicker && <ScoresTicker />}
 
       {/* Main Header */}
       <div className="bg-gradient-to-r from-[#1a1a1a] via-[#2a2a2a] to-[#1a1a1a] border-b border-gray-800 shadow-lg">
@@ -102,6 +108,16 @@ export default function LoggedInHeader() {
 
             {/* Right Side Actions */}
             <div className="flex items-center gap-3">
+              {/* Ticker Toggle Button */}
+              <button
+                onClick={handleToggleTicker}
+                className="p-2 text-gray-300 hover:text-white transition"
+                aria-label={preferences.showTicker ? "Hide ticker" : "Show ticker"}
+                title={preferences.showTicker ? "Hide scores ticker" : "Show scores ticker"}
+              >
+                {preferences.showTicker ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}

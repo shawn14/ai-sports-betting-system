@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import LoggedInHeader from '@/components/LoggedInHeader';
+import PredictionCard from '@/components/mobile/PredictionCard';
 import { Target, TrendingUp, Activity } from 'lucide-react';
 import { NFLAPI } from '@/lib/api/nfl';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -471,8 +472,29 @@ export default function PredictionsPage() {
           </div>
         </div>
 
-        {/* Predictions Table */}
-        <div className="bg-white rounded border border-gray-200 overflow-hidden">
+        {/* Mobile Card View */}
+        <div className="block md:hidden">
+          {currentPredictions
+            .sort((a, b) => {
+              const now = new Date();
+              const aTime = new Date(a.gameTime).getTime();
+              const bTime = new Date(b.gameTime).getTime();
+
+              // Primary sort: by game time (earliest first)
+              if (aTime !== bTime) {
+                return aTime - bTime;
+              }
+
+              // Secondary sort: by confidence (highest first) for games at same time
+              return b.confidence - a.confidence;
+            })
+            .map((pred) => (
+              <PredictionCard key={pred.gameId} prediction={pred} />
+            ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block bg-white rounded border border-gray-200 overflow-hidden">
           {/* Table Header */}
           <div className="grid grid-cols-[2fr_60px_1.5fr_1.5fr_1.5fr_1.5fr_100px] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-600 uppercase">
             <div>Matchup</div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import LoggedInHeader from '@/components/LoggedInHeader';
+import RankingCard from '@/components/mobile/RankingCard';
 import { TrendingUp, TrendingDown, Minus, Trophy, Target, Zap, Shield, Home, BarChart3, Info } from 'lucide-react';
 
 interface TeamRating {
@@ -220,8 +221,15 @@ export default function RankingsPage() {
           </div>
         </div>
 
-        {/* Rankings Table */}
-        <div className="bg-white rounded border border-gray-200 overflow-hidden mb-4">
+        {/* Mobile Card View */}
+        <div className="block md:hidden space-y-3 mb-4">
+          {sortedTeams.map(team => (
+            <RankingCard key={team.team} team={team} />
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden md:block bg-white rounded border border-gray-200 overflow-hidden mb-4">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">

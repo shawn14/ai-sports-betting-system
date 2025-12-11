@@ -317,7 +317,7 @@ export default function AnalyticsPage() {
                       {team.logo && <img src={team.logo} alt={team.team} className="w-6 h-6" />}
                       <div>
                         <div className="text-sm font-semibold text-gray-900">{team.abbreviation}</div>
-                        <div className="text-[10px] text-gray-500">{team.team}</div>
+                        <div className="text-xs text-gray-500">{team.team}</div>
                       </div>
                     </div>
                   </td>
@@ -334,7 +334,7 @@ export default function AnalyticsPage() {
                     }`}
                   >
                     {team.spreadCoverageRate.toFixed(1)}%
-                    <div className="text-[10px] text-gray-500 font-normal">
+                    <div className="text-xs text-gray-500 font-normal">
                       {team.spreadCovered}-{team.spreadTotal - team.spreadCovered}
                     </div>
                   </td>
@@ -348,7 +348,7 @@ export default function AnalyticsPage() {
                     }`}
                   >
                     {team.overRate.toFixed(1)}%
-                    <div className="text-[10px] text-gray-500 font-normal">
+                    <div className="text-xs text-gray-500 font-normal">
                       {team.totalOvers}O-{team.totalUnders}U
                     </div>
                   </td>
@@ -362,7 +362,7 @@ export default function AnalyticsPage() {
                     }`}
                   >
                     {team.accuracyRate.toFixed(1)}%
-                    <div className="text-[10px] text-gray-500 font-normal">
+                    <div className="text-xs text-gray-500 font-normal">
                       {team.correctPredictions}-{team.totalPredictions - team.correctPredictions}
                     </div>
                   </td>
@@ -385,28 +385,28 @@ function HeroMetrics({ teams }: { teams: TeamAnalytics[] }) {
   const bottomOver = [...teams].sort((a, b) => a.overRate - b.overRate)[0];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
       {/* League Average ATS */}
       <div className="bg-white rounded border border-gray-200 p-3">
         <div className="mb-2">
-          <span className="text-[10px] text-blue-600 font-semibold">LEAGUE AVG</span>
+          <span className="text-xs text-blue-600 font-semibold">LEAGUE AVG</span>
         </div>
         <div className="text-3xl font-bold text-gray-900 mb-1">{leagueAvgATS.toFixed(1)}%</div>
         <div className="text-xs text-gray-600">Spread Coverage</div>
-        <div className="text-[10px] text-gray-500 mt-1">Across all {teams.length} teams</div>
+        <div className="text-xs text-gray-500 mt-1">Across all {teams.length} teams</div>
       </div>
 
       {/* Top ATS Team */}
       <div className="bg-white rounded border border-green-200 p-3">
         <div className="mb-2">
-          <span className="text-[10px] text-green-600 font-semibold">BEST ATS</span>
+          <span className="text-xs text-green-600 font-semibold">BEST ATS</span>
         </div>
         <div className="flex items-center gap-2 mb-1">
           {topATS.logo && <img src={topATS.logo} alt={topATS.team} className="w-6 h-6" />}
           <div className="text-2xl font-bold text-gray-900">{topATS.spreadCoverageRate.toFixed(1)}%</div>
         </div>
         <div className="text-xs text-gray-600">{topATS.team}</div>
-        <div className="text-[10px] text-gray-500 mt-1">
+        <div className="text-xs text-gray-500 mt-1">
           {topATS.spreadCovered}-{topATS.spreadTotal - topATS.spreadCovered} record
         </div>
       </div>
@@ -414,14 +414,14 @@ function HeroMetrics({ teams }: { teams: TeamAnalytics[] }) {
       {/* Top Over Team */}
       <div className="bg-white rounded border border-orange-200 p-3">
         <div className="mb-2">
-          <span className="text-[10px] text-orange-600 font-semibold">MOST OVERS</span>
+          <span className="text-xs text-orange-600 font-semibold">MOST OVERS</span>
         </div>
         <div className="flex items-center gap-2 mb-1">
           {topOver.logo && <img src={topOver.logo} alt={topOver.team} className="w-6 h-6" />}
           <div className="text-2xl font-bold text-gray-900">{topOver.overRate.toFixed(1)}%</div>
         </div>
         <div className="text-xs text-gray-600">{topOver.team}</div>
-        <div className="text-[10px] text-gray-500 mt-1">
+        <div className="text-xs text-gray-500 mt-1">
           {topOver.totalOvers} overs in {topOver.totalGames} games
         </div>
       </div>
@@ -429,14 +429,14 @@ function HeroMetrics({ teams }: { teams: TeamAnalytics[] }) {
       {/* Bottom Over Team (Most Unders) */}
       <div className="bg-white rounded border border-purple-200 p-3">
         <div className="mb-2">
-          <span className="text-[10px] text-purple-600 font-semibold">MOST UNDERS</span>
+          <span className="text-xs text-purple-600 font-semibold">MOST UNDERS</span>
         </div>
         <div className="flex items-center gap-2 mb-1">
           {bottomOver.logo && <img src={bottomOver.logo} alt={bottomOver.team} className="w-6 h-6" />}
           <div className="text-2xl font-bold text-gray-900">{(100 - bottomOver.overRate).toFixed(1)}%</div>
         </div>
         <div className="text-xs text-gray-600">{bottomOver.team}</div>
-        <div className="text-[10px] text-gray-500 mt-1">
+        <div className="text-xs text-gray-500 mt-1">
           {bottomOver.totalUnders} unders in {bottomOver.totalGames} games
         </div>
       </div>

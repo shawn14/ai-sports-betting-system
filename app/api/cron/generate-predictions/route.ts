@@ -72,10 +72,9 @@ async function handleRequest(request: NextRequest) {
     // Calculate league averages
     const leagueAvg = calculateLeagueAverages(standings);
 
-    // Fetch completed games
+    // Fetch all games (both upcoming and completed)
     const games = await NFLAPI.getWeekGames(season, week);
-    const completedGames = games.filter(g => g.status === 'completed' && g.homeScore !== null && g.awayScore !== null);
-    console.log(`✅ Found ${completedGames.length} completed games`);
+    console.log(`✅ Found ${games.length} total games`);
 
     let predictionsCreated = 0;
     let resultsCreated = 0;
@@ -107,8 +106,8 @@ async function handleRequest(request: NextRequest) {
       console.warn('⚠️  Could not fetch Vegas odds from ESPN:', error.message);
     }
 
-    // Process each completed game
-    for (const game of completedGames) {
+    // Process each game (both upcoming and completed)
+    for (const game of games) {
       try {
         // Find team standings
         const homeStandings = findTeamStandings(standings, game.homeTeam.name);
@@ -157,51 +156,54 @@ async function handleRequest(request: NextRequest) {
         });
         predictionsCreated++;
 
-        // Calculate result
-        const actualHomeScore = game.homeScore!;
-        const actualAwayScore = game.awayScore!;
-        const actualSpread = actualHomeScore - actualAwayScore;
-        const actualTotal = actualHomeScore + actualAwayScore;
+        // Only calculate results for completed games
+        const isCompleted = game.status === 'completed' && game.homeScore !== null && game.awayScore !== null;
+        if (isCompleted) {
+          const actualHomeScore = game.homeScore!;
+          const actualAwayScore = game.awayScore!;
+          const actualSpread = actualHomeScore - actualAwayScore;
+          const actualTotal = actualHomeScore + actualAwayScore;
 
-        const actualWinner = actualHomeScore > actualAwayScore ? 'home' : 'away';
-        const predictedWinner = scores.home > scores.away ? 'home' : 'away';
-        const winnerCorrect = actualWinner === predictedWinner;
+          const actualWinner = actualHomeScore > actualAwayScore ? 'home' : 'away';
+          const predictedWinner = scores.home > scores.away ? 'home' : 'away';
+          const winnerCorrect = actualWinner === predictedWinner;
 
-        const spreadError = Math.abs(predictedSpread - actualSpread);
-        const spreadCovered = spreadError <= 7;
+          const spreadError = Math.abs(predictedSpread - actualSpread);
+          const spreadCovered = spreadError <= 7;
 
-        const totalOver = actualTotal > predictedTotal;
+          const totalOver = actualTotal > predictedTotal;
 
-        // Save result to Firestore
-        await upsertDocument('results', game.id, {
-          gameId: game.id,
-          season,
-          week,
-          predictedHomeScore: scores.home,
-          predictedAwayScore: scores.away,
-          predictedSpread,
-          predictedTotal,
-          predictedWinner,
-          actualHomeScore,
-          actualAwayScore,
-          actualSpread,
-          actualTotal,
-          actualWinner,
-          winnerCorrect,
-          spreadCovered,
-          totalOver,
-          spreadError,
-          totalError: Math.abs(predictedTotal - actualTotal),
-          confidence,
-          game: {
-            homeTeam: game.homeTeam,
-            awayTeam: game.awayTeam,
-            gameTime: game.gameTime.toISOString(),
-            venue: game.venue
-          },
-          timestamp: new Date().toISOString()
-        });
-        resultsCreated++;
+          // Save result to Firestore
+          await upsertDocument('results', game.id, {
+            gameId: game.id,
+            season,
+            week,
+            predictedHomeScore: scores.home,
+            predictedAwayScore: scores.away,
+            predictedSpread,
+            predictedTotal,
+            predictedWinner,
+            actualHomeScore,
+            actualAwayScore,
+            actualSpread,
+            actualTotal,
+            actualWinner,
+            winnerCorrect,
+            spreadCovered,
+            totalOver,
+            spreadError,
+            totalError: Math.abs(predictedTotal - actualTotal),
+            confidence,
+            game: {
+              homeTeam: game.homeTeam,
+              awayTeam: game.awayTeam,
+              gameTime: game.gameTime.toISOString(),
+              venue: game.venue
+            },
+            timestamp: new Date().toISOString()
+          });
+          resultsCreated++;
+        }
 
       } catch (gameError: any) {
         console.error(`❌ Error processing game ${game.id}:`, gameError.message);
@@ -216,7 +218,7 @@ async function handleRequest(request: NextRequest) {
       season,
       week,
       summary: {
-        completedGames: completedGames.length,
+        totalGames: games.length,
         predictionsCreated,
         resultsCreated,
         skipped,

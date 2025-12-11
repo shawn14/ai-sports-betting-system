@@ -70,14 +70,6 @@ export default function AnalystPage() {
     });
   }
 
-  function getPriorityColor(priority: 'HIGH' | 'MEDIUM' | 'LOW') {
-    switch (priority) {
-      case 'HIGH': return 'bg-red-100 text-red-700 border-red-300';
-      case 'MEDIUM': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
-      case 'LOW': return 'bg-green-100 text-green-700 border-green-300';
-    }
-  }
-
   function getPriorityIcon(priority: 'HIGH' | 'MEDIUM' | 'LOW') {
     switch (priority) {
       case 'HIGH': return '🔴';
@@ -86,12 +78,51 @@ export default function AnalystPage() {
     }
   }
 
-  function getSectionIcon(title: string) {
-    if (title.toLowerCase().includes('performance')) return <BarChart3 className="w-5 h-5" />;
-    if (title.toLowerCase().includes('pattern')) return <TrendingUp className="w-5 h-5" />;
-    if (title.toLowerCase().includes('strategy') || title.toLowerCase().includes('recommendation')) return <Target className="w-5 h-5" />;
-    if (title.toLowerCase().includes('trend') || title.toLowerCase().includes('momentum')) return <Lightbulb className="w-5 h-5" />;
-    return <Brain className="w-5 h-5" />;
+  function getPriorityBg(priority: 'HIGH' | 'MEDIUM' | 'LOW') {
+    switch (priority) {
+      case 'HIGH': return 'bg-red-100 border-red-300';
+      case 'MEDIUM': return 'bg-yellow-100 border-yellow-300';
+      case 'LOW': return 'bg-green-100 border-green-300';
+    }
+  }
+
+  // Extract all metrics from all sections
+  function extractAllMetrics(sections: AnalystReportSection[]) {
+    const metrics: Array<{ label: string; value: string | number }> = [];
+    sections.forEach(section => {
+      if (section.keyMetrics) {
+        Object.entries(section.keyMetrics).forEach(([key, value]) => {
+          metrics.push({ label: key, value });
+        });
+      }
+    });
+    return metrics;
+  }
+
+  // Extract all insights from all sections
+  function extractAllInsights(sections: AnalystReportSection[]) {
+    const insights: string[] = [];
+    sections.forEach(section => {
+      if (section.insights && section.insights.length > 0) {
+        insights.push(...section.insights);
+      }
+    });
+    return insights;
+  }
+
+  // Extract and sort all recommendations from all sections
+  function extractAllRecommendations(sections: AnalystReportSection[]) {
+    const recs: Array<{priority: 'HIGH' | 'MEDIUM' | 'LOW'; action: string; reasoning: string}> = [];
+    sections.forEach(section => {
+      if (section.recommendations && section.recommendations.length > 0) {
+        recs.push(...section.recommendations);
+      }
+    });
+    // Sort by priority: HIGH -> MEDIUM -> LOW
+    return recs.sort((a, b) => {
+      const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
+      return order[a.priority] - order[b.priority];
+    });
   }
 
   return (
@@ -165,173 +196,201 @@ export default function AnalystPage() {
         )}
 
         {/* Report Display */}
-        {!loading && report && (
-          <div className="space-y-3">
-            {/* Compact Header with Stats - ESPN Style */}
-            <div className="bg-white border border-gray-200 rounded p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
+        {!loading && report && (() => {
+          const allMetrics = extractAllMetrics(report.sections);
+          const allInsights = extractAllInsights(report.sections);
+          const allRecommendations = extractAllRecommendations(report.sections);
+
+          return (
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900">
-                      Week {report.week} Performance Analysis
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Week {report.week} Performance Report
                     </h2>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-sm text-gray-600">
                       {report.season} NFL Season • {new Date(report.generatedAt).toLocaleDateString()}
                     </p>
                   </div>
+                  <div className="bg-gray-50 rounded px-4 py-2 border border-gray-200">
+                    <div className="text-xs text-gray-600">Games Analyzed</div>
+                    <div className="text-2xl font-bold text-gray-900">{report.dataSnapshot.totalGames}</div>
+                  </div>
                 </div>
-                <div className="flex gap-3">
-                  <div className="bg-gray-50 rounded px-3 py-1.5 border border-gray-200">
-                    <div className="text-xs text-gray-600">Games</div>
-                    <div className="text-lg font-bold text-gray-900">{report.dataSnapshot.totalGames}</div>
-                  </div>
-                  <div className="bg-gray-50 rounded px-3 py-1.5 border border-gray-200">
-                    <div className="text-xs text-gray-600">ROI</div>
-                    <div className={`text-lg font-bold ${report.dataSnapshot.overallROI >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {report.dataSnapshot.overallROI >= 0 ? '+' : ''}{report.dataSnapshot.overallROI.toFixed(1)}%
-                    </div>
-                  </div>
+
+                {/* Executive Summary */}
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {report.executiveSummary}
+                  </p>
                 </div>
               </div>
 
-              {/* Executive Summary */}
-              <div className="bg-gray-50 rounded p-2.5 border border-gray-200">
-                <p className="text-gray-700 leading-snug text-xs">
-                  {report.executiveSummary}
-                </p>
-              </div>
-            </div>
+              {/* Quick Stats Card - Visual Dashboard */}
+              {allMetrics.length > 0 && (
+                <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">
+                    Performance Metrics
+                  </h2>
+                  <div className="space-y-4">
+                    {allMetrics.map((metric, idx) => {
+                      // Try to extract percentage from metric value
+                      const valueStr = String(metric.value);
+                      const percentMatch = valueStr.match(/(\d+(?:\.\d+)?)\s*%/);
+                      const hasPercent = percentMatch !== null;
+                      const percentage = hasPercent ? parseFloat(percentMatch[1]) : 0;
 
-            {/* Report Sections in Two Columns */}
-            <div className="grid lg:grid-cols-2 gap-3">
-              {report.sections.map((section, idx) => {
-                // Filter content to only show bullets, headers, and short statements
-                const filteredContent = section.content.split('\n').filter(line => {
-                  const trimmed = line.trim();
-                  return trimmed && (
-                    trimmed.startsWith('•') ||
-                    trimmed.startsWith('-') ||
-                    trimmed.startsWith('*') ||
-                    trimmed.startsWith('###') ||
-                    trimmed.length < 100
-                  );
-                });
+                      // Determine color based on metric name and value
+                      let barColor = 'bg-blue-500';
+                      if (hasPercent) {
+                        if (percentage >= 60) barColor = 'bg-green-500';
+                        else if (percentage >= 50) barColor = 'bg-yellow-500';
+                        else barColor = 'bg-red-500';
+                      }
 
-                // Check if section has any actual content
-                const hasContent = filteredContent.length > 0;
-                const hasMetrics = section.keyMetrics && Object.keys(section.keyMetrics).length > 0;
-                const hasInsights = section.insights && section.insights.length > 0;
-                const hasRecommendations = section.recommendations && section.recommendations.length > 0;
-
-                // Skip empty sections
-                if (!hasContent && !hasMetrics && !hasInsights && !hasRecommendations) {
-                  return null;
-                }
-
-                return (
-                  <div key={idx} className="bg-white rounded border border-gray-200 p-3">
-                    <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-1.5">
-                      {getSectionIcon(section.title)}
-                      {section.title}
-                    </h3>
-
-                    {/* Key Metrics First */}
-                    {hasMetrics && (
-                      <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          {Object.entries(section.keyMetrics).map(([key, value]) => (
-                            <div key={key} className="flex justify-between items-center">
-                              <span className="text-xs text-blue-800">{key}:</span>
-                              <span className="text-xs font-semibold text-blue-900">{value}</span>
+                      return (
+                        <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-sm font-semibold text-gray-700">{metric.label}</span>
+                            <span className="text-base font-bold text-gray-900">{metric.value}</span>
+                          </div>
+                          {hasPercent && (
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                              <div
+                                className={`${barColor} h-2.5 rounded-full transition-all duration-500`}
+                                style={{ width: `${Math.min(percentage, 100)}%` }}
+                              />
                             </div>
-                          ))}
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Team Performance Card - Only show if we have data */}
+              {(report.dataSnapshot.bestPerformingTeams.length > 0 || report.dataSnapshot.worstPerformingTeams.length > 0) && (
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                    Team Performance
+                  </h2>
+
+                  {/* Top Performers */}
+                  {report.dataSnapshot.bestPerformingTeams.length > 0 && (
+                    <div className="mb-3">
+                      <div className="text-xs font-semibold text-gray-600 uppercase mb-1.5">Top Performers</div>
+                      <div className="space-y-1">
+                        {report.dataSnapshot.bestPerformingTeams.map((team, idx) => (
+                          <div key={idx} className="flex items-center gap-2 bg-green-50 rounded p-2 border border-green-200">
+                            <span className="text-lg">🏆</span>
+                            <span className="text-sm font-medium text-gray-900">{team}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Underperformers */}
+                  {report.dataSnapshot.worstPerformingTeams.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-600 uppercase mb-1.5">Underperformers</div>
+                      <div className="space-y-1">
+                        {report.dataSnapshot.worstPerformingTeams.map((team, idx) => (
+                          <div key={idx} className="flex items-center gap-2 bg-red-50 rounded p-2 border border-red-200">
+                            <span className="text-lg">📉</span>
+                            <span className="text-sm font-medium text-gray-900">{team}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Key Insights Card - Visual Report Style */}
+              {allInsights.length > 0 && (
+                <div className="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+                  <h2 className="text-xl font-bold text-gray-900 mb-4">
+                    Key Insights
+                  </h2>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {allInsights.map((insight, idx) => {
+                      // Try to extract percentage from insight text
+                      const percentMatch = insight.match(/(\d+(?:\.\d+)?)\s*%/);
+                      const hasPercent = percentMatch !== null;
+                      const percentage = hasPercent ? parseFloat(percentMatch[1]) : 0;
+
+                      return (
+                        <div key={idx} className="bg-white rounded-lg p-4 border border-yellow-300 shadow-sm hover:shadow-md transition">
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                              <span className="text-xl">💡</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-800 leading-relaxed font-medium mb-2">
+                                {insight}
+                              </p>
+                              {hasPercent && percentage > 0 && (
+                                <div className="mt-2">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-xs font-semibold text-gray-600">Performance</span>
+                                    <span className="text-xs font-bold text-yellow-700">{percentage}%</span>
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div
+                                      className="bg-gradient-to-r from-yellow-400 to-orange-500 h-2 rounded-full transition-all duration-500"
+                                      style={{ width: `${Math.min(percentage, 100)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Takeaways Card */}
+              {allRecommendations.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h2 className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-blue-600" />
+                    Takeaways
+                  </h2>
+                  <div className="space-y-3">
+                    {allRecommendations.map((rec, idx) => (
+                      <div key={idx} className={`border rounded-lg p-3 ${getPriorityBg(rec.priority)}`}>
+                        <div className="flex items-start gap-3">
+                          <span className="text-xl">{getPriorityIcon(rec.priority)}</span>
+                          <div className="flex-1">
+                            <div className="font-bold text-sm text-gray-900 mb-1">
+                              {rec.action}
+                            </div>
+                            <div className="text-sm text-gray-700">
+                              {rec.reasoning.split('.')[0]}.
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    )}
-
-                  {/* Content - Quick Hits Only */}
-                  {hasContent && (
-                    <div className="prose max-w-none mb-2 space-y-1">
-                      {filteredContent.map((line, pIdx) => {
-                      const trimmed = line.trim();
-
-                      // Check if it's a markdown header (###)
-                      if (trimmed.startsWith('###')) {
-                        const headerText = trimmed.replace(/^###\s*/, '').trim();
-                        return (
-                          <h4 key={pIdx} className="font-semibold text-gray-900 mt-1.5 mb-0.5 text-xs">
-                            {headerText}
-                          </h4>
-                        );
-                      }
-
-                      // Bullet points
-                      if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
-                        const text = trimmed.replace(/^[•\-*]\s*/, '').replace(/\*\*/g, '');
-                        return (
-                          <div key={pIdx} className="flex items-start gap-1.5 text-gray-700">
-                            <span className="text-blue-600 text-xs mt-0.5">•</span>
-                            <span className="text-xs leading-snug">{text}</span>
-                          </div>
-                        );
-                      }
-
-                      // Short statements
-                      const text = trimmed.replace(/\*\*/g, '');
-                      return (
-                        <p key={pIdx} className="text-gray-700 leading-tight text-xs font-medium">
-                          {text}
-                        </p>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Insights - Quick Bullets */}
-                  {hasInsights && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mb-2">
-                      <ul className="space-y-0.5">
-                        {section.insights.map((insight, iIdx) => (
-                          <li key={iIdx} className="flex items-start gap-1.5 text-gray-700">
-                            <span className="text-yellow-600 text-sm">💡</span>
-                            <span className="text-xs leading-snug font-medium">{insight}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Recommendations - Action Items */}
-                  {hasRecommendations && (
-                    <div className="space-y-1.5">
-                      {section.recommendations.map((rec, rIdx) => (
-                        <div key={rIdx} className={`border rounded p-2 ${getPriorityColor(rec.priority)}`}>
-                          <div className="flex items-start gap-2">
-                            <span className="text-base mt-0.5">{getPriorityIcon(rec.priority)}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-bold text-xs leading-tight mb-0.5">
-                                {rec.action}
-                              </div>
-                              <div className="text-xs opacity-80 leading-tight">
-                                {rec.reasoning.split('.')[0]}.
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
-              );
-            })}
-            </div>
+              )}
 
-            {/* Footer Note */}
-            <div className="bg-gray-100 border border-gray-300 rounded px-3 py-1.5 text-center text-xs text-gray-600">
-              Generated by Claude AI • {report.dataSnapshot.totalGames} games analyzed • Week {report.week}
+              {/* Footer */}
+              <div className="bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-center text-sm text-gray-600">
+                Generated by Claude AI • {report.dataSnapshot.totalGames} games analyzed • Week {report.week}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </main>
   );

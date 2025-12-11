@@ -52,8 +52,8 @@ export default function SignupPage() {
         throw new Error(data.error || 'Signup failed');
       }
 
-      // Redirect to games on success
-      router.push('/games');
+      // Redirect to predictions on success
+      router.push('/predictions');
     } catch (err: any) {
       setError(err.message || 'Failed to create account. Please try again.');
     } finally {
@@ -110,7 +110,7 @@ export default function SignupPage() {
               try {
                 setIsLoading(true);
                 await signInWithGoogle();
-                router.push('/games');
+                router.push('/predictions');
               } catch (error) {
                 console.error('Google signup failed:', error);
                 setError('Failed to sign up with Google. Please try again.');

@@ -204,40 +204,55 @@ export default function AnalystPage() {
 
             {/* Report Sections in Two Columns */}
             <div className="grid lg:grid-cols-2 gap-3">
-              {report.sections.map((section, idx) => (
-                <div key={idx} className="bg-white rounded border border-gray-200 p-3">
-                  <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-1.5">
-                    {getSectionIcon(section.title)}
-                    {section.title}
-                  </h3>
+              {report.sections.map((section, idx) => {
+                // Filter content to only show bullets, headers, and short statements
+                const filteredContent = section.content.split('\n').filter(line => {
+                  const trimmed = line.trim();
+                  return trimmed && (
+                    trimmed.startsWith('•') ||
+                    trimmed.startsWith('-') ||
+                    trimmed.startsWith('*') ||
+                    trimmed.startsWith('###') ||
+                    trimmed.length < 100
+                  );
+                });
 
-                  {/* Key Metrics First */}
-                  {section.keyMetrics && Object.keys(section.keyMetrics).length > 0 && (
-                    <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        {Object.entries(section.keyMetrics).map(([key, value]) => (
-                          <div key={key} className="flex justify-between items-center">
-                            <span className="text-xs text-blue-800">{key}:</span>
-                            <span className="text-xs font-semibold text-blue-900">{value}</span>
-                          </div>
-                        ))}
+                // Check if section has any actual content
+                const hasContent = filteredContent.length > 0;
+                const hasMetrics = section.keyMetrics && Object.keys(section.keyMetrics).length > 0;
+                const hasInsights = section.insights && section.insights.length > 0;
+                const hasRecommendations = section.recommendations && section.recommendations.length > 0;
+
+                // Skip empty sections
+                if (!hasContent && !hasMetrics && !hasInsights && !hasRecommendations) {
+                  return null;
+                }
+
+                return (
+                  <div key={idx} className="bg-white rounded border border-gray-200 p-3">
+                    <h3 className="text-sm font-bold text-gray-900 mb-2 flex items-center gap-1.5">
+                      {getSectionIcon(section.title)}
+                      {section.title}
+                    </h3>
+
+                    {/* Key Metrics First */}
+                    {hasMetrics && (
+                      <div className="bg-blue-50 border border-blue-200 rounded p-2 mb-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.entries(section.keyMetrics).map(([key, value]) => (
+                            <div key={key} className="flex justify-between items-center">
+                              <span className="text-xs text-blue-800">{key}:</span>
+                              <span className="text-xs font-semibold text-blue-900">{value}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
                   {/* Content - Quick Hits Only */}
-                  <div className="prose max-w-none mb-2 space-y-1">
-                    {section.content.split('\n').filter(line => {
-                      const trimmed = line.trim();
-                      // Only show bullet points, headers, or very short sentences
-                      return trimmed && (
-                        trimmed.startsWith('•') ||
-                        trimmed.startsWith('-') ||
-                        trimmed.startsWith('*') ||
-                        trimmed.startsWith('###') ||
-                        trimmed.length < 100
-                      );
-                    }).map((line, pIdx) => {
+                  {hasContent && (
+                    <div className="prose max-w-none mb-2 space-y-1">
+                      {filteredContent.map((line, pIdx) => {
                       const trimmed = line.trim();
 
                       // Check if it's a markdown header (###)
@@ -267,12 +282,13 @@ export default function AnalystPage() {
                         <p key={pIdx} className="text-gray-700 leading-tight text-xs font-medium">
                           {text}
                         </p>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {/* Insights - Quick Bullets */}
-                  {section.insights && section.insights.length > 0 && (
+                  {hasInsights && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded p-2 mb-2">
                       <ul className="space-y-0.5">
                         {section.insights.map((insight, iIdx) => (
@@ -286,7 +302,7 @@ export default function AnalystPage() {
                   )}
 
                   {/* Recommendations - Action Items */}
-                  {section.recommendations && section.recommendations.length > 0 && (
+                  {hasRecommendations && (
                     <div className="space-y-1.5">
                       {section.recommendations.map((rec, rIdx) => (
                         <div key={rIdx} className={`border rounded p-2 ${getPriorityColor(rec.priority)}`}>
@@ -306,7 +322,8 @@ export default function AnalystPage() {
                     </div>
                   )}
                 </div>
-              ))}
+              );
+            })}
             </div>
 
             {/* Footer Note */}

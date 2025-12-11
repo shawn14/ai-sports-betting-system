@@ -19,29 +19,44 @@ async function getESPNOdds() {
       // Extract odds if available
       const odds = competition?.odds?.[0];
 
+      // Use spread and overUnder directly from ESPN API
+      const spread = parseFloat(odds?.spread) || null;
+      const overUnder = parseFloat(odds?.overUnder) || null;
+
       return {
         id: event.id,
+        gameId: event.id, // Add gameId field for easier matching
         sport_key: 'americanfootball_nfl',
         home_team: homeTeam?.team?.displayName,
         away_team: awayTeam?.team?.displayName,
-        bookmakers: odds ? [{
+        bookmakers: odds && spread !== null ? [{
           key: 'espn',
           title: 'ESPN',
-          markets: [{
-            key: 'spreads',
-            outcomes: [
-              {
-                name: homeTeam?.team?.displayName,
-                point: parseFloat(odds.details?.split(' ')[1]) || 0,
+          markets: [
+            {
+              key: 'spreads',
+              outcomes: [
+                {
+                  name: homeTeam?.team?.displayName,
+                  point: spread,
+                  price: -110
+                },
+                {
+                  name: awayTeam?.team?.displayName,
+                  point: -spread,
+                  price: -110
+                }
+              ]
+            },
+            ...(overUnder ? [{
+              key: 'totals',
+              outcomes: [{
+                name: 'Over',
+                point: overUnder,
                 price: -110
-              },
-              {
-                name: awayTeam?.team?.displayName,
-                point: -(parseFloat(odds.details?.split(' ')[1]) || 0),
-                price: -110
-              }
-            ]
-          }]
+              }]
+            }] : [])
+          ]
         }] : []
       };
     }).filter((game: any) => game.bookmakers.length > 0);

@@ -496,13 +496,12 @@ export default function PredictionsPage() {
         {/* Desktop Table View */}
         <div className="hidden md:block bg-white rounded border border-gray-200 overflow-hidden">
           {/* Table Header */}
-          <div className="grid grid-cols-[2fr_60px_1.5fr_1.5fr_1.5fr_1.5fr_100px] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-600 uppercase">
+          <div className="grid grid-cols-[2fr_60px_1.5fr_2fr_2fr_100px] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-600 uppercase">
             <div>Matchup</div>
             <div className="text-center">Conf</div>
-            <div className="text-center">Predicted Winner</div>
-            <div className="text-center">Spread</div>
-            <div className="text-center">Vegas Spread</div>
-            <div className="text-center">Total</div>
+            <div className="text-center">Moneyline</div>
+            <div className="text-center">Spread (vs Vegas)</div>
+            <div className="text-center">Total (vs Vegas)</div>
             <div className="text-center">Result</div>
           </div>
 
@@ -545,10 +544,18 @@ export default function PredictionsPage() {
               totalWin = predictedOver === actualOver;
             }
 
+            // Calculate edge/difference for display
+            const spreadDiff = pred.vegasSpread !== undefined && pred.vegasSpread !== null
+              ? pred.predictedSpread - pred.vegasSpread
+              : null;
+            const totalDiff = pred.vegasTotal !== undefined && pred.vegasTotal !== null
+              ? pred.predictedTotal - pred.vegasTotal
+              : null;
+
             return (
               <div
                 key={pred.gameId}
-                className="grid grid-cols-[2fr_60px_1.5fr_1.5fr_1.5fr_1.5fr_100px] gap-2 px-3 py-2 border-b border-gray-200 hover:bg-gray-50 text-xs items-center"
+                className="grid grid-cols-[2fr_60px_1.5fr_2fr_2fr_100px] gap-2 px-3 py-2 border-b border-gray-200 hover:bg-gray-50 text-xs items-center"
               >
                 {/* Matchup */}
                 <div>
@@ -573,7 +580,7 @@ export default function PredictionsPage() {
                   <div className="text-blue-600 font-semibold">{pred.confidence}%</div>
                 </div>
 
-                {/* Predicted Winner */}
+                {/* Moneyline - Predicted Winner */}
                 <div className="text-center">
                   <div className="font-semibold text-gray-900">{pred.predictedWinner}</div>
                   <div className="text-[10px] text-gray-500">
@@ -586,14 +593,39 @@ export default function PredictionsPage() {
                   )}
                 </div>
 
-                {/* Predicted Spread */}
+                {/* Spread - Ours vs Vegas with Diff */}
                 <div className="text-center">
-                  <div className="font-semibold text-gray-900">
-                    {pred.homeTeam.split(' ').pop()} {pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}
+                  <div className="flex items-center justify-center gap-2">
+                    <div>
+                      <div className="text-[9px] text-gray-500">Ours</div>
+                      <div className="font-semibold text-gray-900">
+                        {pred.homeTeam.split(' ').pop()} {pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}
+                      </div>
+                    </div>
+                    {pred.vegasSpread !== undefined && pred.vegasSpread !== null && (
+                      <>
+                        <div className="text-gray-400">|</div>
+                        <div>
+                          <div className="text-[9px] text-gray-500">Vegas</div>
+                          <div className="font-semibold text-purple-600">
+                            {pred.vegasSpread > 0 ? '+' : ''}{pred.vegasSpread.toFixed(1)}
+                          </div>
+                        </div>
+                        <div className="text-gray-400">|</div>
+                        <div>
+                          <div className="text-[9px] text-gray-500">Diff</div>
+                          <div className={`font-semibold ${
+                            Math.abs(spreadDiff!) >= 3 ? 'text-green-600' : 'text-gray-600'
+                          }`}>
+                            {spreadDiff! > 0 ? '+' : ''}{spreadDiff!.toFixed(1)}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                   {isComplete && (
                     <>
-                      <div className="text-[10px] text-gray-500">
+                      <div className="text-[10px] text-gray-500 mt-1">
                         Actual: {actualSpread > 0 ? '+' : ''}{actualSpread.toFixed(1)}
                       </div>
                       <div className={`text-[10px] font-bold mt-0.5 ${spreadWin ? 'text-green-600' : 'text-red-600'}`}>
@@ -603,29 +635,36 @@ export default function PredictionsPage() {
                   )}
                 </div>
 
-                {/* Vegas Spread */}
-                <div className="text-center">
-                  {pred.vegasSpread !== undefined && pred.vegasSpread !== null ? (
-                    <>
-                      <div className="font-semibold text-purple-600">
-                        {pred.homeTeam.split(' ').pop()} {pred.vegasSpread > 0 ? '+' : ''}{pred.vegasSpread.toFixed(1)}
-                      </div>
-                      <div className="text-[9px] text-gray-500">Vegas Line</div>
-                    </>
-                  ) : (
-                    <div className="text-[10px] text-gray-400">—</div>
-                  )}
-                </div>
-
-                {/* Total */}
+                {/* Total - Ours vs Vegas with Diff */}
                 <div className="text-center">
                   {pred.vegasTotal !== undefined && pred.vegasTotal !== null ? (
                     <>
-                      <div className="font-semibold text-gray-900">
-                        {pred.predictedTotal > pred.vegasTotal ? 'OVER' : 'UNDER'} {pred.predictedTotal.toFixed(1)}
+                      <div className="flex items-center justify-center gap-2">
+                        <div>
+                          <div className="text-[9px] text-gray-500">Ours</div>
+                          <div className="font-semibold text-gray-900">
+                            {pred.predictedTotal.toFixed(1)}
+                          </div>
+                        </div>
+                        <div className="text-gray-400">|</div>
+                        <div>
+                          <div className="text-[9px] text-gray-500">Vegas</div>
+                          <div className="font-semibold text-purple-600">
+                            {pred.vegasTotal.toFixed(1)}
+                          </div>
+                        </div>
+                        <div className="text-gray-400">|</div>
+                        <div>
+                          <div className="text-[9px] text-gray-500">Diff</div>
+                          <div className={`font-semibold ${
+                            Math.abs(totalDiff!) >= 3 ? 'text-green-600' : 'text-gray-600'
+                          }`}>
+                            {totalDiff! > 0 ? '+' : ''}{totalDiff!.toFixed(1)}
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-[9px] text-gray-500">
-                        Line: {pred.vegasTotal.toFixed(1)}
+                      <div className="text-[9px] text-gray-500 mt-1">
+                        {pred.predictedTotal > pred.vegasTotal ? 'OVER' : 'UNDER'}
                       </div>
                     </>
                   ) : (
@@ -633,7 +672,7 @@ export default function PredictionsPage() {
                   )}
                   {isComplete && (
                     <>
-                      <div className="text-[10px] text-gray-500">
+                      <div className="text-[10px] text-gray-500 mt-1">
                         Actual: {actualTotal.toFixed(1)}
                       </div>
                       <div className={`text-[10px] font-bold mt-0.5 ${totalWin ? 'text-green-600' : 'text-red-600'}`}>

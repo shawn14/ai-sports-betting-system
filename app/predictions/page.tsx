@@ -476,7 +476,6 @@ export default function PredictionsPage() {
         <div className="block md:hidden">
           {currentPredictions
             .sort((a, b) => {
-              const now = new Date();
               const aTime = new Date(a.gameTime).getTime();
               const bTime = new Date(b.gameTime).getTime();
 
@@ -493,218 +492,133 @@ export default function PredictionsPage() {
             ))}
         </div>
 
-        {/* Desktop Table View */}
-        <div className="hidden md:block bg-white rounded border border-gray-200 overflow-hidden">
-          {/* Table Header */}
-          <div className="grid grid-cols-[2fr_60px_1.5fr_2fr_2fr_100px] gap-2 px-3 py-2 bg-gray-50 border-b border-gray-200 text-[10px] font-bold text-gray-600 uppercase">
-            <div>Matchup</div>
-            <div className="text-center">Conf</div>
-            <div className="text-center">Moneyline</div>
-            <div className="text-center">Spread (vs Vegas)</div>
-            <div className="text-center">Total (vs Vegas)</div>
-            <div className="text-center">Result</div>
-          </div>
-
-          {/* Table Rows */}
+        {/* Desktop Card View */}
+        <div className="hidden md:flex flex-col gap-4">
           {currentPredictions
             .sort((a, b) => {
-              const now = new Date();
               const aTime = new Date(a.gameTime).getTime();
               const bTime = new Date(b.gameTime).getTime();
 
-              // Primary sort: by game time (earliest first)
               if (aTime !== bTime) {
                 return aTime - bTime;
               }
-
-              // Secondary sort: by confidence (highest first) for games at same time
               return b.confidence - a.confidence;
             })
             .map((pred) => {
             const isComplete = pred.status === 'completed' && pred.actualHomeScore !== undefined && pred.actualAwayScore !== undefined;
-            const actualTotal = isComplete ? (pred.actualHomeScore! + pred.actualAwayScore!) : 0;
-            const actualSpread = isComplete ? (pred.actualHomeScore! - pred.actualAwayScore!) : 0;
+            const hasPredictedScores = Number.isFinite(pred.predictedHomeScore) && Number.isFinite(pred.predictedAwayScore);
+            const actualTotal = isComplete ? pred.actualHomeScore! + pred.actualAwayScore! : null;
+            const homeShort = pred.homeTeam.split(' ').pop() || pred.homeTeam;
+            const awayShort = pred.awayTeam.split(' ').pop() || pred.awayTeam;
+            const spreadEdge = pred.vegasSpread !== undefined && pred.vegasSpread !== null ? pred.predictedSpread - pred.vegasSpread : null;
+            const totalEdge = pred.vegasTotal !== undefined && pred.vegasTotal !== null ? pred.predictedTotal - pred.vegasTotal : null;
 
-            // Calculate bet results
             const moneylineWin = isComplete && pred.actualWinner === pred.predictedWinner;
-
-            // ATS: Beat or tie Vegas
-            let spreadWin = false;
-            if (isComplete && pred.vegasSpread !== null && pred.vegasSpread !== undefined) {
-              const vegasError = Math.abs(pred.vegasSpread - actualSpread);
-              const ourError = Math.abs(pred.predictedSpread - actualSpread);
-              spreadWin = ourError <= vegasError;
-            }
-
-            // O/U: Predict correct side of line
-            let totalWin = false;
-            if (isComplete && pred.vegasTotal !== null && pred.vegasTotal !== undefined) {
-              const predictedOver = pred.predictedTotal > pred.vegasTotal;
-              const actualOver = actualTotal > pred.vegasTotal;
-              totalWin = predictedOver === actualOver;
-            }
-
-            // Calculate edge/difference for display
-            const spreadDiff = pred.vegasSpread !== undefined && pred.vegasSpread !== null
-              ? pred.predictedSpread - pred.vegasSpread
-              : null;
-            const totalDiff = pred.vegasTotal !== undefined && pred.vegasTotal !== null
-              ? pred.predictedTotal - pred.vegasTotal
-              : null;
+            const spreadWin = isComplete && pred.vegasSpread !== undefined && pred.vegasSpread !== null
+              ? Math.abs(pred.predictedSpread - (pred.actualHomeScore! - pred.actualAwayScore!)) <= Math.abs(pred.vegasSpread - (pred.actualHomeScore! - pred.actualAwayScore!))
+              : false;
+            const totalWin = isComplete && pred.vegasTotal !== undefined && pred.vegasTotal !== null
+              ? (pred.predictedTotal > pred.vegasTotal) === ((pred.actualHomeScore! + pred.actualAwayScore!) > pred.vegasTotal)
+              : false;
 
             return (
-              <div
-                key={pred.gameId}
-                className="grid grid-cols-[2fr_60px_1.5fr_2fr_2fr_100px] gap-2 px-3 py-2 border-b border-gray-200 hover:bg-gray-50 text-xs items-center"
-              >
-                {/* Matchup */}
-                <div>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    {pred.awayTeamLogo && (
-                      <img src={pred.awayTeamLogo} alt={pred.awayTeam} className="w-4 h-4" />
-                    )}
-                    <span className="text-gray-900 font-semibold">{pred.awayTeam}</span>
-                    {isComplete && <span className="text-gray-600 ml-1">{pred.actualAwayScore}</span>}
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {pred.homeTeamLogo && (
-                      <img src={pred.homeTeamLogo} alt={pred.homeTeam} className="w-4 h-4" />
-                    )}
-                    <span className="text-gray-900 font-semibold">{pred.homeTeam}</span>
-                    {isComplete && <span className="text-gray-600 ml-1">{pred.actualHomeScore}</span>}
-                  </div>
-                </div>
-
-                {/* Confidence */}
-                <div className="text-center">
-                  <div className="text-blue-600 font-semibold">{pred.confidence}%</div>
-                </div>
-
-                {/* Moneyline - Predicted Winner */}
-                <div className="text-center">
-                  <div className="font-semibold text-gray-900">
-                    {pred.predictedWinner.split(' ').pop()}
-                  </div>
-                  {isComplete && (
-                    <div className={`text-[10px] font-bold mt-0.5 ${moneylineWin ? 'text-green-600' : 'text-red-600'}`}>
-                      {moneylineWin ? '✓ WIN' : '✗ LOSS'}
+              <div key={pred.gameId} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2 text-base font-semibold text-gray-900">
+                      <span className="flex items-center gap-1.5">
+                        {pred.awayTeamLogo && <img src={pred.awayTeamLogo} alt={pred.awayTeam} className="w-5 h-5" />}
+                        {pred.awayTeam}
+                      </span>
+                      <span className="text-gray-400 text-sm">at</span>
+                      <span className="flex items-center gap-1.5">
+                        {pred.homeTeamLogo && <img src={pred.homeTeamLogo} alt={pred.homeTeam} className="w-5 h-5" />}
+                        {pred.homeTeam}
+                      </span>
                     </div>
-                  )}
-                </div>
-
-                {/* Spread - Ours vs Vegas with Diff */}
-                <div className="text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <div>
-                      <div className="text-[9px] text-gray-500">Ours</div>
-                      <div className="font-semibold text-gray-900">
-                        {pred.homeTeam.split(' ').pop()} {pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}
+                    {hasPredictedScores && (
+                      <div className="text-sm text-blue-700 font-semibold">
+                        Projected score: {awayShort} {pred.predictedAwayScore.toFixed(1)} - {homeShort} {pred.predictedHomeScore.toFixed(1)}
                       </div>
-                    </div>
-                    {pred.vegasSpread !== undefined && pred.vegasSpread !== null && (
-                      <>
-                        <div className="text-gray-400">|</div>
-                        <div>
-                          <div className="text-[9px] text-gray-500">Vegas</div>
-                          <div className="font-semibold text-purple-600">
-                            {pred.vegasSpread > 0 ? '+' : ''}{pred.vegasSpread.toFixed(1)}
-                          </div>
-                        </div>
-                        <div className="text-gray-400">|</div>
-                        <div>
-                          <div className="text-[9px] text-gray-500">Diff</div>
-                          <div className={`font-semibold ${
-                            Math.abs(spreadDiff!) >= 3 ? 'text-green-600' : 'text-gray-600'
-                          }`}>
-                            {spreadDiff! > 0 ? '+' : ''}{spreadDiff!.toFixed(1)}
-                          </div>
-                        </div>
-                      </>
+                    )}
+                    {isComplete ? (
+                      <div className="text-sm text-gray-600">
+                        Final: {pred.awayTeam} {pred.actualAwayScore} - {pred.homeTeam} {pred.actualHomeScore}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">Kickoff {formatGameTime(pred.gameTime)}</div>
                     )}
                   </div>
-                  {isComplete && (
-                    <>
-                      <div className="text-[10px] text-gray-500 mt-1">
-                        Actual: {actualSpread > 0 ? '+' : ''}{actualSpread.toFixed(1)}
-                      </div>
-                      <div className={`text-[10px] font-bold mt-0.5 ${spreadWin ? 'text-green-600' : 'text-red-600'}`}>
-                        {spreadWin ? '✓ WIN' : '✗ LOSS'}
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase ${
+                      isComplete ? 'bg-gray-900 text-white' : 'bg-emerald-50 text-emerald-700'
+                    }`}>
+                      {isComplete ? 'Final' : 'Upcoming'}
+                    </span>
+                  </div>
                 </div>
 
-                {/* Total - Ours vs Vegas with Diff */}
-                <div className="text-center">
-                  {pred.vegasTotal !== undefined && pred.vegasTotal !== null ? (
-                    <>
-                      <div className="flex items-center justify-center gap-2">
-                        <div>
-                          <div className="text-[9px] text-gray-500">Ours</div>
-                          <div className="font-semibold text-gray-900">
-                            {pred.predictedTotal.toFixed(1)}
-                          </div>
-                        </div>
-                        <div className="text-gray-400">|</div>
-                        <div>
-                          <div className="text-[9px] text-gray-500">Vegas</div>
-                          <div className="font-semibold text-purple-600">
-                            {pred.vegasTotal.toFixed(1)}
-                          </div>
-                        </div>
-                        <div className="text-gray-400">|</div>
-                        <div>
-                          <div className="text-[9px] text-gray-500">Diff</div>
-                          <div className={`font-semibold ${
-                            Math.abs(totalDiff!) >= 3 ? 'text-green-600' : 'text-gray-600'
-                          }`}>
-                            {totalDiff! > 0 ? '+' : ''}{totalDiff!.toFixed(1)}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-[9px] text-gray-500 mt-1">
-                        {pred.predictedTotal > pred.vegasTotal ? 'OVER' : 'UNDER'}
-                      </div>
-                    </>
-                  ) : (
-                    <div className="font-semibold text-gray-900">{pred.predictedTotal.toFixed(1)}</div>
-                  )}
-                  {isComplete && (
-                    <>
-                      <div className="text-[10px] text-gray-500 mt-1">
-                        Actual: {actualTotal.toFixed(1)}
-                      </div>
-                      <div className={`text-[10px] font-bold mt-0.5 ${totalWin ? 'text-green-600' : 'text-red-600'}`}>
-                        {totalWin ? '✓ WIN' : '✗ LOSS'}
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Game Time / Result Status */}
-                <div className="text-center">
-                  {!isComplete ? (
-                    <div className="text-xs text-gray-700">
-                      {formatGameTime(pred.gameTime)}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Moneyline prediction */}
+                  <div className="rounded-xl border border-gray-200 p-4">
+                    <div className="flex items-center justify-between text-[11px] font-semibold uppercase text-gray-500">
+                      <span>Moneyline</span>
+                      <span>{pred.confidence}%</span>
                     </div>
-                  ) : (
-                    <>
-                      <div className={`text-[10px] font-semibold uppercase px-2 py-1 rounded bg-gray-100 text-gray-700`}>
-                        Final
+                    <div className="text-lg font-bold text-gray-900 mt-1">{pred.predictedWinner}</div>
+                    <div className="text-sm text-gray-600">Model expects {pred.predictedWinner.split(' ').pop()} to win outright.</div>
+                    {isComplete && (
+                      <div className={`text-xs font-semibold mt-2 ${moneylineWin ? 'text-green-600' : 'text-red-500'}`}>
+                        {moneylineWin ? 'Result: Hit' : 'Result: Missed'}
                       </div>
-                      <div className="text-[10px] font-bold mt-1 flex gap-1 justify-center">
-                        <span className={moneylineWin ? 'text-green-600' : 'text-red-600'}>
-                          {moneylineWin ? '✓' : '✗'}
+                    )}
+                  </div>
+
+                  {/* Spread prediction */}
+                  <div className="rounded-xl border border-gray-200 p-4">
+                    <div className="flex items-center justify-between text-[11px] font-semibold uppercase text-gray-500">
+                      <span>Spread</span>
+                      {spreadEdge !== null && (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] ${Math.abs(spreadEdge) >= 3 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                          {spreadEdge > 0 ? '+' : ''}{spreadEdge.toFixed(1)} edge
                         </span>
-                        <span className={spreadWin ? 'text-green-600' : 'text-red-600'}>
-                          {spreadWin ? '✓' : '✗'}
-                        </span>
-                        <span className={totalWin ? 'text-green-600' : 'text-red-600'}>
-                          {totalWin ? '✓' : '✗'}
-                        </span>
+                      )}
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 mt-1">
+                      {homeShort} {pred.predictedSpread > 0 ? '+' : ''}{pred.predictedSpread.toFixed(1)}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Vegas line: {pred.vegasSpread !== undefined && pred.vegasSpread !== null ? `${homeShort} ${pred.vegasSpread > 0 ? '+' : ''}${pred.vegasSpread.toFixed(1)}` : 'N/A'}
+                    </div>
+                    {isComplete && (
+                      <div className={`text-xs font-semibold mt-2 ${spreadWin ? 'text-green-600' : 'text-red-500'}`}>
+                        {spreadWin ? 'Result: Covered' : 'Result: Missed'}
                       </div>
-                    </>
-                  )}
+                    )}
+                  </div>
+
+                  {/* Total prediction */}
+                  <div className="rounded-xl border border-gray-200 p-4">
+                    <div className="flex items-center justify-between text-[11px] font-semibold uppercase text-gray-500">
+                      <span>Total (O/U)</span>
+                      {totalEdge !== null && (
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] ${Math.abs(totalEdge) >= 3 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                          {totalEdge > 0 ? '+' : ''}{totalEdge.toFixed(1)} edge
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-lg font-bold text-gray-900 mt-1">
+                      Play {pred.predictedTotal > (pred.vegasTotal ?? 0) ? 'Over' : 'Under'} {pred.predictedTotal.toFixed(1)}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Vegas total: {pred.vegasTotal !== undefined && pred.vegasTotal !== null ? pred.vegasTotal.toFixed(1) : 'N/A'}
+                    </div>
+                    {isComplete && actualTotal !== null && (
+                      <div className={`text-xs font-semibold mt-2 ${totalWin ? 'text-green-600' : 'text-red-500'}`}>
+                        {totalWin ? 'Result: Correct side' : 'Result: Missed'}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             );

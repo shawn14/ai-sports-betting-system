@@ -58,16 +58,49 @@ export default function GameDetailPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch game
-        const gamesRes = await fetch('/api/games?sport=nfl');
-        const gamesData = await gamesRes.json();
-        const foundGame = (gamesData.games || []).find((g: Game) => g.id === gameId);
-        setGame(foundGame || null);
+        // Fetch from pre-computed blob (instant!)
+        const res = await fetch('/prediction-data.json', { cache: 'no-cache' });
+        const data = await res.json();
+        const teamsArray: Team[] = data.teams || [];
 
-        // Fetch prediction
-        const predRes = await fetch(`/api/predictions?gameId=${gameId}`);
-        const predData = await predRes.json();
-        setPrediction(predData.prediction || null);
+        // Find game in upcoming games
+        const found = (data.games || []).find((g: { game: Game; prediction: Prediction }) => g.game.id === gameId);
+        if (found) {
+          // Merge full team data from teams array
+          const homeTeamFull = teamsArray.find(t => t.id === found.game.homeTeamId);
+          const awayTeamFull = teamsArray.find(t => t.id === found.game.awayTeamId);
+          setGame({
+            ...found.game,
+            homeTeam: homeTeamFull || found.game.homeTeam,
+            awayTeam: awayTeamFull || found.game.awayTeam,
+          });
+          setPrediction(found.prediction);
+        } else {
+          // Check backtest results for completed games
+          const backtestResult = (data.backtest?.results || []).find((r: { gameId: string }) => r.gameId === gameId);
+          if (backtestResult) {
+            // Build game object from backtest result
+            const homeTeam = teamsArray.find(t => t.abbreviation === backtestResult.homeTeam);
+            const awayTeam = teamsArray.find(t => t.abbreviation === backtestResult.awayTeam);
+            setGame({
+              id: backtestResult.gameId,
+              homeTeamId: homeTeam?.id || '',
+              awayTeamId: awayTeam?.id || '',
+              homeTeam: homeTeam || { id: '', name: backtestResult.homeTeam, abbreviation: backtestResult.homeTeam, eloRating: backtestResult.homeElo },
+              awayTeam: awayTeam || { id: '', name: backtestResult.awayTeam, abbreviation: backtestResult.awayTeam, eloRating: backtestResult.awayElo },
+              gameTime: backtestResult.gameTime,
+              status: 'final',
+            });
+            setPrediction({
+              predictedHomeScore: backtestResult.predictedHomeScore,
+              predictedAwayScore: backtestResult.predictedAwayScore,
+              predictedSpread: backtestResult.predictedSpread,
+              predictedTotal: backtestResult.predictedTotal,
+              homeWinProbability: backtestResult.homeWinProb,
+              confidence: 0.5,
+            });
+          }
+        }
       } catch (error) {
         console.error('Error fetching game:', error);
       } finally {

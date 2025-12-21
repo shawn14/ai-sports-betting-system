@@ -74,6 +74,165 @@ const getLogoUrl = (abbr: string) => {
   return `https://a.espncdn.com/i/teamlogos/nfl/500-dark/${abbr.toLowerCase()}.png`;
 };
 
+function computeAnalysis(results: BacktestResult[]): Analysis {
+  const homePicks = { wins: 0, losses: 0, pushes: 0 };
+  const awayPicks = { wins: 0, losses: 0, pushes: 0 };
+  const smallSpread = { wins: 0, losses: 0, pushes: 0 };
+  const mediumSpread = { wins: 0, losses: 0, pushes: 0 };
+  const largeSpread = { wins: 0, losses: 0, pushes: 0 };
+  const closeGames = { wins: 0, losses: 0, pushes: 0 };
+  const blowouts = { wins: 0, losses: 0, pushes: 0 };
+  const weeklyPerformance: Record<number, { wins: number; losses: number; pushes: number }> = {};
+  const spreadErrors: number[] = [];
+  const predictedMargins: number[] = [];
+  const actualMargins: number[] = [];
+  let correctDirection = 0;
+  let wrongDirection = 0;
+
+  const biggestMisses: Analysis['biggestMisses'] = [];
+
+  for (const r of results) {
+    const spreadResult = r.spreadResult;
+    const predictedMargin = Math.abs(r.predictedSpread);
+    const actualMargin = Math.abs(r.actualSpread);
+    const spreadError = Math.abs(r.predictedSpread - r.actualSpread);
+
+    spreadErrors.push(spreadError);
+    predictedMargins.push(predictedMargin);
+    actualMargins.push(actualMargin);
+
+    // Direction accuracy
+    const predictedWinner = r.predictedSpread < 0 ? 'home' : 'away';
+    const actualWinner = r.actualSpread < 0 ? 'home' : r.actualSpread > 0 ? 'away' : 'tie';
+    if (actualWinner !== 'tie') {
+      if (predictedWinner === actualWinner) correctDirection++;
+      else wrongDirection++;
+    }
+
+    // Home vs Away picks
+    if (r.spreadPick === 'home') {
+      if (spreadResult === 'win') homePicks.wins++;
+      else if (spreadResult === 'loss') homePicks.losses++;
+      else homePicks.pushes++;
+    } else {
+      if (spreadResult === 'win') awayPicks.wins++;
+      else if (spreadResult === 'loss') awayPicks.losses++;
+      else awayPicks.pushes++;
+    }
+
+    // By spread size
+    if (predictedMargin < 3) {
+      if (spreadResult === 'win') smallSpread.wins++;
+      else if (spreadResult === 'loss') smallSpread.losses++;
+      else smallSpread.pushes++;
+    } else if (predictedMargin < 7) {
+      if (spreadResult === 'win') mediumSpread.wins++;
+      else if (spreadResult === 'loss') mediumSpread.losses++;
+      else mediumSpread.pushes++;
+    } else {
+      if (spreadResult === 'win') largeSpread.wins++;
+      else if (spreadResult === 'loss') largeSpread.losses++;
+      else largeSpread.pushes++;
+    }
+
+    // Close games vs blowouts
+    if (actualMargin < 7) {
+      if (spreadResult === 'win') closeGames.wins++;
+      else if (spreadResult === 'loss') closeGames.losses++;
+      else closeGames.pushes++;
+    } else {
+      if (spreadResult === 'win') blowouts.wins++;
+      else if (spreadResult === 'loss') blowouts.losses++;
+      else blowouts.pushes++;
+    }
+
+    // Weekly performance
+    const week = r.week || 0;
+    if (!weeklyPerformance[week]) {
+      weeklyPerformance[week] = { wins: 0, losses: 0, pushes: 0 };
+    }
+    if (spreadResult === 'win') weeklyPerformance[week].wins++;
+    else if (spreadResult === 'loss') weeklyPerformance[week].losses++;
+    else weeklyPerformance[week].pushes++;
+
+    // Track for biggest misses
+    biggestMisses.push({
+      game: `${r.awayTeam} @ ${r.homeTeam}`,
+      week,
+      predictedSpread: Math.round(r.predictedSpread * 10) / 10,
+      actualSpread: r.actualSpread,
+      error: Math.round(spreadError * 10) / 10,
+      ourPick: r.spreadPick === 'home' ? r.homeTeam : r.awayTeam,
+      result: spreadResult || 'push',
+    });
+  }
+
+  // Sort and slice biggest misses
+  biggestMisses.sort((a, b) => b.error - a.error);
+
+  // Calculate averages
+  spreadErrors.sort((a, b) => a - b);
+  const avgSpreadError = spreadErrors.reduce((a, b) => a + b, 0) / spreadErrors.length;
+  const medianSpreadError = spreadErrors[Math.floor(spreadErrors.length / 2)] || 0;
+  const avgPredictedMargin = predictedMargins.reduce((a, b) => a + b, 0) / predictedMargins.length;
+  const avgActualMargin = actualMargins.reduce((a, b) => a + b, 0) / actualMargins.length;
+
+  const calcWinPct = (bucket: { wins: number; losses: number }) => {
+    const total = bucket.wins + bucket.losses;
+    return total > 0 ? Math.round((bucket.wins / total) * 1000) / 10 : 0;
+  };
+
+  // Generate insights
+  const insights: string[] = [];
+  const homeWinPct = calcWinPct(homePicks);
+  const awayWinPct = calcWinPct(awayPicks);
+  if (Math.abs(homeWinPct - awayWinPct) > 5) {
+    if (homeWinPct > awayWinPct) {
+      insights.push(`Home picks outperform away picks (${homeWinPct}% vs ${awayWinPct}%).`);
+    } else {
+      insights.push(`Away picks outperform home picks (${awayWinPct}% vs ${homeWinPct}%).`);
+    }
+  }
+  const smallWinPct = calcWinPct(smallSpread);
+  const mediumWinPct = calcWinPct(mediumSpread);
+  const largeWinPct = calcWinPct(largeSpread);
+  const bestSize = smallWinPct > mediumWinPct && smallWinPct > largeWinPct ? 'small' :
+                   mediumWinPct > largeWinPct ? 'medium' : 'large';
+  const bestPct = bestSize === 'small' ? smallWinPct : bestSize === 'medium' ? mediumWinPct : largeWinPct;
+  if (bestPct > 55) {
+    insights.push(`${bestSize.charAt(0).toUpperCase() + bestSize.slice(1)} spreads perform best at ${bestPct}%.`);
+  }
+
+  return {
+    summary: {
+      totalGames: results.length,
+      avgSpreadError: Math.round(avgSpreadError * 10) / 10,
+      medianSpreadError: Math.round(medianSpreadError * 10) / 10,
+      avgPredictedMargin: Math.round(avgPredictedMargin * 10) / 10,
+      avgActualMargin: Math.round(avgActualMargin * 10) / 10,
+      directionAccuracy: Math.round((correctDirection / (correctDirection + wrongDirection)) * 1000) / 10,
+    },
+    byPickType: {
+      home: { ...homePicks, winPct: homeWinPct },
+      away: { ...awayPicks, winPct: awayWinPct },
+    },
+    bySpreadSize: {
+      small: { ...smallSpread, winPct: smallWinPct, range: '0-3 pts' },
+      medium: { ...mediumSpread, winPct: mediumWinPct, range: '3-7 pts' },
+      large: { ...largeSpread, winPct: largeWinPct, range: '7+ pts' },
+    },
+    byActualMargin: {
+      closeGames: { ...closeGames, winPct: calcWinPct(closeGames), range: '<7 pts' },
+      blowouts: { ...blowouts, winPct: calcWinPct(blowouts), range: '7+ pts' },
+    },
+    weeklyPerformance: Object.entries(weeklyPerformance)
+      .map(([week, data]) => ({ week: parseInt(week), ...data, winPct: calcWinPct(data) }))
+      .sort((a, b) => a.week - b.week),
+    biggestMisses: biggestMisses.slice(0, 20),
+    insights,
+  };
+}
+
 export default function ResultsPage() {
   const [results, setResults] = useState<BacktestResult[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -85,15 +244,16 @@ export default function ResultsPage() {
     const fetchResults = async () => {
       try {
         // Fetch backtest from pre-computed blob (instant!)
-        const [blobRes, analysisRes] = await Promise.all([
-          fetch('/prediction-data.json', { cache: 'no-cache' }),
-          fetch('/api/backtest/analysis'),
-        ]);
+        const blobRes = await fetch('/prediction-data.json', { cache: 'no-cache' });
         const blobData = await blobRes.json();
-        const analysisData = await analysisRes.json();
-        setResults(blobData.backtest?.results || []);
+        const backtestResults: BacktestResult[] = blobData.backtest?.results || [];
+        setResults(backtestResults);
         setSummary(blobData.backtest?.summary || null);
-        setAnalysis(analysisData);
+
+        // Compute analysis client-side from blob data
+        if (backtestResults.length > 0) {
+          setAnalysis(computeAnalysis(backtestResults));
+        }
       } catch (error) {
         console.error('Error fetching backtest:', error);
       } finally {

@@ -537,48 +537,48 @@ export default function Dashboard() {
               }`}>
                 {/* Situation tags - only show if we have high confidence situations */}
                 {situations.length > 0 && atsConf !== 'low' && (
-                  <div className="px-3 py-1.5 flex flex-wrap gap-1 border-b border-gray-100">
+                  <div className="px-2 sm:px-3 py-1 sm:py-1.5 flex flex-wrap gap-1 border-b border-gray-100">
                     {situations.map(s => (
-                      <span key={s} className="text-[9px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                      <span key={s} className="text-[8px] sm:text-[9px] font-medium text-gray-500 bg-gray-100 px-1 sm:px-1.5 py-0.5 rounded">
                         {s}
                       </span>
                     ))}
                   </div>
                 )}
                 {/* Game header */}
-                <a href={`/game/${game.id}`} className="group block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                <a href={`/game/${game.id}`} className="group block p-3 sm:p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <img src={getLogoUrl(away)} alt={away} className="w-10 h-10 object-contain" />
-                        <span className="font-bold text-gray-900">{away}</span>
+                    <div className="flex items-center gap-2 sm:gap-4">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <img src={getLogoUrl(away)} alt={away} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
+                        <span className="font-bold text-gray-900 text-sm sm:text-base">{away}</span>
                       </div>
-                      <span className="text-gray-400 text-sm">@</span>
-                      <div className="flex items-center gap-2">
-                        <img src={getLogoUrl(home)} alt={home} className="w-10 h-10 object-contain" />
-                        <span className="font-bold text-gray-900">{home}</span>
+                      <span className="text-gray-400 text-xs sm:text-sm">@</span>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <img src={getLogoUrl(home)} alt={home} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
+                        <span className="font-bold text-gray-900 text-sm sm:text-base">{home}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <div className="text-right">
                         {isFinal ? (
                           <>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-400 font-mono">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</span>
-                              <span className="text-gray-300">→</span>
-                              <span className="font-mono text-lg font-bold text-gray-900">{awayScore}-{homeScore}</span>
+                            <div className="flex items-center gap-1 sm:gap-2">
+                              <span className="text-[10px] sm:text-xs text-gray-400 font-mono">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</span>
+                              <span className="text-gray-300 text-xs">→</span>
+                              <span className="font-mono text-base sm:text-lg font-bold text-gray-900">{awayScore}-{homeScore}</span>
                             </div>
-                            <div className="text-xs font-semibold text-gray-500">FINAL</div>
+                            <div className="text-[10px] sm:text-xs font-semibold text-gray-500">FINAL</div>
                           </>
                         ) : (
                           <>
-                            <div className="font-mono text-lg font-bold text-gray-900">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</div>
-                            <div className="text-xs text-gray-500">{formatTime(game.gameTime)}</div>
+                            <div className="font-mono text-base sm:text-lg font-bold text-gray-900">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</div>
+                            <div className="text-[10px] sm:text-xs text-gray-500">{formatTime(game.gameTime)}</div>
                           </>
                         )}
                       </div>
                       <div className="flex items-center text-gray-400 group-hover:text-red-600 transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
                       </div>
@@ -588,28 +588,20 @@ export default function Dashboard() {
 
                 {/* Weather info */}
                 {prediction.weather && (
-                  <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                      <span className="text-base">{getWeatherIcon(prediction.weather.conditions)}</span>
-                      <span className="text-gray-600 capitalize">{prediction.weather.conditions}</span>
-                      <span className="text-gray-400">|</span>
+                  <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-[10px] sm:text-xs">
+                    <div className="flex items-center gap-1.5 sm:gap-3 flex-wrap">
+                      <span className="text-sm sm:text-base">{getWeatherIcon(prediction.weather.conditions)}</span>
                       <span className="text-gray-600">{prediction.weather.temperature}°F</span>
                       {prediction.weather.windSpeed > 0 && (
                         <>
-                          <span className="text-gray-400">|</span>
-                          <span className="text-gray-600">{prediction.weather.windSpeed} mph wind</span>
-                        </>
-                      )}
-                      {prediction.weather.precipitation > 0 && (
-                        <>
-                          <span className="text-gray-400">|</span>
-                          <span className="text-gray-600">{prediction.weather.precipitation}% precip</span>
+                          <span className="text-gray-300 hidden sm:inline">|</span>
+                          <span className="text-gray-600">{prediction.weather.windSpeed}mph</span>
                         </>
                       )}
                     </div>
                     {(prediction.weatherImpact ?? 0) > 0 && (
-                      <span className={`font-medium ${getWeatherImpactColor(prediction.weatherImpact ?? 0)}`}>
-                        -{((prediction.weatherImpact ?? 0) * 3).toFixed(1)} pts adj
+                      <span className={`font-medium text-[10px] sm:text-xs ${getWeatherImpactColor(prediction.weatherImpact ?? 0)}`}>
+                        -{((prediction.weatherImpact ?? 0) * 3).toFixed(1)}pts
                       </span>
                     )}
                   </div>
@@ -617,30 +609,30 @@ export default function Dashboard() {
 
                 {/* Injury info - from NFL.com */}
                 {prediction.injuries && prediction.injuries.impactLevel !== 'none' && (
-                  <div className={`px-4 py-2 border-b border-gray-100 flex items-center justify-between text-xs ${
+                  <div className={`px-3 sm:px-4 py-1.5 sm:py-2 border-b border-gray-100 flex items-center justify-between text-[10px] sm:text-xs ${
                     prediction.injuries.impactLevel === 'major' ? 'bg-red-50' :
                     prediction.injuries.impactLevel === 'significant' ? 'bg-orange-50' : 'bg-yellow-50'
                   }`}>
-                    <div className="flex items-center gap-4">
-                      <span className="text-base">🏥</span>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-1.5">
-                          <img src={getLogoUrl(away)} alt="" className="w-4 h-4 object-contain" />
-                          <span className={prediction.injuries.awayInjuries.hasQBOut ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                      <span className="text-sm sm:text-base flex-shrink-0">🏥</span>
+                      <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 overflow-hidden">
+                        <div className="flex items-center gap-1 min-w-0">
+                          <img src={getLogoUrl(away)} alt="" className="w-3 h-3 sm:w-4 sm:h-4 object-contain flex-shrink-0" />
+                          <span className={`truncate ${prediction.injuries.awayInjuries.hasQBOut ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
                             {prediction.injuries.awayInjuries.summary}
                           </span>
                         </div>
-                        <span className="text-gray-300">|</span>
-                        <div className="flex items-center gap-1.5">
-                          <img src={getLogoUrl(home)} alt="" className="w-4 h-4 object-contain" />
-                          <span className={prediction.injuries.homeInjuries.hasQBOut ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                        <span className="text-gray-300 flex-shrink-0">|</span>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <img src={getLogoUrl(home)} alt="" className="w-3 h-3 sm:w-4 sm:h-4 object-contain flex-shrink-0" />
+                          <span className={`truncate ${prediction.injuries.homeInjuries.hasQBOut ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
                             {prediction.injuries.homeInjuries.summary}
                           </span>
                         </div>
                       </div>
                     </div>
                     {(prediction.injuries.homeInjuries.hasQBOut || prediction.injuries.awayInjuries.hasQBOut) && (
-                      <span className="text-red-600 font-bold text-[10px] bg-red-100 px-1.5 py-0.5 rounded">
+                      <span className="text-red-600 font-bold text-[9px] sm:text-[10px] bg-red-100 px-1 sm:px-1.5 py-0.5 rounded flex-shrink-0 ml-1">
                         QB OUT
                       </span>
                     )}
@@ -649,17 +641,17 @@ export default function Dashboard() {
 
                 {/* Vegas line status */}
                 {hasVegas && (
-                  <div className="px-4 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-[10px]">
-                    <span className="text-gray-500">Vegas Lines</span>
+                  <div className="px-3 sm:px-4 py-1 sm:py-1.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-[9px] sm:text-[10px]">
+                    <span className="text-gray-500">Vegas</span>
                     {prediction.oddsLockedAt ? (
                       <span className="text-green-600 font-medium flex items-center gap-1">
-                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                         </svg>
-                        Locked {new Date(prediction.oddsLockedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}
+                        Locked
                       </span>
                     ) : (
-                      <span className="text-gray-400">Live - locks 1hr before game</span>
+                      <span className="text-gray-400">Live</span>
                     )}
                   </div>
                 )}
@@ -667,13 +659,13 @@ export default function Dashboard() {
                 {/* Picks grid - Clean color-coded picks */}
                 <div className="grid grid-cols-3 divide-x divide-gray-100">
                   {/* Spread */}
-                  <div className="p-3">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
+                  <div className="p-2 sm:p-3">
+                    <div className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2 text-center">
                       Spread
                     </div>
                     <div className="relative">
                       <div
-                        className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-sm font-bold ${
+                        className={`flex items-center justify-center gap-1 px-1.5 sm:px-2.5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold ${
                           atsConf === 'low'
                             ? 'bg-gray-100 text-gray-400'
                             : atsConf === 'high'
@@ -681,14 +673,12 @@ export default function Dashboard() {
                               : 'bg-blue-500 text-white'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5">
-                          <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 object-contain" />
-                          <span>{pickHomeSpread ? home : away}</span>
-                        </div>
-                        <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
+                        <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
+                        <span className="text-[11px] sm:text-sm">{pickHomeSpread ? home : away}</span>
+                        <span className="font-mono text-[10px] sm:text-sm">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
                       </div>
                       {spreadResult && (
-                        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                        <div className={`absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-xs text-white font-bold ${
                           spreadResult === 'win' ? 'bg-green-500' : spreadResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
                         }`}>
                           {spreadResult === 'win' ? '✓' : spreadResult === 'loss' ? '✗' : '–'}
@@ -698,13 +688,13 @@ export default function Dashboard() {
                   </div>
 
                   {/* Moneyline */}
-                  <div className="p-3">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
-                      Moneyline
+                  <div className="p-2 sm:p-3">
+                    <div className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2 text-center">
+                      ML
                     </div>
                     <div className="relative">
                       <div
-                        className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-bold ${
+                        className={`flex items-center justify-center gap-1 px-1.5 sm:px-2.5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold ${
                           mlConf === 'high'
                             ? 'bg-green-600 text-white'
                             : mlConf === 'medium'
@@ -712,11 +702,11 @@ export default function Dashboard() {
                               : 'bg-gray-100 text-gray-400'
                         }`}
                       >
-                        <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 object-contain" />
-                        <span>{pickHomeML ? home : away}</span>
+                        <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
+                        <span className="text-[11px] sm:text-sm">{pickHomeML ? home : away}</span>
                       </div>
                       {mlResult && (
-                        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                        <div className={`absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-xs text-white font-bold ${
                           mlResult === 'win' ? 'bg-green-500' : 'bg-red-500'
                         }`}>
                           {mlResult === 'win' ? '✓' : '✗'}
@@ -726,13 +716,13 @@ export default function Dashboard() {
                   </div>
 
                   {/* Over/Under */}
-                  <div className="p-3">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
+                  <div className="p-2 sm:p-3">
+                    <div className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2 text-center">
                       Total
                     </div>
                     <div className="relative">
                       <div
-                        className={`px-2.5 py-2 rounded-lg text-sm font-bold text-center ${
+                        className={`px-1.5 sm:px-2.5 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-sm font-bold text-center ${
                           ouConf === 'high'
                             ? 'bg-green-600 text-white'
                             : ouConf === 'medium'
@@ -740,10 +730,10 @@ export default function Dashboard() {
                               : 'bg-gray-100 text-gray-400'
                         }`}
                       >
-                        {pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}
+                        <div>{pickOver ? 'O' : 'U'} {Math.round(displayTotal * 2) / 2}</div>
                       </div>
                       {ouResult && (
-                        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                        <div className={`absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-xs text-white font-bold ${
                           ouResult === 'win' ? 'bg-green-500' : ouResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
                         }`}>
                           {ouResult === 'win' ? '✓' : ouResult === 'loss' ? '✗' : '–'}

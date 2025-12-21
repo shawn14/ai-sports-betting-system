@@ -431,9 +431,11 @@ export default function ResultsPage() {
       loss: 'bg-red-500 text-white',
       push: 'bg-gray-400 text-white',
     };
+    const labels = { win: 'W', loss: 'L', push: 'P' };
     return (
-      <span className={`px-2 py-0.5 rounded text-xs font-bold ${colors[result]}`}>
-        {result.toUpperCase()}
+      <span className={`px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-bold ${colors[result]}`}>
+        <span className="sm:hidden">{labels[result]}</span>
+        <span className="hidden sm:inline">{result.toUpperCase()}</span>
       </span>
     );
   };
@@ -444,14 +446,14 @@ export default function ResultsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Performance Results</h1>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex justify-between items-center border-b border-gray-200 pb-3 sm:pb-4">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Results</h1>
         <button
           onClick={() => setShowAnalysis(!showAnalysis)}
-          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
+          className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm font-medium rounded-lg transition-colors"
         >
-          {showAnalysis ? 'Hide Analysis' : 'Show Analysis'}
+          {showAnalysis ? 'Hide' : 'Analysis'}
         </button>
       </div>
 
@@ -460,33 +462,33 @@ export default function ResultsPage() {
         <div className="space-y-4">
           {/* ATS vs Vegas - The Important Stats */}
           {vegasStats && vegasStats.ats.gamesWithOdds > 0 && (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-              <h2 className="text-green-800 font-bold text-sm mb-3">ATS vs Vegas Lines (What Matters for Betting)</h2>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-3 sm:p-4">
+              <h2 className="text-green-800 font-bold text-xs sm:text-sm mb-2 sm:mb-3">ATS vs Vegas</h2>
+              <div className="grid grid-cols-2 gap-2 sm:gap-4">
                 {/* ATS vs Vegas Spread */}
-                <div className="bg-white rounded-lg p-4 border border-green-200">
-                  <div className="text-gray-600 text-sm font-medium mb-1">Spread vs Vegas</div>
-                  <div className="text-2xl font-bold text-gray-900">
+                <div className="bg-white rounded-lg p-2.5 sm:p-4 border border-green-200">
+                  <div className="text-gray-600 text-[10px] sm:text-sm font-medium mb-0.5 sm:mb-1">Spread</div>
+                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
                     {vegasStats.ats.wins}-{vegasStats.ats.losses}
-                    {vegasStats.ats.pushes > 0 && <span className="text-gray-400">-{vegasStats.ats.pushes}</span>}
+                    {vegasStats.ats.pushes > 0 && <span className="text-gray-400 text-base sm:text-2xl">-{vegasStats.ats.pushes}</span>}
                   </div>
-                  <div className={`text-xl font-mono font-bold ${vegasStats.ats.winPct > 52.4 ? 'text-green-600' : vegasStats.ats.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+                  <div className={`text-base sm:text-xl font-mono font-bold ${vegasStats.ats.winPct > 52.4 ? 'text-green-600' : vegasStats.ats.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
                     {vegasStats.ats.winPct}%
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">{vegasStats.ats.gamesWithOdds} games with Vegas lines</div>
+                  <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{vegasStats.ats.gamesWithOdds} games</div>
                 </div>
 
                 {/* O/U vs Vegas Total */}
-                <div className="bg-white rounded-lg p-4 border border-green-200">
-                  <div className="text-gray-600 text-sm font-medium mb-1">O/U vs Vegas Total</div>
-                  <div className="text-2xl font-bold text-gray-900">
+                <div className="bg-white rounded-lg p-2.5 sm:p-4 border border-green-200">
+                  <div className="text-gray-600 text-[10px] sm:text-sm font-medium mb-0.5 sm:mb-1">O/U</div>
+                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
                     {vegasStats.ouVegas.wins}-{vegasStats.ouVegas.losses}
-                    {vegasStats.ouVegas.pushes > 0 && <span className="text-gray-400">-{vegasStats.ouVegas.pushes}</span>}
+                    {vegasStats.ouVegas.pushes > 0 && <span className="text-gray-400 text-base sm:text-2xl">-{vegasStats.ouVegas.pushes}</span>}
                   </div>
-                  <div className={`text-xl font-mono font-bold ${vegasStats.ouVegas.winPct > 52.4 ? 'text-green-600' : vegasStats.ouVegas.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+                  <div className={`text-base sm:text-xl font-mono font-bold ${vegasStats.ouVegas.winPct > 52.4 ? 'text-green-600' : vegasStats.ouVegas.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
                     {vegasStats.ouVegas.winPct}%
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">{vegasStats.ouVegas.gamesWithOdds} games with Vegas lines</div>
+                  <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{vegasStats.ouVegas.gamesWithOdds} games</div>
                 </div>
               </div>
             </div>
@@ -494,13 +496,13 @@ export default function ResultsPage() {
 
           {/* 60%+ Situations Breakdown */}
           {situationStats.length > 0 && (
-            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4">
-              <h2 className="text-amber-800 font-bold text-sm mb-3">ATS Performance by Situation (60%+ Opportunities)</h2>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-3 sm:p-4">
+              <h2 className="text-amber-800 font-bold text-xs sm:text-sm mb-2 sm:mb-3">By Situation</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                 {situationStats.map((sit) => (
                   <div
                     key={sit.badge}
-                    className={`rounded-lg p-3 border ${
+                    className={`rounded-lg p-2 sm:p-3 border ${
                       sit.badge === 'AVOID'
                         ? 'bg-red-50 border-red-200'
                         : sit.winPct >= 60
@@ -508,8 +510,8 @@ export default function ResultsPage() {
                         : 'bg-white border-gray-200'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+                    <div className="flex items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1">
+                      <span className={`text-[9px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded ${
                         sit.badge === 'AVOID'
                           ? 'bg-red-500 text-white'
                           : sit.winPct >= 60
@@ -518,13 +520,12 @@ export default function ResultsPage() {
                       }`}>
                         {sit.badge}
                       </span>
-                      <span className="text-xs text-gray-600 truncate">{sit.name}</span>
                     </div>
-                    <div className="text-lg font-bold text-gray-900">
+                    <div className="text-sm sm:text-lg font-bold text-gray-900">
                       {sit.wins}-{sit.losses}
-                      {sit.pushes > 0 && <span className="text-gray-400 text-sm">-{sit.pushes}</span>}
+                      {sit.pushes > 0 && <span className="text-gray-400 text-xs sm:text-sm">-{sit.pushes}</span>}
                     </div>
-                    <div className={`text-lg font-mono font-bold ${
+                    <div className={`text-sm sm:text-lg font-mono font-bold ${
                       sit.badge === 'AVOID'
                         ? 'text-red-600'
                         : sit.winPct >= 60
@@ -538,52 +539,46 @@ export default function ResultsPage() {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-amber-700 mt-3">
-                Focus on games with 60%+ situations. Avoid medium spreads (3.5-6.5 pts).
-              </p>
             </div>
           )}
 
           {/* Directional Accuracy - For Reference */}
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-            <h2 className="text-gray-600 font-bold text-sm mb-3">Directional Accuracy (Prediction vs Outcome)</h2>
-            <div className="grid grid-cols-3 gap-4">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 sm:p-4">
+            <h2 className="text-gray-600 font-bold text-xs sm:text-sm mb-2 sm:mb-3">Directional Accuracy</h2>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {/* Spread Direction */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <div className="text-gray-500 text-xs font-medium mb-1">Spread Direction</div>
-                <div className="text-xl font-bold text-gray-900">
+              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-200">
+                <div className="text-gray-500 text-[9px] sm:text-xs font-medium mb-0.5 sm:mb-1">Spread</div>
+                <div className="text-sm sm:text-xl font-bold text-gray-900">
                   {summary.spread.wins}-{summary.spread.losses}
-                  {summary.spread.pushes > 0 && <span className="text-gray-400 text-lg">-{summary.spread.pushes}</span>}
+                  {summary.spread.pushes > 0 && <span className="text-gray-400 text-xs sm:text-lg">-{summary.spread.pushes}</span>}
                 </div>
-                <div className={`text-lg font-mono font-bold ${summary.spread.winPct > 52.4 ? 'text-green-600' : summary.spread.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+                <div className={`text-sm sm:text-lg font-mono font-bold ${summary.spread.winPct > 52.4 ? 'text-green-600' : summary.spread.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
                   {summary.spread.winPct}%
                 </div>
-                <div className="text-xs text-gray-400 mt-1">Predicted margin covered</div>
               </div>
 
               {/* Moneyline */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <div className="text-gray-500 text-xs font-medium mb-1">Moneyline</div>
-                <div className="text-xl font-bold text-gray-900">
+              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-200">
+                <div className="text-gray-500 text-[9px] sm:text-xs font-medium mb-0.5 sm:mb-1">ML</div>
+                <div className="text-sm sm:text-xl font-bold text-gray-900">
                   {summary.moneyline.wins}-{summary.moneyline.losses}
                 </div>
-                <div className={`text-lg font-mono font-bold ${summary.moneyline.winPct > 50 ? 'text-green-600' : 'text-red-500'}`}>
+                <div className={`text-sm sm:text-lg font-mono font-bold ${summary.moneyline.winPct > 50 ? 'text-green-600' : 'text-red-500'}`}>
                   {summary.moneyline.winPct}%
                 </div>
-                <div className="text-xs text-gray-400 mt-1">Picking winners straight up</div>
               </div>
 
               {/* Over/Under Direction */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <div className="text-gray-500 text-xs font-medium mb-1">O/U Direction</div>
-                <div className="text-xl font-bold text-gray-900">
+              <div className="bg-white rounded-lg p-2 sm:p-4 border border-gray-200">
+                <div className="text-gray-500 text-[9px] sm:text-xs font-medium mb-0.5 sm:mb-1">O/U</div>
+                <div className="text-sm sm:text-xl font-bold text-gray-900">
                   {summary.overUnder.wins}-{summary.overUnder.losses}
-                  {summary.overUnder.pushes > 0 && <span className="text-gray-400 text-lg">-{summary.overUnder.pushes}</span>}
+                  {summary.overUnder.pushes > 0 && <span className="text-gray-400 text-xs sm:text-lg">-{summary.overUnder.pushes}</span>}
                 </div>
-                <div className={`text-lg font-mono font-bold ${summary.overUnder.winPct > 52.4 ? 'text-green-600' : summary.overUnder.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+                <div className={`text-sm sm:text-lg font-mono font-bold ${summary.overUnder.winPct > 52.4 ? 'text-green-600' : summary.overUnder.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
                   {summary.overUnder.winPct}%
                 </div>
-                <div className="text-xs text-gray-400 mt-1">vs league avg (44 pts)</div>
               </div>
             </div>
           </div>
@@ -752,63 +747,53 @@ export default function ResultsPage() {
 
       {/* Results Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left font-semibold">Game</th>
-              <th className="px-4 py-3 text-center font-semibold">Predicted</th>
-              <th className="px-4 py-3 text-center font-semibold">Actual</th>
-              <th className="px-4 py-3 text-center font-semibold">Spread</th>
-              <th className="px-4 py-3 text-center font-semibold">ML</th>
-              <th className="px-4 py-3 text-center font-semibold">O/U</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {results.map((game) => (
-              <tr key={game.gameId} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <img src={getLogoUrl(game.awayTeam)} alt="" className="w-6 h-6" />
-                    <img src={getLogoUrl(game.homeTeam)} alt="" className="w-6 h-6" />
-                    <div>
-                      <div className="font-semibold text-gray-900">{game.awayTeam} @ {game.homeTeam}</div>
-                      <div className="text-xs text-gray-500">
-                        {formatDate(game.gameTime)}
-                        {game.week && ` • Wk ${game.week}`}
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs sm:text-sm min-w-[600px]">
+            <thead className="bg-gray-50 text-gray-600 border-b border-gray-200">
+              <tr>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-left font-semibold">Game</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold">Pred</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold">Actual</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold">ATS</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold">ML</th>
+                <th className="px-2 sm:px-4 py-2 sm:py-3 text-center font-semibold">O/U</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {results.map((game) => (
+                <tr key={game.gameId} className="hover:bg-gray-50">
+                  <td className="px-2 sm:px-4 py-2 sm:py-3">
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <img src={getLogoUrl(game.awayTeam)} alt="" className="w-4 h-4 sm:w-6 sm:h-6" />
+                      <img src={getLogoUrl(game.homeTeam)} alt="" className="w-4 h-4 sm:w-6 sm:h-6" />
+                      <div>
+                        <div className="font-semibold text-gray-900 text-[11px] sm:text-sm">{game.awayTeam}@{game.homeTeam}</div>
+                        <div className="text-[9px] sm:text-xs text-gray-500">
+                          {formatDate(game.gameTime)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <div className="font-mono text-gray-900">{Math.round(game.predictedAwayScore)}-{Math.round(game.predictedHomeScore)}</div>
-                  <div className="text-xs text-gray-500">{formatSpread(game.predictedSpread)}</div>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <div className="font-mono font-bold text-gray-900">{game.actualAwayScore}-{game.actualHomeScore}</div>
-                  <div className="text-xs text-gray-500">{formatSpread(game.actualSpread)}</div>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <div className="text-xs text-gray-500 mb-1">
-                    {game.spreadPick === 'home' ? game.homeTeam : game.awayTeam}
-                  </div>
-                  <ResultBadge result={game.spreadResult} />
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <div className="text-xs text-gray-500 mb-1">
-                    {game.mlPick === 'home' ? game.homeTeam : game.awayTeam}
-                  </div>
-                  <ResultBadge result={game.mlResult} />
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <div className="text-xs text-gray-500 mb-1">
-                    {game.ouPick?.toUpperCase()}
-                  </div>
-                  <ResultBadge result={game.ouResult} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </td>
+                  <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                    <div className="font-mono text-gray-900 text-[11px] sm:text-sm">{Math.round(game.predictedAwayScore)}-{Math.round(game.predictedHomeScore)}</div>
+                  </td>
+                  <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                    <div className="font-mono font-bold text-gray-900 text-[11px] sm:text-sm">{game.actualAwayScore}-{game.actualHomeScore}</div>
+                  </td>
+                  <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                    <ResultBadge result={game.spreadResult} />
+                  </td>
+                  <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                    <ResultBadge result={game.mlResult} />
+                  </td>
+                  <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
+                    <ResultBadge result={game.ouResult} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {results.length === 0 && (

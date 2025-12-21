@@ -487,10 +487,16 @@ export async function GET(request: Request) {
       };
     });
 
+    // Deduplicate by gameId (new results take priority over existing)
+    const seenGameIds = new Set<string>();
     const allBacktestResults = [
       ...newBacktestResults,
       ...enrichedExistingResults,
-    ];
+    ].filter(r => {
+      if (seenGameIds.has(r.gameId)) return false;
+      seenGameIds.add(r.gameId);
+      return true;
+    });
 
     // 7. Fetch all current week games and Vegas odds
     log('Fetching current week games...');

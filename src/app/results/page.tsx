@@ -378,7 +378,14 @@ export default function ResultsPage() {
         // Fetch backtest from pre-computed blob (instant!)
         const blobRes = await fetch('/prediction-data.json', { cache: 'no-cache' });
         const blobData = await blobRes.json();
-        const backtestResults: BacktestResult[] = blobData.backtest?.results || [];
+        const rawResults: BacktestResult[] = blobData.backtest?.results || [];
+        // Deduplicate by gameId
+        const seen = new Set<string>();
+        const backtestResults = rawResults.filter(r => {
+          if (seen.has(r.gameId)) return false;
+          seen.add(r.gameId);
+          return true;
+        });
         setResults(backtestResults);
         setSummary(blobData.backtest?.summary || null);
 

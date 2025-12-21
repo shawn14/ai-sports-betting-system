@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/blob-sync",
+      "path": "/api/cron/blob-sync-simple",
       "schedule": "0 */4 * * *"
     }
   ]

@@ -152,8 +152,18 @@ export default function Dashboard() {
         return false;
       }
 
-      setGames(data.games || []);
-      setRecentGames(data.recentGames || []);
+      // Deduplicate games by id to avoid React key warnings
+      const uniqueGames = (data.games || []).filter(
+        (item: GameWithPrediction, index: number, self: GameWithPrediction[]) =>
+          index === self.findIndex((g) => g.game.id === item.game.id)
+      );
+      setGames(uniqueGames);
+      // Deduplicate recentGames by id to avoid React key warnings
+      const uniqueRecentGames = (data.recentGames || []).filter(
+        (game: Game, index: number, self: Game[]) =>
+          index === self.findIndex((g) => g.id === game.id)
+      );
+      setRecentGames(uniqueRecentGames);
       return true;
     } catch (error) {
       console.error('Error fetching data:', error);

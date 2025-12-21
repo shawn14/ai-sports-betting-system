@@ -492,11 +492,12 @@ export async function GET(request: Request) {
       ...enrichedExistingResults,
     ];
 
-    // 7. Fetch upcoming games and Vegas odds
-    log('Fetching upcoming games...');
-    const upcomingGames = await fetchNFLSchedule();
-    const upcoming = upcomingGames.filter(g => g.status !== 'final');
-    log(`Found ${upcoming.length} upcoming games`);
+    // 7. Fetch all current week games and Vegas odds
+    log('Fetching current week games...');
+    const allWeekGames = await fetchNFLSchedule();
+    // Include all games (final, in-progress, and scheduled) for the current week
+    const upcoming = allWeekGames;
+    log(`Found ${upcoming.length} games for current week`);
 
     // Fetch Vegas odds
     log('Fetching Vegas odds...');

@@ -363,9 +363,55 @@ export async function GET(request: Request) {
     log(`Processed ${newGames.length} new games. Spread: ${spreadWins}-${spreadLosses}`);
 
     // 6. Merge backtest results (new + existing)
+    const existingResults = existingState?.backtest?.results || [];
+
+    // Enrich existing results with historical odds if available
+    const enrichedExistingResults = existingResults.map(r => {
+      // Skip if already has Vegas data
+      if (r.vegasSpread !== undefined && r.atsResult !== undefined) {
+        return r;
+      }
+
+      const storedOdds = historicalOdds[r.gameId];
+      if (!storedOdds) return r;
+
+      const vegasSpread = storedOdds.vegasSpread;
+      const vegasTotal = storedOdds.vegasTotal;
+
+      // Calculate ATS result vs Vegas
+      let atsResult: 'win' | 'loss' | 'push' | undefined;
+      if (vegasSpread !== undefined && r.actualSpread !== undefined) {
+        const pickHome = r.predictedSpread < vegasSpread;
+        if (pickHome) {
+          atsResult = r.actualSpread < vegasSpread ? 'win' : r.actualSpread > vegasSpread ? 'loss' : 'push';
+        } else {
+          atsResult = r.actualSpread > vegasSpread ? 'win' : r.actualSpread < vegasSpread ? 'loss' : 'push';
+        }
+      }
+
+      // Calculate O/U result vs Vegas
+      let ouVegasResult: 'win' | 'loss' | 'push' | undefined;
+      if (vegasTotal !== undefined && vegasTotal > 0 && r.actualTotal !== undefined) {
+        const pickOver = r.predictedTotal > vegasTotal;
+        if (pickOver) {
+          ouVegasResult = r.actualTotal > vegasTotal ? 'win' : r.actualTotal < vegasTotal ? 'loss' : 'push';
+        } else {
+          ouVegasResult = r.actualTotal < vegasTotal ? 'win' : r.actualTotal > vegasTotal ? 'loss' : 'push';
+        }
+      }
+
+      return {
+        ...r,
+        vegasSpread,
+        vegasTotal,
+        atsResult,
+        ouVegasResult,
+      };
+    });
+
     const allBacktestResults = [
       ...newBacktestResults,
-      ...(existingState?.backtest?.results || []),
+      ...enrichedExistingResults,
     ];
 
     // 7. Fetch upcoming games and Vegas odds

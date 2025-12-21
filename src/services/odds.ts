@@ -74,13 +74,20 @@ export async function fetchNFLOdds(): Promise<Map<string, Partial<Odds>[]>> {
       const homeMLOutcome = moneyline?.outcomes.find(o => o.name === event.home_team);
       const awayMLOutcome = moneyline?.outcomes.find(o => o.name === event.away_team);
 
+      const totalValue = overOutcome?.point || 0;
+
+      // Debug first few entries
+      if (oddsForGame.length < 2 && event.home_team.includes('Cleveland')) {
+        console.log(`[Odds Debug] ${event.away_team} @ ${event.home_team} - ${bookmaker.title}: total=${totalValue}, totalsMarket=${JSON.stringify(totals)}`);
+      }
+
       oddsForGame.push({
         bookmaker: bookmaker.title,
         homeSpread: homeSpreadOutcome?.point || 0,
         awaySpread: awaySpreadOutcome?.point || 0,
         homeSpreadOdds: homeSpreadOutcome?.price || -110,
         awaySpreadOdds: awaySpreadOutcome?.price || -110,
-        total: overOutcome?.point || 0,
+        total: totalValue,
         overOdds: overOutcome?.price || -110,
         underOdds: underOutcome?.price || -110,
         homeMoneyline: homeMLOutcome?.price || 0,
@@ -112,8 +119,16 @@ export async function fetchOddsForGame(homeTeam: string, awayTeam: string): Prom
 export function getConsensusOdds(oddsArray: Partial<Odds>[]): Partial<Odds> | null {
   if (oddsArray.length === 0) return null;
 
-  const avgHomeSpread = oddsArray.reduce((sum, o) => sum + (o.homeSpread || 0), 0) / oddsArray.length;
-  const avgTotal = oddsArray.reduce((sum, o) => sum + (o.total || 0), 0) / oddsArray.length;
+  // Filter out entries with 0 totals (missing data) before averaging
+  const validTotals = oddsArray.filter(o => o.total && o.total > 0);
+  const validSpreads = oddsArray.filter(o => o.homeSpread !== undefined);
+
+  const avgHomeSpread = validSpreads.length > 0
+    ? validSpreads.reduce((sum, o) => sum + (o.homeSpread || 0), 0) / validSpreads.length
+    : 0;
+  const avgTotal = validTotals.length > 0
+    ? validTotals.reduce((sum, o) => sum + (o.total || 0), 0) / validTotals.length
+    : 0;
   const avgHomeML = oddsArray.reduce((sum, o) => sum + (o.homeMoneyline || 0), 0) / oddsArray.length;
   const avgAwayML = oddsArray.reduce((sum, o) => sum + (o.awayMoneyline || 0), 0) / oddsArray.length;
 

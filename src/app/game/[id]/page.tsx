@@ -24,6 +24,26 @@ interface Game {
   venue?: string;
 }
 
+interface CalcBreakdown {
+  homePPG: number;
+  homePPGAllowed: number;
+  awayPPG: number;
+  awayPPGAllowed: number;
+  regHomePPG: number;
+  regHomePPGAllowed: number;
+  regAwayPPG: number;
+  regAwayPPGAllowed: number;
+  baseHomeScore: number;
+  baseAwayScore: number;
+  homeElo: number;
+  awayElo: number;
+  eloDiff: number;
+  eloAdj: number;
+  homeFieldAdv: number;
+  weatherDelta: number;
+  perTeamDelta: number;
+}
+
 interface Prediction {
   predictedHomeScore: number;
   predictedAwayScore: number;
@@ -36,7 +56,7 @@ interface Prediction {
   edgeSpread?: number;
   edgeTotal?: number;
   weatherImpact?: number;
-  rawPredictedTotal?: number;
+  calc?: CalcBreakdown;
 }
 
 // Constants from our calibrated model
@@ -131,47 +151,23 @@ export default function GameDetailPage() {
   const home = game.homeTeam;
   const away = game.awayTeam;
 
-  // Recalculate the math for display
+  // Team stats for display
   const homePPG = home.ppg || LEAGUE_AVG_PPG;
   const homePPGAllowed = home.ppgAllowed || LEAGUE_AVG_PPG;
   const awayPPG = away.ppg || LEAGUE_AVG_PPG;
   const awayPPGAllowed = away.ppgAllowed || LEAGUE_AVG_PPG;
-
   const homeElo = home.eloRating || 1500;
   const awayElo = away.eloRating || 1500;
-  const eloDiff = homeElo - awayElo;
 
-  // Regression toward mean (30%)
-  const regress = (stat: number) => stat * 0.7 + LEAGUE_AVG_PPG * 0.3;
-  const regHomePPG = regress(homePPG);
-  const regHomePPGAllowed = regress(homePPGAllowed);
-  const regAwayPPG = regress(awayPPG);
-  const regAwayPPGAllowed = regress(awayPPGAllowed);
-
-  // Base scores from matchup
-  const baseHomeScore = (regHomePPG + regAwayPPGAllowed) / 2;
-  const baseAwayScore = (regAwayPPG + regHomePPGAllowed) / 2;
-
-  // Elo adjustment
-  const eloAdjustment = (eloDiff * ELO_TO_POINTS) / 2;
-
-  // Final scores
-  const finalHomeScore = baseHomeScore + eloAdjustment + HOME_FIELD_ADVANTAGE / 2;
-  const finalAwayScore = baseAwayScore - eloAdjustment - HOME_FIELD_ADVANTAGE / 2;
-
-  // Spread and total
-  const ourSpread = finalAwayScore - finalHomeScore;
-  const ourTotal = finalHomeScore + finalAwayScore;
-
-  // Win probability
+  // Win probability (for display)
   const adjustedHomeElo = homeElo + ELO_HOME_ADVANTAGE;
   const homeWinProb = 1 / (1 + Math.pow(10, (awayElo - adjustedHomeElo) / 400));
 
-  // Edge calculations - use prediction values when available (they include weather adjustments)
+  // Edge calculations - use prediction values
   const vegasSpread = prediction?.vegasSpread;
   const vegasTotal = prediction?.vegasTotal;
-  const actualSpread = prediction?.predictedSpread ?? ourSpread;
-  const actualTotal = prediction?.predictedTotal ?? ourTotal;
+  const actualSpread = prediction?.predictedSpread ?? 0;
+  const actualTotal = prediction?.predictedTotal ?? 0;
   const spreadEdge = vegasSpread !== undefined ? vegasSpread - actualSpread : 0;
   const totalEdge = vegasTotal !== undefined ? actualTotal - vegasTotal : 0;
 
@@ -248,117 +244,111 @@ export default function GameDetailPage() {
         </table>
       </div>
 
-      {/* Score Calculation */}
-      <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
-        <h2 className="text-xl font-bold mb-4 text-gray-900">Score Calculation</h2>
-        {game.status === 'final' && (
-          <div className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded p-2 mb-4">
-            Note: This calculation uses current team stats. The displayed prediction was made with stats from when this game was played.
-          </div>
-        )}
+      {/* Score Calculation - uses stored calc values from prediction */}
+      {prediction?.calc && (
+        <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+          <h2 className="text-xl font-bold mb-4 text-gray-900">Score Calculation</h2>
 
-        <div className="space-y-4">
-          {/* Step 1: Regression */}
-          <div className="bg-gray-50 rounded p-4 border border-gray-200">
-            <div className="text-red-600 font-semibold text-lg mb-2">Step 1: Regress Stats to League Average (30%)</div>
-            <div className="text-gray-600 mb-3">
-              We regress each team's stats 30% toward league average ({LEAGUE_AVG_PPG} PPG) to account for small sample sizes.
-            </div>
-            <div className="grid grid-cols-2 gap-4 font-mono">
-              <div className="space-y-1">
-                <div className="text-gray-600">{away.abbreviation} PPG: {formatNum(awayPPG)} → <span className="text-gray-900 font-semibold">{formatNum(regAwayPPG)}</span></div>
-                <div className="text-gray-600">{away.abbreviation} Allowed: {formatNum(awayPPGAllowed)} → <span className="text-gray-900 font-semibold">{formatNum(regAwayPPGAllowed)}</span></div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-gray-600">{home.abbreviation} PPG: {formatNum(homePPG)} → <span className="text-gray-900 font-semibold">{formatNum(regHomePPG)}</span></div>
-                <div className="text-gray-600">{home.abbreviation} Allowed: {formatNum(homePPGAllowed)} → <span className="text-gray-900 font-semibold">{formatNum(regHomePPGAllowed)}</span></div>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 2: Base Scores */}
-          <div className="bg-gray-50 rounded p-4 border border-gray-200">
-            <div className="text-red-600 font-semibold text-lg mb-2">Step 2: Calculate Base Scores from Matchup</div>
-            <div className="text-gray-600 mb-3">
-              Each team's score = average of their offense vs opponent's defense.
-            </div>
-            <div className="font-mono space-y-2">
-              <div className="text-gray-600">
-                {home.abbreviation} Base = ({formatNum(regHomePPG)} + {formatNum(regAwayPPGAllowed)}) / 2 = <span className="text-gray-900 text-xl font-semibold">{formatNum(baseHomeScore)}</span>
-              </div>
-              <div className="text-gray-600">
-                {away.abbreviation} Base = ({formatNum(regAwayPPG)} + {formatNum(regHomePPGAllowed)}) / 2 = <span className="text-gray-900 text-xl font-semibold">{formatNum(baseAwayScore)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Step 3: Elo Adjustment */}
-          <div className="bg-gray-50 rounded p-4 border border-gray-200">
-            <div className="text-red-600 font-semibold text-lg mb-2">Step 3: Elo Adjustment</div>
-            <div className="text-gray-600 mb-3">
-              Based on calibration: 100 Elo difference = {formatNum(ELO_TO_POINTS * 100)} points. Split between teams.
-            </div>
-            <div className="font-mono space-y-2">
-              <div className="text-gray-600">
-                Elo Diff = {homeElo} - {awayElo} = <span className="text-gray-900 text-xl font-semibold">{eloDiff}</span>
-              </div>
-              <div className="text-gray-600">
-                Adjustment = {eloDiff} × {ELO_TO_POINTS} / 2 = <span className="text-gray-900 text-xl font-semibold">{formatSpread(eloAdjustment)}</span> per team
-              </div>
-            </div>
-          </div>
-
-          {/* Step 4: Home Field */}
-          <div className="bg-gray-50 rounded p-4 border border-gray-200">
-            <div className="text-red-600 font-semibold text-lg mb-2">Step 4: Home Field Advantage</div>
-            <div className="text-gray-600 mb-3">
-              Based on calibration: home teams score {formatNum(HOME_FIELD_ADVANTAGE)} more points on average.
-            </div>
-            <div className="font-mono">
-              <div className="text-gray-600">
-                Split: <span className="text-gray-900 font-semibold">+{formatNum(HOME_FIELD_ADVANTAGE / 2)}</span> to home, <span className="text-gray-900 font-semibold">-{formatNum(HOME_FIELD_ADVANTAGE / 2)}</span> to away
-              </div>
-            </div>
-          </div>
-
-          {/* Final Scores */}
-          <div className="bg-red-50 border border-red-200 rounded p-4">
-            <div className="text-red-600 font-semibold text-lg mb-3">Final Predicted Scores</div>
-            <div className="font-mono space-y-2">
-              <div className="text-gray-600 text-lg">
-                {home.abbreviation} = {formatNum(baseHomeScore)} + {formatSpread(eloAdjustment)} + {formatNum(HOME_FIELD_ADVANTAGE / 2)} = <span className="text-gray-900 text-2xl font-bold">{formatNum(finalHomeScore)}</span>
-              </div>
-              <div className="text-gray-600 text-lg">
-                {away.abbreviation} = {formatNum(baseAwayScore)} - {formatNum(Math.abs(eloAdjustment))} - {formatNum(HOME_FIELD_ADVANTAGE / 2)} = <span className="text-gray-900 text-2xl font-bold">{formatNum(finalAwayScore)}</span>
-              </div>
-              <div className="text-gray-600 text-lg mt-2">
-                Raw Total = {formatNum(finalHomeScore)} + {formatNum(finalAwayScore)} = <span className="text-gray-900 font-bold">{formatNum(ourTotal)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Weather Adjustment (if applicable) */}
-          {prediction && prediction.weatherImpact && prediction.weatherImpact > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded p-4">
-              <div className="text-blue-600 font-semibold text-lg mb-2">Step 5: Weather Adjustment</div>
+          <div className="space-y-4">
+            {/* Step 1: Regression */}
+            <div className="bg-gray-50 rounded p-4 border border-gray-200">
+              <div className="text-red-600 font-semibold text-lg mb-2">Step 1: Regress Stats to League Average (30%)</div>
               <div className="text-gray-600 mb-3">
-                Weather conditions reduce expected scoring. Impact is split evenly between teams.
+                We regress each team's stats 30% toward league average ({LEAGUE_AVG_PPG} PPG) to account for small sample sizes.
+              </div>
+              <div className="grid grid-cols-2 gap-4 font-mono">
+                <div className="space-y-1">
+                  <div className="text-gray-600">{away.abbreviation} PPG: {formatNum(prediction.calc.awayPPG)} → <span className="text-gray-900 font-semibold">{formatNum(prediction.calc.regAwayPPG)}</span></div>
+                  <div className="text-gray-600">{away.abbreviation} Allowed: {formatNum(prediction.calc.awayPPGAllowed)} → <span className="text-gray-900 font-semibold">{formatNum(prediction.calc.regAwayPPGAllowed)}</span></div>
+                </div>
+                <div className="space-y-1">
+                  <div className="text-gray-600">{home.abbreviation} PPG: {formatNum(prediction.calc.homePPG)} → <span className="text-gray-900 font-semibold">{formatNum(prediction.calc.regHomePPG)}</span></div>
+                  <div className="text-gray-600">{home.abbreviation} Allowed: {formatNum(prediction.calc.homePPGAllowed)} → <span className="text-gray-900 font-semibold">{formatNum(prediction.calc.regHomePPGAllowed)}</span></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Step 2: Base Scores */}
+            <div className="bg-gray-50 rounded p-4 border border-gray-200">
+              <div className="text-red-600 font-semibold text-lg mb-2">Step 2: Calculate Base Scores from Matchup</div>
+              <div className="text-gray-600 mb-3">
+                Each team's score = average of their offense vs opponent's defense.
               </div>
               <div className="font-mono space-y-2">
                 <div className="text-gray-600">
-                  Weather Impact = {formatNum(prediction.weatherImpact)} × 3 = <span className="text-gray-900 font-semibold">{formatNum(prediction.weatherImpact * 3)}</span> points off total
+                  {home.abbreviation} Base = ({formatNum(prediction.calc.regHomePPG)} + {formatNum(prediction.calc.regAwayPPGAllowed)}) / 2 = <span className="text-gray-900 text-xl font-semibold">{formatNum(prediction.calc.baseHomeScore)}</span>
                 </div>
                 <div className="text-gray-600">
-                  Per Team = {formatNum(prediction.weatherImpact * 3 / 2)} points off each team's score
-                </div>
-                <div className="text-gray-600 text-lg mt-2">
-                  Weather-Adjusted Total = <span className="text-gray-900 text-2xl font-bold">{formatNum(actualTotal)}</span>
+                  {away.abbreviation} Base = ({formatNum(prediction.calc.regAwayPPG)} + {formatNum(prediction.calc.regHomePPGAllowed)}) / 2 = <span className="text-gray-900 text-xl font-semibold">{formatNum(prediction.calc.baseAwayScore)}</span>
                 </div>
               </div>
             </div>
-          )}
+
+            {/* Step 3: Elo Adjustment */}
+            <div className="bg-gray-50 rounded p-4 border border-gray-200">
+              <div className="text-red-600 font-semibold text-lg mb-2">Step 3: Elo Adjustment</div>
+              <div className="text-gray-600 mb-3">
+                Based on calibration: 100 Elo difference = {formatNum(ELO_TO_POINTS * 100)} points. Split between teams.
+              </div>
+              <div className="font-mono space-y-2">
+                <div className="text-gray-600">
+                  Elo Diff = {prediction.calc.homeElo} - {prediction.calc.awayElo} = <span className="text-gray-900 text-xl font-semibold">{prediction.calc.eloDiff}</span>
+                </div>
+                <div className="text-gray-600">
+                  Adjustment = {prediction.calc.eloDiff} × {ELO_TO_POINTS} / 2 = <span className="text-gray-900 text-xl font-semibold">{formatSpread(prediction.calc.eloAdj)}</span> per team
+                </div>
+              </div>
+            </div>
+
+            {/* Step 4: Home Field */}
+            <div className="bg-gray-50 rounded p-4 border border-gray-200">
+              <div className="text-red-600 font-semibold text-lg mb-2">Step 4: Home Field Advantage</div>
+              <div className="text-gray-600 mb-3">
+                Based on calibration: home teams score {formatNum(prediction.calc.homeFieldAdv)} more points on average.
+              </div>
+              <div className="font-mono">
+                <div className="text-gray-600">
+                  Split: <span className="text-gray-900 font-semibold">+{formatNum(prediction.calc.homeFieldAdv / 2)}</span> to home, <span className="text-gray-900 font-semibold">-{formatNum(prediction.calc.homeFieldAdv / 2)}</span> to away
+                </div>
+              </div>
+            </div>
+
+            {/* Step 5: Weather (if applicable) */}
+            {prediction.calc.weatherDelta > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded p-4">
+                <div className="text-blue-600 font-semibold text-lg mb-2">Step 5: Weather Adjustment</div>
+                <div className="text-gray-600 mb-3">
+                  Weather conditions reduce expected scoring. Impact is split evenly between teams.
+                </div>
+                <div className="font-mono space-y-2">
+                  <div className="text-gray-600">
+                    Weather Delta = <span className="text-gray-900 font-semibold">{formatNum(prediction.calc.weatherDelta)}</span> points off total
+                  </div>
+                  <div className="text-gray-600">
+                    Per Team = <span className="text-gray-900 font-semibold">{formatNum(prediction.calc.perTeamDelta)}</span> points off each score
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Final Scores */}
+            <div className="bg-red-50 border border-red-200 rounded p-4">
+              <div className="text-red-600 font-semibold text-lg mb-3">Final Predicted Scores</div>
+              <div className="font-mono space-y-2">
+                <div className="text-gray-600 text-lg">
+                  {home.abbreviation} = {formatNum(prediction.calc.baseHomeScore)} + {formatSpread(prediction.calc.eloAdj)} + {formatNum(prediction.calc.homeFieldAdv / 2)}{prediction.calc.perTeamDelta > 0 ? ` - ${formatNum(prediction.calc.perTeamDelta)}` : ''} = <span className="text-gray-900 text-2xl font-bold">{formatNum(prediction.predictedHomeScore)}</span>
+                </div>
+                <div className="text-gray-600 text-lg">
+                  {away.abbreviation} = {formatNum(prediction.calc.baseAwayScore)} - {formatNum(Math.abs(prediction.calc.eloAdj))} + {formatNum(prediction.calc.homeFieldAdv / 2)}{prediction.calc.perTeamDelta > 0 ? ` - ${formatNum(prediction.calc.perTeamDelta)}` : ''} = <span className="text-gray-900 text-2xl font-bold">{formatNum(prediction.predictedAwayScore)}</span>
+                </div>
+                <div className="text-gray-600 text-lg mt-2">
+                  Total = {formatNum(prediction.predictedHomeScore)} + {formatNum(prediction.predictedAwayScore)} = <span className="text-gray-900 font-bold">{formatNum(prediction.predictedTotal)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Betting Analysis */}
       <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
@@ -371,7 +361,7 @@ export default function GameDetailPage() {
             <div className="space-y-3">
               <div>
                 <div className="text-gray-500 text-sm">Our Line</div>
-                <div className="font-mono text-xl text-gray-900">{home.abbreviation} {formatSpread(prediction?.predictedSpread ?? ourSpread)}</div>
+                <div className="font-mono text-xl text-gray-900">{home.abbreviation} {formatSpread(actualSpread)}</div>
               </div>
               {vegasSpread !== undefined && (
                 <>
@@ -421,7 +411,7 @@ export default function GameDetailPage() {
             <div className="space-y-3">
               <div>
                 <div className="text-gray-500 text-sm">Our Total</div>
-                <div className="font-mono text-xl text-gray-900">{formatNum(prediction?.predictedTotal ?? ourTotal)}</div>
+                <div className="font-mono text-xl text-gray-900">{formatNum(actualTotal)}</div>
               </div>
               {vegasTotal !== undefined && (
                 <>

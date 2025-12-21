@@ -134,8 +134,15 @@ function predictScore(
   awayPPGAllowed: number
 ) {
   const regress = (stat: number) => stat * 0.7 + LEAGUE_AVG_PPG * 0.3;
-  let homeScore = (regress(homePPG) + regress(awayPPGAllowed)) / 2;
-  let awayScore = (regress(awayPPG) + regress(homePPGAllowed)) / 2;
+
+  // Store intermediate values for transparency
+  const regHomePPG = regress(homePPG);
+  const regHomePPGAllowed = regress(homePPGAllowed);
+  const regAwayPPG = regress(awayPPG);
+  const regAwayPPGAllowed = regress(awayPPGAllowed);
+
+  const baseHomeScore = (regHomePPG + regAwayPPGAllowed) / 2;
+  const baseAwayScore = (regAwayPPG + regHomePPGAllowed) / 2;
 
   const eloDiff = homeElo - awayElo;
   let eloAdj = (eloDiff * ELO_TO_POINTS) / 2;
@@ -143,12 +150,30 @@ function predictScore(
     eloAdj = Math.max(-ELO_CAP / 2, Math.min(ELO_CAP / 2, eloAdj));
   }
 
-  homeScore += eloAdj + HOME_FIELD_ADVANTAGE / 2;
-  awayScore -= eloAdj - HOME_FIELD_ADVANTAGE / 2;
+  const homeScore = baseHomeScore + eloAdj + HOME_FIELD_ADVANTAGE / 2;
+  const awayScore = baseAwayScore - eloAdj + HOME_FIELD_ADVANTAGE / 2;
 
   return {
     homeScore: Math.round(homeScore * 10) / 10,
     awayScore: Math.round(awayScore * 10) / 10,
+    // Calculation breakdown for game detail page
+    calc: {
+      homePPG,
+      homePPGAllowed,
+      awayPPG,
+      awayPPGAllowed,
+      regHomePPG: Math.round(regHomePPG * 10) / 10,
+      regHomePPGAllowed: Math.round(regHomePPGAllowed * 10) / 10,
+      regAwayPPG: Math.round(regAwayPPG * 10) / 10,
+      regAwayPPGAllowed: Math.round(regAwayPPGAllowed * 10) / 10,
+      baseHomeScore: Math.round(baseHomeScore * 10) / 10,
+      baseAwayScore: Math.round(baseAwayScore * 10) / 10,
+      homeElo,
+      awayElo,
+      eloDiff,
+      eloAdj: Math.round(eloAdj * 100) / 100,
+      homeFieldAdv: HOME_FIELD_ADVANTAGE,
+    },
   };
 }
 
@@ -627,7 +652,7 @@ export async function GET(request: Request) {
 
       const weatherImpact = getWeatherImpact(weather);
 
-      const { homeScore: predHomeRaw, awayScore: predAwayRaw } = predictScore(
+      const { homeScore: predHomeRaw, awayScore: predAwayRaw, calc } = predictScore(
         homeTeam.eloRating, awayTeam.eloRating,
         homeTeam.ppg || LEAGUE_AVG_PPG, homeTeam.ppgAllowed || LEAGUE_AVG_PPG,
         awayTeam.ppg || LEAGUE_AVG_PPG, awayTeam.ppgAllowed || LEAGUE_AVG_PPG
@@ -757,6 +782,12 @@ export async function GET(request: Request) {
           weatherImpact,  // Keep for backwards compatibility
           // Injury data
           injuries: injuryReport ? getGameInjuryImpact(injuryReport, homeTeam.abbreviation, awayTeam.abbreviation) : null,
+          // Calculation breakdown for game detail page
+          calc: {
+            ...calc,
+            weatherDelta,
+            perTeamDelta,
+          },
         },
       });
     }

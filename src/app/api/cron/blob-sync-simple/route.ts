@@ -311,6 +311,30 @@ export async function GET() {
       const adjustedHomeElo = homeTeam.eloRating + ELO_HOME_ADVANTAGE;
       const homeWinProb = 1 / (1 + Math.pow(10, (awayTeam.eloRating - adjustedHomeElo) / 400));
 
+      const predictedSpread = calculateSpread(predHome, predAway);
+      const predictedTotal = predHome + predAway;
+
+      // Calculate confidence based on simulation findings
+      // ATS: Best when Vegas spread ≤5, avoid >7
+      const absVegasSpread = vegasSpread !== undefined ? Math.abs(vegasSpread) : 3;
+      let atsConfidence: 'high' | 'medium' | 'low' = 'medium';
+      if (absVegasSpread <= 3) atsConfidence = 'high';      // 66.7% win rate
+      else if (absVegasSpread <= 5) atsConfidence = 'high'; // 63.4% win rate
+      else if (absVegasSpread <= 7) atsConfidence = 'medium';
+      else atsConfidence = 'low';                           // 42.9% win rate - avoid!
+
+      // O/U: Best when edge vs Vegas is ≥4 points
+      const totalEdge = vegasTotal !== undefined ? Math.abs(predictedTotal - vegasTotal) : 0;
+      let ouConfidence: 'high' | 'medium' | 'low' = 'medium';
+      if (totalEdge >= 6) ouConfidence = 'high';           // 71% win rate
+      else if (totalEdge >= 4) ouConfidence = 'high';      // 59.5% win rate
+      else if (totalEdge >= 2) ouConfidence = 'medium';
+      else ouConfidence = 'low';
+
+      // Best bet flags
+      const isAtsBestBet = absVegasSpread <= 5;
+      const isOuBestBet = totalEdge >= 4;
+
       gamesWithPredictions.push({
         game: {
           ...game,
@@ -321,12 +345,18 @@ export async function GET() {
           gameId: game.id,
           predictedHomeScore: predHome,
           predictedAwayScore: predAway,
-          predictedSpread: calculateSpread(predHome, predAway),
-          predictedTotal: predHome + predAway,
+          predictedSpread,
+          predictedTotal,
           homeWinProbability: homeWinProb,
           confidence: 0.5,
           vegasSpread,
           vegasTotal,
+          spreadEdge: vegasSpread !== undefined ? Math.round((predictedSpread - vegasSpread) * 2) / 2 : undefined,
+          totalEdge: vegasTotal !== undefined ? Math.round((predictedTotal - vegasTotal) * 2) / 2 : undefined,
+          atsConfidence,
+          ouConfidence,
+          isAtsBestBet,
+          isOuBestBet,
         },
       });
     }

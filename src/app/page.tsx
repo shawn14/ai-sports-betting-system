@@ -32,8 +32,12 @@ interface Prediction {
   confidence: number;
   vegasSpread?: number;
   vegasTotal?: number;
-  edgeSpread?: number;
-  edgeTotal?: number;
+  spreadEdge?: number;
+  totalEdge?: number;
+  atsConfidence?: 'high' | 'medium' | 'low';
+  ouConfidence?: 'high' | 'medium' | 'low';
+  isAtsBestBet?: boolean;
+  isOuBestBet?: boolean;
 }
 
 interface GameWithPrediction {
@@ -193,16 +197,69 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Best Bets Section */}
+      {games.filter(g => g.prediction.isAtsBestBet || g.prediction.isOuBestBet).length > 0 && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🎯</span>
+            <h2 className="text-sm font-bold text-green-800 uppercase tracking-wide">Best Bets</h2>
+            <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">High Confidence</span>
+          </div>
+          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+            {games.filter(g => g.prediction.isAtsBestBet || g.prediction.isOuBestBet).map(({ game, prediction }) => {
+              const away = game.awayTeam?.abbreviation || 'AWAY';
+              const home = game.homeTeam?.abbreviation || 'HOME';
+              const pickHomeSpread = prediction.predictedSpread < 0;
+              const displaySpread = prediction.vegasSpread ?? prediction.predictedSpread;
+              const displayTotal = prediction.vegasTotal ?? prediction.predictedTotal;
+              const pickOver = prediction.predictedTotal > (prediction.vegasTotal ?? 44);
+
+              return (
+                <div key={`best-${game.id}`} className="bg-white rounded-lg p-3 shadow-sm border border-green-100">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <img src={getLogoUrl(away)} alt={away} className="w-5 h-5 object-contain" />
+                      <span className="text-xs text-gray-500">@</span>
+                      <img src={getLogoUrl(home)} alt={home} className="w-5 h-5 object-contain" />
+                    </div>
+                    <span className="text-[10px] text-gray-400">{formatTime(game.gameTime).split(',')[0]}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {prediction.isAtsBestBet && (
+                      <div className="flex-1 bg-green-100 rounded px-2 py-1.5 text-center">
+                        <div className="text-[10px] text-green-600 font-medium">ATS</div>
+                        <div className="text-sm font-bold text-green-800">
+                          {pickHomeSpread ? home : away} {formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}
+                        </div>
+                      </div>
+                    )}
+                    {prediction.isOuBestBet && (
+                      <div className="flex-1 bg-green-100 rounded px-2 py-1.5 text-center">
+                        <div className="text-[10px] text-green-600 font-medium">TOTAL</div>
+                        <div className="text-sm font-bold text-green-800">
+                          {pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-3 text-[10px] text-green-600">
+            Based on backtesting: ATS picks on spreads ≤5 pts (63%+) • O/U with 4+ pt edge (59%+)
+          </div>
+        </div>
+      )}
+
       {/* Upcoming Picks Header */}
       <div className="flex justify-between items-center border-b border-gray-200 pb-3">
         <h1 className="text-xl font-bold text-gray-900">This Week's Picks</h1>
-        <button
-          onClick={syncAll}
-          disabled={syncing}
-          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
-        >
-          Refresh Data
-        </button>
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-600 rounded-full"></span> High conf</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-yellow-500 rounded-full"></span> Medium</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-400 rounded-full"></span> Low</span>
+        </div>
       </div>
 
       {games.length === 0 ? (
@@ -238,8 +295,20 @@ export default function Dashboard() {
             const pickOver = ourTotal > 44;
             const ouStrong = hasVegas ? Math.abs(totalEdge) >= 2.5 : Math.abs(ourTotal - 44) >= 3;
 
+            // Confidence indicators
+            const atsConf = prediction.atsConfidence || 'medium';
+            const ouConf = prediction.ouConfidence || 'medium';
+
             return (
-              <div key={game.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+              <div key={game.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${
+                atsConf === 'low' ? 'border-red-200' : 'border-gray-200'
+              }`}>
+                {/* Low confidence warning */}
+                {atsConf === 'low' && (
+                  <div className="bg-red-50 px-3 py-1.5 text-[10px] text-red-600 font-medium flex items-center gap-1">
+                    <span>⚠️</span> Large spread - historically low ATS accuracy (43%)
+                  </div>
+                )}
                 {/* Game header */}
                 <a href={`/game/${game.id}`} className="group block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <div className="flex justify-between items-center">
@@ -272,7 +341,12 @@ export default function Dashboard() {
                 <div className="grid grid-cols-3 divide-x divide-gray-100">
                   {/* Spread */}
                   <div className="p-3">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">Spread</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center flex items-center justify-center gap-1">
+                      Spread
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        atsConf === 'high' ? 'bg-green-500' : atsConf === 'medium' ? 'bg-yellow-500' : 'bg-red-400'
+                      }`}></span>
+                    </div>
                     <div className="flex flex-col gap-1.5">
                       <div
                         className={`flex items-center justify-between px-2 py-1.5 rounded-lg text-sm font-medium ${
@@ -340,7 +414,12 @@ export default function Dashboard() {
 
                   {/* Over/Under */}
                   <div className="p-3">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">Total</div>
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center flex items-center justify-center gap-1">
+                      Total
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        ouConf === 'high' ? 'bg-green-500' : ouConf === 'medium' ? 'bg-yellow-500' : 'bg-red-400'
+                      }`}></span>
+                    </div>
                     <div className="flex flex-col gap-1.5">
                       <div
                         className={`px-2 py-1.5 rounded-lg text-sm font-medium text-center ${

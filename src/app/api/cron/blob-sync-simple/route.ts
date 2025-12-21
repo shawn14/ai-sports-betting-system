@@ -4,6 +4,7 @@ import { fetchNFLTeams, fetchNFLSchedule, fetchAllCompletedGames } from '@/servi
 import { updateEloAfterGame } from '@/services/elo';
 import { fetchNFLOdds, getConsensusOdds } from '@/services/odds';
 import { fetchWeatherForVenue, getWeatherImpact } from '@/services/weather';
+import { fetchInjuries, getGameInjuryImpact, InjuryReport } from '@/services/injuries';
 import { Team, Odds, WeatherData } from '@/types';
 
 // Constants - Optimized via simulation (927 parameter combinations tested)
@@ -90,12 +91,26 @@ interface CachedWeather {
   gameId: string;
 }
 
+interface GameInjuryInfo {
+  homeInjuries: { hasQBOut: boolean; keyOut: number; summary: string };
+  awayInjuries: { hasQBOut: boolean; keyOut: number; summary: string };
+  impactLevel: 'none' | 'minor' | 'significant' | 'major';
+}
+
+interface CachedInjuries {
+  data: InjuryReport;
+  fetchedAt: string;
+  week: number;
+}
+
 interface BlobState {
   generated: string;
   teams: TeamData[];
   processedGameIds: string[];
   historicalOdds: Record<string, HistoricalOdds>; // gameId -> odds (persists across resets)
   weatherCache: Record<string, CachedWeather>; // gameId -> weather (refresh every 6 hours)
+  injuriesByWeek: Record<string, CachedInjuries>; // week -> injuries (permanent once week is done)
+  currentWeekInjuriesCache?: CachedInjuries; // current week only (refresh every 6 hours)
   games: unknown[];
   recentGames: unknown[];
   backtest: {
@@ -467,6 +482,60 @@ export async function GET(request: Request) {
       log(`Failed to fetch odds: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
 
+    // Determine current week from upcoming games
+    const currentWeek = upcoming.length > 0 ? (upcoming[0].week || 1) : 1;
+
+    // Injury caching strategy:
+    // - Past weeks: stored permanently in injuriesByWeek (never refetch)
+    // - Current week: refresh every 6 hours
+    const INJURY_CACHE_HOURS = 6;
+    const injuriesByWeek: Record<string, CachedInjuries> = rawExistingState?.injuriesByWeek || {};
+    let currentWeekInjuriesCache: CachedInjuries | undefined = rawExistingState?.currentWeekInjuriesCache;
+    let injuryReport: InjuryReport | null = null;
+
+    // Check if current week cache is still valid
+    const cacheIsCurrentWeek = currentWeekInjuriesCache?.week === currentWeek;
+    const injuryCacheAge = currentWeekInjuriesCache
+      ? (new Date().getTime() - new Date(currentWeekInjuriesCache.fetchedAt).getTime()) / (1000 * 60 * 60)
+      : Infinity;
+
+    if (cacheIsCurrentWeek && currentWeekInjuriesCache && injuryCacheAge < INJURY_CACHE_HOURS) {
+      injuryReport = currentWeekInjuriesCache.data;
+      log(`Using cached Week ${currentWeek} injuries (${Math.round(injuryCacheAge * 10) / 10}h old)`);
+    } else {
+      // If we had a previous week cached, save it permanently before fetching new
+      if (currentWeekInjuriesCache && currentWeekInjuriesCache.week !== currentWeek) {
+        const prevWeek = currentWeekInjuriesCache.week;
+        injuriesByWeek[String(prevWeek)] = currentWeekInjuriesCache;
+        log(`Saved Week ${prevWeek} injuries to permanent storage`);
+      }
+
+      log(`Fetching fresh Week ${currentWeek} injuries...`);
+      try {
+        injuryReport = await fetchInjuries();
+        if (injuryReport) {
+          const teamsWithInjuries = Object.keys(injuryReport.teams).length;
+          const totalInjuries = Object.values(injuryReport.teams).reduce((sum, t) => sum + t.injuries.length, 0);
+          log(`Fetched injuries: ${totalInjuries} players across ${teamsWithInjuries} teams`);
+          // Update current week cache
+          currentWeekInjuriesCache = {
+            data: injuryReport,
+            fetchedAt: new Date().toISOString(),
+            week: currentWeek,
+          };
+        }
+      } catch (err) {
+        log(`Failed to fetch injuries: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        // Fall back to cached data if available
+        if (currentWeekInjuriesCache) {
+          injuryReport = currentWeekInjuriesCache.data;
+          log('Using stale cached injuries as fallback');
+        }
+      }
+    }
+
+    log(`Stored injuries for ${Object.keys(injuriesByWeek).length} past weeks`);
+
     const gamesWithPredictions = [];
     for (const game of upcoming) {
       if (!game.id || !game.homeTeamId || !game.awayTeamId) continue;
@@ -652,6 +721,8 @@ export async function GET(request: Request) {
             precipitation: weather.precipitation,
           } : null,
           weatherImpact,
+          // Injury data
+          injuries: injuryReport ? getGameInjuryImpact(injuryReport, homeTeam.abbreviation, awayTeam.abbreviation) : null,
         },
       });
     }
@@ -659,6 +730,11 @@ export async function GET(request: Request) {
     // Log weather stats
     const gamesWithWeather = gamesWithPredictions.filter((g: any) => g.prediction.weather).length;
     log(`Weather data: ${gamesWithWeather}/${gamesWithPredictions.length} games`);
+
+    // Log injury stats
+    const gamesWithInjuries = gamesWithPredictions.filter((g: any) => g.prediction.injuries).length;
+    const majorInjuryGames = gamesWithPredictions.filter((g: any) => g.prediction.injuries?.impactLevel === 'major').length;
+    log(`Injury data: ${gamesWithInjuries}/${gamesWithPredictions.length} games (${majorInjuryGames} with QB out)`);
 
     // 8. Build blob data
     const spreadTotal = spreadWins + spreadLosses;
@@ -672,7 +748,9 @@ export async function GET(request: Request) {
       teams: Array.from(teamsMap.values()).sort((a, b) => b.eloRating - a.eloRating),
       processedGameIds: Array.from(processedGameIds),
       historicalOdds, // Persists Vegas odds across resets
-      weatherCache, // Persists weather data (refresh every 6 hours)
+      weatherCache, // Weather by gameId (permanent for completed games, 6h refresh for upcoming)
+      injuriesByWeek, // Past weeks injuries (permanent)
+      currentWeekInjuriesCache, // Current week injuries (6h refresh)
       games: gamesWithPredictions.sort((a, b) =>
         new Date(a.game.gameTime || 0).getTime() - new Date(b.game.gameTime || 0).getTime()
       ),

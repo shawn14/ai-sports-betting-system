@@ -22,6 +22,19 @@ interface Game {
   week?: number;
 }
 
+interface WeatherInfo {
+  temperature: number;
+  windSpeed: number;
+  conditions: string;
+  precipitation: number;
+}
+
+interface InjuryInfo {
+  homeInjuries: { hasQBOut: boolean; keyOut: number; summary: string };
+  awayInjuries: { hasQBOut: boolean; keyOut: number; summary: string };
+  impactLevel: 'none' | 'minor' | 'significant' | 'major';
+}
+
 interface Prediction {
   gameId: string;
   predictedHomeScore: number;
@@ -48,6 +61,11 @@ interface Prediction {
   sixtyPlusFactors?: number;
   eloDiff?: number;
   week?: number;
+  // Weather data
+  weather?: WeatherInfo;
+  weatherImpact?: number;
+  // Injury data
+  injuries?: InjuryInfo;
 }
 
 interface GameWithPrediction {
@@ -124,6 +142,24 @@ export default function Dashboard() {
 
   const getLogoUrl = (abbr: string) => {
     return `https://a.espncdn.com/i/teamlogos/nfl/500-dark/${abbr.toLowerCase()}.png`;
+  };
+
+  const getWeatherIcon = (conditions: string) => {
+    const c = conditions.toLowerCase();
+    if (c === 'indoor') return '🏟️';
+    if (c.includes('rain') || c.includes('shower')) return '🌧️';
+    if (c.includes('snow')) return '🌨️';
+    if (c.includes('cloud') || c.includes('overcast')) return '☁️';
+    if (c.includes('clear') || c.includes('sun')) return '☀️';
+    if (c.includes('wind')) return '💨';
+    if (c.includes('fog') || c.includes('mist')) return '🌫️';
+    return '🌤️';
+  };
+
+  const getWeatherImpactColor = (impact: number) => {
+    if (impact === 0) return 'text-gray-400';
+    if (impact <= 1) return 'text-yellow-600';
+    return 'text-red-600';
   };
 
   if (loading || syncing) {
@@ -385,6 +421,67 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </a>
+
+                {/* Weather info */}
+                {prediction.weather && (
+                  <div className="px-4 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-3">
+                      <span className="text-base">{getWeatherIcon(prediction.weather.conditions)}</span>
+                      <span className="text-gray-600 capitalize">{prediction.weather.conditions}</span>
+                      <span className="text-gray-400">|</span>
+                      <span className="text-gray-600">{prediction.weather.temperature}°F</span>
+                      {prediction.weather.windSpeed > 0 && (
+                        <>
+                          <span className="text-gray-400">|</span>
+                          <span className="text-gray-600">{prediction.weather.windSpeed} mph wind</span>
+                        </>
+                      )}
+                      {prediction.weather.precipitation > 0 && (
+                        <>
+                          <span className="text-gray-400">|</span>
+                          <span className="text-gray-600">{prediction.weather.precipitation}% precip</span>
+                        </>
+                      )}
+                    </div>
+                    {(prediction.weatherImpact ?? 0) > 0 && (
+                      <span className={`font-medium ${getWeatherImpactColor(prediction.weatherImpact ?? 0)}`}>
+                        -{((prediction.weatherImpact ?? 0) * 3).toFixed(1)} pts
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Injury info */}
+                {prediction.injuries && prediction.injuries.impactLevel !== 'none' && (
+                  <div className={`px-4 py-2 border-b border-gray-100 flex items-center justify-between text-xs ${
+                    prediction.injuries.impactLevel === 'major' ? 'bg-red-50' :
+                    prediction.injuries.impactLevel === 'significant' ? 'bg-orange-50' : 'bg-yellow-50'
+                  }`}>
+                    <div className="flex items-center gap-4">
+                      <span className="text-base">🏥</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5">
+                          <img src={getLogoUrl(away)} alt="" className="w-4 h-4 object-contain" />
+                          <span className={prediction.injuries.awayInjuries.hasQBOut ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                            {prediction.injuries.awayInjuries.summary}
+                          </span>
+                        </div>
+                        <span className="text-gray-300">|</span>
+                        <div className="flex items-center gap-1.5">
+                          <img src={getLogoUrl(home)} alt="" className="w-4 h-4 object-contain" />
+                          <span className={prediction.injuries.homeInjuries.hasQBOut ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                            {prediction.injuries.homeInjuries.summary}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {(prediction.injuries.homeInjuries.hasQBOut || prediction.injuries.awayInjuries.hasQBOut) && (
+                      <span className="text-red-600 font-bold text-[10px] bg-red-100 px-1.5 py-0.5 rounded">
+                        QB OUT
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Picks grid */}
                 <div className="grid grid-cols-3 divide-x divide-gray-100">

@@ -65,11 +65,11 @@ export default function RootLayout({
                   <span className="text-gray-300 mx-1">|</span>
                   <span className="font-medium">ML:</span>
                   <span className="font-bold text-green-600">77.9%</span>
-                  <span className="text-[10px] text-gray-400">@15%+</span>
+                  <span className="text-[10px] text-gray-400">w/edge</span>
                   <span className="text-gray-300 mx-1">|</span>
                   <span className="font-medium">O/U:</span>
                   <span className="font-bold text-green-600">59.7%</span>
-                  <span className="text-[10px] text-gray-400">@5pt+</span>
+                  <span className="text-[10px] text-gray-400">w/edge</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">NFL</span>

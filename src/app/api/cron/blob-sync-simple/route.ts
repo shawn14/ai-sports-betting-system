@@ -662,8 +662,18 @@ export async function GET(request: Request) {
       // This keeps scores summing to total and spread mostly unchanged
       const weatherDelta = weatherImpact * 3;  // Optimal multiplier from backtesting
       const perTeamDelta = weatherDelta / 2;
-      const predHome = predHomeRaw - perTeamDelta;
-      const predAway = predAwayRaw - perTeamDelta;
+
+      // Get injury data for this game
+      const gameInjuries = injuryReport ? getGameInjuryImpact(injuryReport, homeTeam.abbreviation, awayTeam.abbreviation) : null;
+
+      // QB OUT adjustment: -3 points per team (industry standard value)
+      // We don't have historical injury data to backtest, but this is well-established
+      const QB_OUT_ADJUSTMENT = 3;
+      const homeQBAdj = gameInjuries?.homeInjuries.hasQBOut ? QB_OUT_ADJUSTMENT : 0;
+      const awayQBAdj = gameInjuries?.awayInjuries.hasQBOut ? QB_OUT_ADJUSTMENT : 0;
+
+      const predHome = predHomeRaw - perTeamDelta - homeQBAdj;
+      const predAway = predAwayRaw - perTeamDelta - awayQBAdj;
 
       const adjustedHomeElo = homeTeam.eloRating + ELO_HOME_ADVANTAGE;
       const homeWinProb = 1 / (1 + Math.pow(10, (awayTeam.eloRating - adjustedHomeElo) / 400));

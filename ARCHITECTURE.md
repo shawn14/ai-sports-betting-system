@@ -266,17 +266,26 @@ awayScore -= HOME_FIELD_ADVANTAGE / 2;  // -1.625 points
 **5. Weather Impact**
 ```typescript
 weatherImpact = getWeatherImpact(weather);
-predictedTotal = (homeScore + awayScore) - (weatherImpact * 3);
+perTeamDelta = (weatherImpact * 3) / 2;
+homeScore -= perTeamDelta;
+awayScore -= perTeamDelta;
 ```
 
-**6. Spread Calculation** (with regression)
+**6. QB Injury Adjustment**
+```typescript
+// -3 points if starting QB is OUT (industry standard)
+if (homeQBOut) homeScore -= 3;
+if (awayQBOut) awayScore -= 3;
+```
+
+**7. Spread Calculation** (with regression)
 ```typescript
 rawSpread = awayScore - homeScore;
 predictedSpread = rawSpread * (1 - SPREAD_REGRESSION);
 // Shrinks spreads by 45% to reduce overconfidence
 ```
 
-**7. Win Probability** (from Elo)
+**8. Win Probability** (from Elo)
 ```typescript
 adjustedHomeElo = homeElo + ELO_HOME_ADVANTAGE;
 homeWinProb = 1 / (1 + 10^((awayElo - adjustedHomeElo) / 400));
@@ -346,19 +355,37 @@ KEY_POSITIONS = ['QB', 'RB', 'WR', 'TE', 'LT', 'RT', 'CB', 'EDGE', 'DE', 'DT'];
 STAR_POSITIONS = ['QB', 'RB', 'WR'];  // Highlighted positions
 ```
 
-### Injury Impact Levels
+### Injury Impact on Predictions
+
+**QB OUT Adjustment: -3 points**
+```typescript
+const QB_OUT_ADJUSTMENT = 3;
+predHome = predHomeRaw - homeQBAdj;  // -3 if QB out
+predAway = predAwayRaw - awayQBAdj;  // -3 if QB out
+```
+
+This is an industry-standard value that Vegas uses. We apply it because:
+- We don't have historical injury data to backtest our own value
+- Vegas already factors QB injuries into their lines
+- Without this adjustment, we'd show false edges against Vegas when a QB is out
+
+**Note:** Only QB injuries are factored into predictions. Other injuries (RB, WR, etc.) are displayed for user reference but don't affect the model.
+
+### Injury Impact Levels (Display Only)
 
 **Major** - QB Out for either team
-- Most significant impact on predictions
+- Prediction adjusted by -3 points for that team
 - Highlighted with red badge "QB OUT"
 
 **Significant** - 3+ key players out for either team
 - Multiple position impacts
 - Orange background
+- Not factored into predictions
 
 **Minor** - 1-2 key players out
 - Some impact on game
 - Yellow background
+- Not factored into predictions
 
 **None** - No key injuries
 

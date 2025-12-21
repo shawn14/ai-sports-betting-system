@@ -35,16 +35,19 @@ export default function AboutPage() {
 
         <div className="grid grid-cols-3 gap-4 text-center">
           <div className="bg-white rounded-xl p-4 border border-gray-200">
-            <div className="text-2xl font-bold text-green-600">60.7%</div>
+            <div className="text-2xl font-bold text-green-600">52.7%</div>
             <div className="text-xs text-gray-500 mt-1">Against the Spread</div>
+            <div className="text-[10px] text-gray-400 mt-1">88-79-2</div>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200">
             <div className="text-2xl font-bold text-green-600">63.4%</div>
             <div className="text-xs text-gray-500 mt-1">Moneyline</div>
+            <div className="text-[10px] text-gray-400 mt-1">Picking Winners</div>
           </div>
           <div className="bg-white rounded-xl p-4 border border-gray-200">
-            <div className="text-2xl font-bold text-green-600">63.6%</div>
+            <div className="text-2xl font-bold text-green-600">57.5%</div>
             <div className="text-xs text-gray-500 mt-1">Over/Under</div>
+            <div className="text-[10px] text-gray-400 mt-1">96-71-2</div>
           </div>
         </div>
 

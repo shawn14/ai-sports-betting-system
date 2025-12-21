@@ -411,12 +411,13 @@ export async function GET(request: Request) {
       const absVegasSpread = vegasSpread !== undefined ? Math.abs(vegasSpread) : 0;
       const eloDiff = Math.abs((r.homeElo || 1500) - (r.awayElo || 1500));
 
-      const isDivisional = r.isDivisional ?? (getDivision(r.homeTeam) === getDivision(r.awayTeam));
-      const isLateSeasonGame = r.isLateSeasonGame ?? (week >= 13);
-      const isLargeSpread = r.isLargeSpread ?? (absVegasSpread >= 7);
-      const isSmallSpread = r.isSmallSpread ?? (absVegasSpread <= 3 && absVegasSpread > 0);
-      const isMediumSpread = r.isMediumSpread ?? (absVegasSpread > 3 && absVegasSpread < 7);
-      const isEloMismatch = r.isEloMismatch ?? (eloDiff > 100);
+      // Always recalculate situation flags to ensure accuracy
+      const isDivisional = getDivision(r.homeTeam) === getDivision(r.awayTeam);
+      const isLateSeasonGame = week >= 13;
+      const isLargeSpread = absVegasSpread >= 7;
+      const isSmallSpread = absVegasSpread > 0 && absVegasSpread <= 3;
+      const isMediumSpread = absVegasSpread > 3 && absVegasSpread < 7;
+      const isEloMismatch = eloDiff > 100;
 
       return {
         ...r,

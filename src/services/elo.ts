@@ -273,9 +273,10 @@ export function predictGameWithStats(
   baseAwayScore -= HOME_FIELD_ADVANTAGE / 2;
 
   // Weather impact (reduces both scores)
+  // Optimal multiplier of 5 total (2.5 per team) based on backtesting analysis
   const weatherImpact = getWeatherImpact(weather);
-  baseHomeScore -= weatherImpact * 0.75;
-  baseAwayScore -= weatherImpact * 0.75;
+  baseHomeScore -= weatherImpact * 2.5;
+  baseAwayScore -= weatherImpact * 2.5;
 
   // Final scores (round to 1 decimal)
   const predictedHomeScore = Math.round(Math.max(0, baseHomeScore) * 10) / 10;

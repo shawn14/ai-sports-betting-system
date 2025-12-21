@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface Team {
   id: string;
@@ -20,6 +20,18 @@ interface Game {
   gameTime: string;
   status: string;
   week?: number;
+}
+
+interface LiveGame {
+  id: string;
+  away: string;
+  home: string;
+  awayScore: number;
+  homeScore: number;
+  quarter: number;
+  clock: string;
+  status: 'live' | 'final' | 'scheduled';
+  gameTime?: string;
 }
 
 interface WeatherInfo {
@@ -76,8 +88,54 @@ interface GameWithPrediction {
 export default function Dashboard() {
   const [games, setGames] = useState<GameWithPrediction[]>([]);
   const [recentGames, setRecentGames] = useState<Game[]>([]);
+  const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+  const [showBestBets, setShowBestBets] = useState(true);
+  const scoreboardRef = useRef<HTMLDivElement>(null);
+
+  const scrollScoreboard = (direction: 'left' | 'right') => {
+    if (scoreboardRef.current) {
+      const scrollAmount = 300;
+      scoreboardRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const fetchLiveScores = useCallback(async () => {
+    try {
+      const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
+      const data = await response.json();
+
+      const games: LiveGame[] = data.events?.map((event: any) => {
+        const competition = event.competitions?.[0];
+        const homeTeam = competition?.competitors?.find((c: any) => c.homeAway === 'home');
+        const awayTeam = competition?.competitors?.find((c: any) => c.homeAway === 'away');
+
+        let status: 'live' | 'final' | 'scheduled' = 'scheduled';
+        if (event.status?.type?.name === 'STATUS_IN_PROGRESS') status = 'live';
+        else if (event.status?.type?.name === 'STATUS_FINAL') status = 'final';
+
+        return {
+          id: event.id,
+          away: awayTeam?.team?.abbreviation || 'AWAY',
+          home: homeTeam?.team?.abbreviation || 'HOME',
+          awayScore: parseInt(awayTeam?.score || '0'),
+          homeScore: parseInt(homeTeam?.score || '0'),
+          quarter: event.status?.period || 0,
+          clock: event.status?.displayClock || '',
+          status,
+          gameTime: event.date,
+        };
+      }) || [];
+
+      setLiveGames(games);
+    } catch (error) {
+      console.error('Error fetching live scores:', error);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -121,8 +179,14 @@ export default function Dashboard() {
       if (!hasData) {
         await syncAll();
       }
+      // Fetch live scores
+      fetchLiveScores();
     };
     init();
+
+    // Refresh live scores every 30 seconds
+    const interval = setInterval(fetchLiveScores, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const formatTime = (date: string) => {
@@ -182,10 +246,138 @@ export default function Dashboard() {
     return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
+  const liveNow = liveGames.filter(g => g.status === 'live');
+  const finalToday = liveGames.filter(g => g.status === 'final');
+  const scheduledToday = liveGames.filter(g => g.status === 'scheduled');
+
+  const formatGameTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
+
+  const getQuarterText = (quarter: number) => {
+    if (quarter === 1) return '1st';
+    if (quarter === 2) return '2nd';
+    if (quarter === 3) return '3rd';
+    if (quarter === 4) return '4th';
+    if (quarter === 5) return 'OT';
+    return '';
+  };
+
+  // Sort all games: live first, then scheduled by time, then final
+  const allTodayGames = [...liveGames].sort((a, b) => {
+    if (a.status === 'live' && b.status !== 'live') return -1;
+    if (a.status !== 'live' && b.status === 'live') return 1;
+    if (a.status === 'scheduled' && b.status === 'final') return -1;
+    if (a.status === 'final' && b.status === 'scheduled') return 1;
+    return new Date(a.gameTime || 0).getTime() - new Date(b.gameTime || 0).getTime();
+  });
+
   return (
     <div className="space-y-6">
-      {/* Recent Scores - ESPN Style Scoreboard */}
-      {recentGames.length > 0 && (
+      {/* All Games - Horizontal Scoreboard */}
+      {allTodayGames.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {liveNow.length > 0 && (
+                <>
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                  <span className="text-xs font-bold text-red-600">{liveNow.length} LIVE</span>
+                  <span className="text-gray-300">|</span>
+                </>
+              )}
+              <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Week 16</h2>
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => scrollScoreboard('left')}
+                className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                aria-label="Scroll left"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => scrollScoreboard('right')}
+                className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                aria-label="Scroll right"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div ref={scoreboardRef} className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide scroll-snap-x">
+            {allTodayGames.map((game) => {
+              const awayWinning = game.awayScore > game.homeScore;
+              const homeWinning = game.homeScore > game.awayScore;
+              const isLive = game.status === 'live';
+              const isFinal = game.status === 'final';
+
+              return (
+                <div
+                  key={game.id}
+                  className={`flex-shrink-0 bg-white rounded-lg px-3 py-2 min-w-[140px] border shadow-sm ${
+                    isLive ? 'border-red-300 bg-red-50/30' : 'border-gray-200'
+                  }`}
+                >
+                  {/* Status row */}
+                  <div className="flex items-center justify-between mb-1">
+                    {isLive ? (
+                      <span className="text-[9px] font-bold text-red-600">
+                        {getQuarterText(game.quarter)} {game.clock}
+                      </span>
+                    ) : isFinal ? (
+                      <span className="text-[9px] font-bold text-gray-500">FINAL</span>
+                    ) : (
+                      <span className="text-[9px] font-medium text-gray-400">
+                        {game.gameTime ? formatGameTime(game.gameTime) : 'TBD'}
+                      </span>
+                    )}
+                    {isLive && (
+                      <span className="relative flex h-1.5 w-1.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Teams */}
+                  <div className={`flex items-center justify-between text-xs ${
+                    isFinal ? (awayWinning ? 'text-gray-900' : 'text-gray-400') :
+                    isLive ? (awayWinning ? 'text-gray-900 font-semibold' : 'text-gray-600') : 'text-gray-700'
+                  }`}>
+                    <div className="flex items-center gap-1.5">
+                      <img src={getLogoUrl(game.away)} alt={game.away} className="w-4 h-4 object-contain" />
+                      <span>{game.away}</span>
+                    </div>
+                    <span className="font-mono font-medium">{isLive || isFinal ? game.awayScore : ''}</span>
+                  </div>
+                  <div className={`flex items-center justify-between text-xs mt-0.5 ${
+                    isFinal ? (homeWinning ? 'text-gray-900' : 'text-gray-400') :
+                    isLive ? (homeWinning ? 'text-gray-900 font-semibold' : 'text-gray-600') : 'text-gray-700'
+                  }`}>
+                    <div className="flex items-center gap-1.5">
+                      <img src={getLogoUrl(game.home)} alt={game.home} className="w-4 h-4 object-contain" />
+                      <span>{game.home}</span>
+                    </div>
+                    <span className="font-mono font-medium">{isLive || isFinal ? game.homeScore : ''}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Scores - Only show when no live games */}
+      {recentGames.length > 0 && liveGames.length === 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Recent Scores</h2>
@@ -193,7 +385,7 @@ export default function Dashboard() {
               View All →
             </a>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-snap-x">
             {recentGames.map((game) => {
               const away = game.awayTeam?.abbreviation || 'AWAY';
               const home = game.homeTeam?.abbreviation || 'HOME';
@@ -243,14 +435,31 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Best Bets Section */}
+      {/* Best Bets Section - Collapsible */}
       {games.filter(g => g.prediction.isAtsBestBet || g.prediction.isOuBestBet).length > 0 && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 border border-green-200">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🎯</span>
-            <h2 className="text-sm font-bold text-green-800 uppercase tracking-wide">Best Bets</h2>
-            <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">60%+ ATS Situations</span>
-          </div>
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 overflow-hidden">
+          <button
+            onClick={() => setShowBestBets(!showBestBets)}
+            className="w-full flex items-center justify-between p-3 hover:bg-green-100/50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base">🎯</span>
+              <h2 className="text-sm font-bold text-green-800 uppercase tracking-wide">Best Bets</h2>
+              <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
+                {games.filter(g => g.prediction.isAtsBestBet || g.prediction.isOuBestBet).length} picks
+              </span>
+            </div>
+            <svg
+              className={`w-5 h-5 text-green-600 transition-transform ${showBestBets ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showBestBets && (
+          <div className="px-4 pb-4">
           <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
             {games.filter(g => g.prediction.isAtsBestBet || g.prediction.isOuBestBet).map(({ game, prediction }) => {
               const away = game.awayTeam?.abbreviation || 'AWAY';
@@ -313,6 +522,8 @@ export default function Dashboard() {
           <div className="mt-3 text-[10px] text-green-600">
             Based on 169 games: Divisional 61.5% • Late Season 62.9% • Large Spreads 61.7% • Small Spreads 60% • Elo Mismatch 61.4%
           </div>
+          </div>
+        )}
         </div>
       )}
 
@@ -445,7 +656,7 @@ export default function Dashboard() {
                     </div>
                     {(prediction.weatherImpact ?? 0) > 0 && (
                       <span className={`font-medium ${getWeatherImpactColor(prediction.weatherImpact ?? 0)}`}>
-                        -{((prediction.weatherImpact ?? 0) * 3).toFixed(1)} pts
+                        -{((prediction.weatherImpact ?? 0) * 5).toFixed(1)} pts adj
                       </span>
                     )}
                   </div>

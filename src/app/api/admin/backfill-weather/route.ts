@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { put, head } from '@vercel/blob';
 
-const OPENWEATHER_HISTORY_BASE = 'https://history.openweathermap.org/data/2.5/history/city';
+// Using Open-Meteo Archive API (free, no API key required)
+const OPEN_METEO_ARCHIVE_BASE = 'https://archive-api.open-meteo.com/v1/archive';
 
 // NFL stadium coordinates
 const NFL_STADIUMS: Record<string, { lat: number; lon: number; indoor: boolean }> = {
@@ -75,6 +76,7 @@ const TEAM_STADIUMS: Record<string, string> = {
   'TB': 'Raymond James Stadium',
   'TEN': 'Nissan Stadium',
   'WAS': 'Northwest Stadium',
+  'WSH': 'Northwest Stadium',
 };
 
 interface HistoricalWeather {
@@ -85,49 +87,81 @@ interface HistoricalWeather {
   humidity: number;
 }
 
+// Weather code to condition description mapping
+const WEATHER_CODES: Record<number, string> = {
+  0: 'Clear sky',
+  1: 'Mainly clear',
+  2: 'Partly cloudy',
+  3: 'Overcast',
+  45: 'Fog',
+  48: 'Depositing rime fog',
+  51: 'Light drizzle',
+  53: 'Moderate drizzle',
+  55: 'Dense drizzle',
+  56: 'Light freezing drizzle',
+  57: 'Dense freezing drizzle',
+  61: 'Slight rain',
+  63: 'Moderate rain',
+  65: 'Heavy rain',
+  66: 'Light freezing rain',
+  67: 'Heavy freezing rain',
+  71: 'Slight snow',
+  73: 'Moderate snow',
+  75: 'Heavy snow',
+  77: 'Snow grains',
+  80: 'Slight rain showers',
+  81: 'Moderate rain showers',
+  82: 'Violent rain showers',
+  85: 'Slight snow showers',
+  86: 'Heavy snow showers',
+  95: 'Thunderstorm',
+  96: 'Thunderstorm with slight hail',
+  99: 'Thunderstorm with heavy hail',
+};
+
 async function fetchHistoricalWeather(
   lat: number,
   lon: number,
-  gameTime: Date,
-  apiKey: string
+  gameTime: Date
 ): Promise<HistoricalWeather | null> {
-  // Get weather for the hour of the game
-  const start = Math.floor(gameTime.getTime() / 1000) - 3600; // 1 hour before
-  const end = Math.floor(gameTime.getTime() / 1000) + 3600; // 1 hour after
+  // Format date as YYYY-MM-DD for Open-Meteo
+  const dateStr = gameTime.toISOString().split('T')[0];
 
-  const url = `${OPENWEATHER_HISTORY_BASE}?lat=${lat}&lon=${lon}&type=hour&start=${start}&end=${end}&appid=${apiKey}&units=imperial`;
+  // Get timezone based on longitude (rough approximation for US)
+  const timezone = lon < -100 ? 'America/Denver' :
+                   lon < -85 ? 'America/Chicago' :
+                   'America/New_York';
+
+  const url = `${OPEN_METEO_ARCHIVE_BASE}?latitude=${lat}&longitude=${lon}&start_date=${dateStr}&end_date=${dateStr}&hourly=temperature_2m,precipitation,wind_speed_10m,relative_humidity_2m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=${timezone}`;
 
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      console.error(`Weather API error: ${response.status}`);
+      console.error(`Open-Meteo API error: ${response.status}`);
       return null;
     }
 
     const data = await response.json();
-    if (!data.list || data.list.length === 0) {
+    if (!data.hourly || !data.hourly.time || data.hourly.time.length === 0) {
       return null;
     }
 
-    // Find closest hour to game time
-    const targetTime = gameTime.getTime();
-    let closest = data.list[0];
-    let closestDiff = Math.abs(new Date(closest.dt * 1000).getTime() - targetTime);
+    // Find the hour closest to game time
+    const gameHour = gameTime.getHours();
+    const hourIndex = Math.min(gameHour, data.hourly.time.length - 1);
 
-    for (const record of data.list) {
-      const diff = Math.abs(new Date(record.dt * 1000).getTime() - targetTime);
-      if (diff < closestDiff) {
-        closest = record;
-        closestDiff = diff;
-      }
-    }
+    const temperature = data.hourly.temperature_2m?.[hourIndex];
+    const windSpeed = data.hourly.wind_speed_10m?.[hourIndex];
+    const precipitation = data.hourly.precipitation?.[hourIndex];
+    const humidity = data.hourly.relative_humidity_2m?.[hourIndex];
+    const weatherCode = data.hourly.weather_code?.[hourIndex];
 
     return {
-      temperature: Math.round(closest.main.temp),
-      windSpeed: Math.round(closest.wind.speed),
-      precipitation: closest.rain?.['1h'] || closest.snow?.['1h'] || 0,
-      conditions: closest.weather?.[0]?.description || 'Unknown',
-      humidity: closest.main.humidity,
+      temperature: Math.round(temperature ?? 72),
+      windSpeed: Math.round(windSpeed ?? 0),
+      precipitation: precipitation ?? 0,
+      conditions: WEATHER_CODES[weatherCode] || 'Unknown',
+      humidity: humidity ?? 50,
     };
   } catch (error) {
     console.error('Weather fetch error:', error);
@@ -171,12 +205,7 @@ interface BacktestResult {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limitParam = searchParams.get('limit');
-  const limit = limitParam ? parseInt(limitParam) : 20;
-
-  const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: 'Weather API key not configured' }, { status: 500 });
-  }
+  const limit = limitParam ? parseInt(limitParam) : 50; // Increased limit since Open-Meteo is free
 
   const logs: string[] = [];
   const log = (msg: string) => {
@@ -239,9 +268,9 @@ export async function GET(request: Request) {
         continue;
       }
 
-      // Fetch historical weather for outdoor games
+      // Fetch historical weather for outdoor games using Open-Meteo
       const gameTime = new Date(game.gameTime);
-      const weather = await fetchHistoricalWeather(stadium.lat, stadium.lon, gameTime, apiKey);
+      const weather = await fetchHistoricalWeather(stadium.lat, stadium.lon, gameTime);
 
       if (weather) {
         const impact = calculateWeatherImpact(weather, false);
@@ -258,8 +287,8 @@ export async function GET(request: Request) {
         }
       }
 
-      // Rate limit - 60 calls/minute for free tier
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      // Small delay to be respectful to Open-Meteo's free API
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
 
     log(`Fetched ${fetchedCount} weather records (${indoorCount} indoor, ${outdoorCount} outdoor)`);
@@ -281,8 +310,8 @@ export async function GET(request: Request) {
       if (!weather) continue;
       gamesWithWeatherAndOdds++;
 
-      // Adjusted prediction
-      const adjustedTotal = game.predictedTotal - (weather.impact * 3);
+      // Adjusted prediction (multiplier 5 based on optimization)
+      const adjustedTotal = game.predictedTotal - (weather.impact * 5);
       const originalPick = game.predictedTotal > game.vegasTotal ? 'over' : 'under';
       const adjustedPick = adjustedTotal > game.vegasTotal ? 'over' : 'under';
 

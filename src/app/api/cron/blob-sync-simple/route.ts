@@ -614,7 +614,8 @@ export async function GET(request: Request) {
 
       const predictedSpread = calculateSpread(predHome, predAway);
       // Apply weather impact to total (bad weather = lower scoring)
-      const predictedTotal = (predHome + predAway) - (weatherImpact * 3);
+      // Optimal multiplier of 5 based on backtesting analysis
+      const predictedTotal = (predHome + predAway) - (weatherImpact * 5);
 
       // 60%+ Situation Detection (based on backtesting 169 games)
       const absVegasSpread = vegasSpread !== undefined ? Math.abs(vegasSpread) : 3;
@@ -754,16 +755,19 @@ export async function GET(request: Request) {
       games: gamesWithPredictions.sort((a, b) =>
         new Date(a.game.gameTime || 0).getTime() - new Date(b.game.gameTime || 0).getTime()
       ),
-      recentGames: allBacktestResults.slice(0, 10).map((r: any) => ({
-        id: r.gameId,
-        homeTeam: { abbreviation: r.homeTeam },
-        awayTeam: { abbreviation: r.awayTeam },
-        homeScore: r.actualHomeScore,
-        awayScore: r.actualAwayScore,
-        gameTime: r.gameTime,
-        status: 'final',
-        week: r.week,
-      })),
+      recentGames: [...allBacktestResults]
+        .sort((a: any, b: any) => new Date(b.gameTime).getTime() - new Date(a.gameTime).getTime())
+        .slice(0, 10)
+        .map((r: any) => ({
+          id: r.gameId,
+          homeTeam: { abbreviation: r.homeTeam },
+          awayTeam: { abbreviation: r.awayTeam },
+          homeScore: r.actualHomeScore,
+          awayScore: r.actualAwayScore,
+          gameTime: r.gameTime,
+          status: 'final',
+          week: r.week,
+        })),
       backtest: {
         summary: {
           totalGames: processedGameIds.size,

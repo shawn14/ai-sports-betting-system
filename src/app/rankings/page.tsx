@@ -39,7 +39,7 @@ export default function RankingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -67,7 +67,7 @@ export default function RankingsPage() {
               <tr key={team.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3">
                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                    index < 3 ? 'bg-emerald-500 text-white' :
+                    index < 3 ? 'bg-red-600 text-white' :
                     index < 10 ? 'bg-gray-200 text-gray-700' : 'text-gray-400'
                   }`}>
                     {index + 1}

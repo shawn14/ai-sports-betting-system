@@ -115,7 +115,7 @@ export default function Dashboard() {
   if (loading || syncing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
         <p className="text-gray-500 text-sm">{syncing ? 'Syncing data...' : 'Loading...'}</p>
       </div>
     );
@@ -139,7 +139,7 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Recent Scores</h2>
-            <a href="/results" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
+            <a href="/results" className="text-sm text-red-700 hover:text-red-700 font-medium">
               View All →
             </a>
           </div>
@@ -199,7 +199,7 @@ export default function Dashboard() {
         <button
           onClick={syncAll}
           disabled={syncing}
-          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
         >
           Refresh Data
         </button>
@@ -259,7 +259,7 @@ export default function Dashboard() {
                         <div className="font-mono text-lg font-bold text-gray-900">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</div>
                         <div className="text-xs text-gray-500">{formatTime(game.gameTime)}</div>
                       </div>
-                      <div className="flex items-center text-gray-400 group-hover:text-emerald-500 transition-colors">
+                      <div className="flex items-center text-gray-400 group-hover:text-red-600 transition-colors">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                         </svg>
@@ -278,8 +278,8 @@ export default function Dashboard() {
                         className={`flex items-center justify-between px-2 py-1.5 rounded-lg text-sm font-medium ${
                           !pickHomeSpread
                             ? spreadStrong
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200'
+                              ? 'bg-green-700 text-white'
+                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
                             : 'bg-gray-50 text-gray-500'
                         }`}
                       >
@@ -293,8 +293,8 @@ export default function Dashboard() {
                         className={`flex items-center justify-between px-2 py-1.5 rounded-lg text-sm font-medium ${
                           pickHomeSpread
                             ? spreadStrong
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200'
+                              ? 'bg-green-700 text-white'
+                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
                             : 'bg-gray-50 text-gray-500'
                         }`}
                       >
@@ -315,8 +315,8 @@ export default function Dashboard() {
                         className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium ${
                           !pickHomeML
                             ? mlStrong
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200'
+                              ? 'bg-green-700 text-white'
+                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
                             : 'bg-gray-50 text-gray-500'
                         }`}
                       >
@@ -327,8 +327,8 @@ export default function Dashboard() {
                         className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium ${
                           pickHomeML
                             ? mlStrong
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200'
+                              ? 'bg-green-700 text-white'
+                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
                             : 'bg-gray-50 text-gray-500'
                         }`}
                       >
@@ -346,8 +346,8 @@ export default function Dashboard() {
                         className={`px-2 py-1.5 rounded-lg text-sm font-medium text-center ${
                           pickOver
                             ? ouStrong
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200'
+                              ? 'bg-green-700 text-white'
+                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
                             : 'bg-gray-50 text-gray-500'
                         }`}
                       >
@@ -357,8 +357,8 @@ export default function Dashboard() {
                         className={`px-2 py-1.5 rounded-lg text-sm font-medium text-center ${
                           !pickOver
                             ? ouStrong
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200'
+                              ? 'bg-green-700 text-white'
+                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
                             : 'bg-gray-50 text-gray-500'
                         }`}
                       >

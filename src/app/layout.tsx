@@ -30,7 +30,7 @@ export default function RootLayout({
         style={{ fontFamily: 'var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif' }}
       >
         {/* Top accent bar */}
-        <div className="h-1 bg-emerald-500" />
+        <div className="h-1 bg-red-600" />
 
         {/* Main nav */}
         <nav className="bg-white border-b border-gray-200 shadow-sm">
@@ -38,19 +38,19 @@ export default function RootLayout({
             <div className="flex items-center justify-between h-14">
               <div className="flex items-center gap-8">
                 <a href="/" className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-red-600 rounded-lg flex items-center justify-center">
                     <span className="text-white font-bold text-sm">PM</span>
                   </div>
                   <span className="text-lg font-bold text-gray-900">Prediction Matrix</span>
                 </a>
                 <div className="flex">
-                  <a href="/" className="text-gray-700 hover:text-emerald-600 hover:border-b-2 hover:border-emerald-500 px-4 py-4 text-sm font-semibold transition-colors">
+                  <a href="/" className="text-gray-700 hover:text-red-700 hover:border-b-2 hover:border-red-600 px-4 py-4 text-sm font-semibold transition-colors">
                     Picks
                   </a>
-                  <a href="/rankings" className="text-gray-700 hover:text-emerald-600 hover:border-b-2 hover:border-emerald-500 px-4 py-4 text-sm font-semibold transition-colors">
+                  <a href="/rankings" className="text-gray-700 hover:text-red-700 hover:border-b-2 hover:border-red-600 px-4 py-4 text-sm font-semibold transition-colors">
                     Rankings
                   </a>
-                  <a href="/results" className="text-gray-700 hover:text-emerald-600 hover:border-b-2 hover:border-emerald-500 px-4 py-4 text-sm font-semibold transition-colors">
+                  <a href="/results" className="text-gray-700 hover:text-red-700 hover:border-b-2 hover:border-red-600 px-4 py-4 text-sm font-semibold transition-colors">
                     Results
                   </a>
                 </div>

@@ -113,7 +113,7 @@ export default function GameDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -251,7 +251,7 @@ export default function GameDetailPage() {
         <div className="space-y-4">
           {/* Step 1: Regression */}
           <div className="bg-gray-800 rounded p-4">
-            <div className="text-emerald-400 font-semibold text-lg mb-2">Step 1: Regress Stats to League Average (30%)</div>
+            <div className="text-red-400 font-semibold text-lg mb-2">Step 1: Regress Stats to League Average (30%)</div>
             <div className="text-gray-400 mb-3">
               We regress each team's stats 30% toward league average ({LEAGUE_AVG_PPG} PPG) to account for small sample sizes.
             </div>
@@ -269,7 +269,7 @@ export default function GameDetailPage() {
 
           {/* Step 2: Base Scores */}
           <div className="bg-gray-800 rounded p-4">
-            <div className="text-emerald-400 font-semibold text-lg mb-2">Step 2: Calculate Base Scores from Matchup</div>
+            <div className="text-red-400 font-semibold text-lg mb-2">Step 2: Calculate Base Scores from Matchup</div>
             <div className="text-gray-400 mb-3">
               Each team's score = average of their offense vs opponent's defense.
             </div>
@@ -285,7 +285,7 @@ export default function GameDetailPage() {
 
           {/* Step 3: Elo Adjustment */}
           <div className="bg-gray-800 rounded p-4">
-            <div className="text-emerald-400 font-semibold text-lg mb-2">Step 3: Elo Adjustment</div>
+            <div className="text-red-400 font-semibold text-lg mb-2">Step 3: Elo Adjustment</div>
             <div className="text-gray-400 mb-3">
               Based on calibration: 100 Elo difference = {formatNum(ELO_TO_POINTS * 100)} points. Split between teams.
             </div>
@@ -301,7 +301,7 @@ export default function GameDetailPage() {
 
           {/* Step 4: Home Field */}
           <div className="bg-gray-800 rounded p-4">
-            <div className="text-emerald-400 font-semibold text-lg mb-2">Step 4: Home Field Advantage</div>
+            <div className="text-red-400 font-semibold text-lg mb-2">Step 4: Home Field Advantage</div>
             <div className="text-gray-400 mb-3">
               Based on calibration: home teams score {formatNum(HOME_FIELD_ADVANTAGE)} more points on average.
             </div>
@@ -313,8 +313,8 @@ export default function GameDetailPage() {
           </div>
 
           {/* Final Scores */}
-          <div className="bg-emerald-900/30 border border-emerald-800 rounded p-4">
-            <div className="text-emerald-400 font-semibold text-lg mb-3">Final Predicted Scores</div>
+          <div className="bg-red-900/30 border border-red-800 rounded p-4">
+            <div className="text-red-400 font-semibold text-lg mb-3">Final Predicted Scores</div>
             <div className="font-mono space-y-2">
               <div className="text-gray-300 text-lg">
                 {home.abbreviation} = {formatNum(baseHomeScore)} + {formatSpread(eloAdjustment)} + {formatNum(HOME_FIELD_ADVANTAGE / 2)} = <span className="text-white text-2xl font-bold">{formatNum(finalHomeScore)}</span>
@@ -346,7 +346,7 @@ export default function GameDetailPage() {
                     <div className="text-gray-400 text-sm">Vegas Line</div>
                     <div className="font-mono text-xl">{home.abbreviation} {formatSpread(vegasSpread)}</div>
                   </div>
-                  <div className={`p-3 rounded ${Math.abs(spreadEdge) >= 2.5 ? 'bg-emerald-900/50' : 'bg-gray-700'}`}>
+                  <div className={`p-3 rounded ${Math.abs(spreadEdge) >= 2.5 ? 'bg-green-900/50' : 'bg-gray-700'}`}>
                     <div className="text-gray-400 text-sm">Edge</div>
                     <div className="font-mono text-xl">{formatSpread(spreadEdge)} pts</div>
                     <div className="text-sm mt-2 font-medium">
@@ -373,7 +373,7 @@ export default function GameDetailPage() {
                 <div className="text-gray-400 text-sm">{away.abbreviation} Win Prob</div>
                 <div className="font-mono text-xl">{formatNum((1 - homeWinProb) * 100, 0)}%</div>
               </div>
-              <div className={`p-3 rounded ${homeWinProb > 0.6 || homeWinProb < 0.4 ? 'bg-emerald-900/50' : 'bg-gray-700'}`}>
+              <div className={`p-3 rounded ${homeWinProb > 0.6 || homeWinProb < 0.4 ? 'bg-green-900/50' : 'bg-gray-700'}`}>
                 <div className="text-gray-400 text-sm">Pick</div>
                 <div className="font-mono text-xl font-medium">
                   {homeWinProb > 0.5 ? home.abbreviation : away.abbreviation}
@@ -396,7 +396,7 @@ export default function GameDetailPage() {
                     <div className="text-gray-400 text-sm">Vegas Total</div>
                     <div className="font-mono text-xl">{vegasTotal}</div>
                   </div>
-                  <div className={`p-3 rounded ${Math.abs(totalEdge) >= 2.5 ? 'bg-emerald-900/50' : 'bg-gray-700'}`}>
+                  <div className={`p-3 rounded ${Math.abs(totalEdge) >= 2.5 ? 'bg-green-900/50' : 'bg-gray-700'}`}>
                     <div className="text-gray-400 text-sm">Edge</div>
                     <div className="font-mono text-xl">{formatSpread(totalEdge)} pts</div>
                     <div className="text-sm mt-2 font-medium">
@@ -432,7 +432,7 @@ export default function GameDetailPage() {
 
       {/* Back link */}
       <div className="text-center py-4">
-        <a href="/" className="text-emerald-400 hover:text-emerald-300 text-lg">
+        <a href="/" className="text-red-400 hover:text-red-300 text-lg">
           ← Back to Picks
         </a>
       </div>

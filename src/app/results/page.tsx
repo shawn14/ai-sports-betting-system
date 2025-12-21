@@ -266,7 +266,7 @@ export default function ResultsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -286,7 +286,7 @@ export default function ResultsPage() {
   const ResultBadge = ({ result }: { result?: 'win' | 'loss' | 'push' }) => {
     if (!result) return <span className="text-gray-400">—</span>;
     const colors = {
-      win: 'bg-emerald-500 text-white',
+      win: 'bg-green-600 text-white',
       loss: 'bg-red-500 text-white',
       push: 'bg-gray-400 text-white',
     };
@@ -298,7 +298,7 @@ export default function ResultsPage() {
   };
 
   const WinPctBadge = ({ pct, threshold = 52.4 }: { pct: number; threshold?: number }) => {
-    const color = pct >= threshold ? 'text-emerald-600' : pct < (100 - threshold) ? 'text-red-600' : 'text-gray-500';
+    const color = pct >= threshold ? 'text-green-600' : pct < (100 - threshold) ? 'text-red-600' : 'text-gray-500';
     return <span className={`font-mono font-bold ${color}`}>{pct}%</span>;
   };
 
@@ -308,7 +308,7 @@ export default function ResultsPage() {
         <h1 className="text-2xl font-bold text-gray-900">Performance Results</h1>
         <button
           onClick={() => setShowAnalysis(!showAnalysis)}
-          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-medium rounded-lg transition-colors"
+          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-colors"
         >
           {showAnalysis ? 'Hide Analysis' : 'Show Analysis'}
         </button>
@@ -324,7 +324,7 @@ export default function ResultsPage() {
               {summary.spread.wins}-{summary.spread.losses}
               {summary.spread.pushes > 0 && <span className="text-gray-400">-{summary.spread.pushes}</span>}
             </div>
-            <div className={`text-2xl font-mono font-bold ${summary.spread.winPct > 52.4 ? 'text-emerald-500' : summary.spread.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+            <div className={`text-2xl font-mono font-bold ${summary.spread.winPct > 52.4 ? 'text-green-600' : summary.spread.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
               {summary.spread.winPct}%
             </div>
             <div className="text-xs text-gray-400 mt-2">Need 52.4% to beat vig</div>
@@ -336,7 +336,7 @@ export default function ResultsPage() {
             <div className="text-3xl font-bold text-gray-900">
               {summary.moneyline.wins}-{summary.moneyline.losses}
             </div>
-            <div className={`text-2xl font-mono font-bold ${summary.moneyline.winPct > 50 ? 'text-emerald-500' : 'text-red-500'}`}>
+            <div className={`text-2xl font-mono font-bold ${summary.moneyline.winPct > 50 ? 'text-green-600' : 'text-red-500'}`}>
               {summary.moneyline.winPct}%
             </div>
             <div className="text-xs text-gray-400 mt-2">Picking winners straight up</div>
@@ -349,7 +349,7 @@ export default function ResultsPage() {
               {summary.overUnder.wins}-{summary.overUnder.losses}
               {summary.overUnder.pushes > 0 && <span className="text-gray-400">-{summary.overUnder.pushes}</span>}
             </div>
-            <div className={`text-2xl font-mono font-bold ${summary.overUnder.winPct > 52.4 ? 'text-emerald-500' : summary.overUnder.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+            <div className={`text-2xl font-mono font-bold ${summary.overUnder.winPct > 52.4 ? 'text-green-600' : summary.overUnder.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
               {summary.overUnder.winPct}%
             </div>
             <div className="text-xs text-gray-400 mt-2">vs league avg (44 pts)</div>
@@ -384,7 +384,7 @@ export default function ResultsPage() {
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
               <div className="text-gray-500 text-xs font-medium mb-1">Direction Accuracy</div>
-              <div className="text-2xl font-bold text-emerald-500">{analysis.summary.directionAccuracy}%</div>
+              <div className="text-2xl font-bold text-green-600">{analysis.summary.directionAccuracy}%</div>
               <div className="text-xs text-gray-400">Picking winners</div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
@@ -470,7 +470,7 @@ export default function ResultsPage() {
                 <div
                   key={week.week}
                   className={`px-3 py-2 rounded-lg text-center border ${
-                    week.winPct >= 52.4 ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : week.winPct < 47.6 ? 'bg-red-50 border-red-200 text-red-800' : 'bg-gray-50 border-gray-200 text-gray-700'
+                    week.winPct >= 52.4 ? 'bg-green-50 border-green-200 text-green-800' : week.winPct < 47.6 ? 'bg-red-50 border-red-200 text-red-800' : 'bg-gray-50 border-gray-200 text-gray-700'
                   }`}
                 >
                   <div className="text-xs font-medium opacity-70">Wk {week.week}</div>

@@ -439,6 +439,11 @@ export async function GET(request: Request) {
       ...enrichedExistingResults,
     ];
 
+    // Log enrichment stats
+    const divisionalCount = enrichedExistingResults.filter((r: any) => r.isDivisional).length;
+    const lateSeasonCount = enrichedExistingResults.filter((r: any) => r.isLateSeasonGame).length;
+    log(`Enriched ${enrichedExistingResults.length} results: ${divisionalCount} divisional, ${lateSeasonCount} late season`);
+
     // 7. Fetch upcoming games and Vegas odds
     log('Fetching upcoming games...');
     const upcomingGames = await fetchNFLSchedule();

@@ -14,8 +14,31 @@ const robotoCondensed = Roboto_Condensed({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.predictionmatrix.com'),
   title: "Prediction Matrix - NFL Picks",
   description: "AI-powered NFL betting predictions using Elo ratings",
+  openGraph: {
+    title: "Prediction Matrix",
+    description: "AI Sports Predictions",
+    url: "https://www.predictionmatrix.com",
+    siteName: "Prediction Matrix",
+    images: [
+      {
+        url: "https://www.predictionmatrix.com/api/og",
+        width: 1200,
+        height: 630,
+        alt: "Prediction Matrix - AI Sports Predictions",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Prediction Matrix",
+    description: "AI Sports Predictions",
+    images: ["https://www.predictionmatrix.com/api/og"],
+  },
 };
 
 export default function RootLayout({

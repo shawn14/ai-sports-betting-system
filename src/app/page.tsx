@@ -466,10 +466,10 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-600 rounded-full"></span> High conf</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-yellow-500 rounded-full"></span> Medium</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-400 rounded-full"></span> Low</span>
+        <div className="flex items-center gap-3 text-xs text-gray-500">
+          <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-600 rounded"></span> Strong</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-500 rounded"></span> Lean</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 bg-gray-300 rounded"></span> Avoid</span>
         </div>
       </div>
 
@@ -505,20 +505,14 @@ export default function Dashboard() {
             const displayTotal = prediction.vegasTotal ?? ourTotal;
             const hasVegas = prediction.vegasSpread !== undefined;
 
-            // Spread pick: negative spread = home favored, we pick based on our prediction
-            // If our spread is more negative than Vegas, we like home more (pick home)
-            const spreadEdge = hasVegas ? (prediction.vegasSpread! - ourSpread) : 0;
-            const pickHomeSpread = ourSpread < 0; // We pick home if we predict home favored
-            const spreadStrong = hasVegas ? Math.abs(spreadEdge) >= 2.5 : Math.abs(ourSpread) >= 3;
+            // Spread pick: negative spread = home favored
+            const pickHomeSpread = ourSpread < 0;
 
             // ML pick: based on win probability
             const pickHomeML = homeWinProb > 0.5;
-            const mlStrong = homeWinProb > 0.6 || homeWinProb < 0.4;
 
-            // O/U pick: if our total > 44 (league avg), pick over
-            const totalEdge = hasVegas ? (ourTotal - prediction.vegasTotal!) : 0;
-            const pickOver = ourTotal > 44;
-            const ouStrong = hasVegas ? Math.abs(totalEdge) >= 2.5 : Math.abs(ourTotal - 44) >= 3;
+            // O/U pick: compare our total to Vegas (or league avg if no Vegas)
+            const pickOver = hasVegas ? ourTotal > prediction.vegasTotal! : ourTotal > 44;
 
             // Confidence indicators
             const atsConf = prediction.atsConfidence || 'medium';
@@ -533,27 +527,21 @@ export default function Dashboard() {
             if (prediction.isSmallSpread) situations.push('CLOSE');
             if (prediction.isEloMismatch) situations.push('MISMATCH');
 
+            // Determine if this game has any strong picks
+            const hasStrongPick = mlConf === 'high' || ouConf === 'high' || atsConf === 'high';
+
             return (
               <div key={game.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${
-                atsConf === 'low' ? 'border-red-200' : prediction.sixtyPlusFactors && prediction.sixtyPlusFactors >= 2 ? 'border-green-300' : 'border-gray-200'
+                hasStrongPick ? 'border-green-300' : 'border-gray-200'
               }`}>
-                {/* Situation factors highlight */}
+                {/* Situation tags - only show if we have high confidence situations */}
                 {situations.length > 0 && atsConf !== 'low' && (
-                  <div className="bg-green-50 px-3 py-1.5 flex items-center gap-2">
-                    <span className="text-[9px] font-bold text-white bg-green-600 px-1.5 py-0.5 rounded">ATS 60%</span>
-                    <div className="flex flex-wrap gap-1">
-                      {situations.map(s => (
-                        <span key={s} className="text-[9px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {/* Low confidence warning - medium spreads are 46.7% ATS */}
-                {atsConf === 'low' && (
-                  <div className="bg-red-50 px-3 py-1.5 text-[10px] text-red-600 font-medium flex items-center gap-1">
-                    <span>⚠️</span> Medium spread (3.5-6.5) - historically 46.7% ATS - AVOID
+                  <div className="px-3 py-1.5 flex flex-wrap gap-1 border-b border-gray-100">
+                    {situations.map(s => (
+                      <span key={s} className="text-[9px] font-medium text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                        {s}
+                      </span>
+                    ))}
                   </div>
                 )}
                 {/* Game header */}
@@ -662,138 +650,64 @@ export default function Dashboard() {
                   </div>
                 )}
 
-                {/* Picks grid */}
+                {/* Picks grid - Clean color-coded picks */}
                 <div className="grid grid-cols-3 divide-x divide-gray-100">
                   {/* Spread */}
                   <div className="p-3">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 text-center flex items-center justify-center gap-1">
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
                       Spread
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        atsConf === 'high' ? 'bg-green-500' : atsConf === 'medium' ? 'bg-yellow-500' : 'bg-red-400'
-                      }`}></span>
                     </div>
-                    {hasVegas && (
-                      <div className={`text-[10px] text-center mb-1.5 font-medium ${Math.abs(spreadEdge) >= 2.5 ? 'text-green-600' : 'text-gray-400'}`}>
-                        {spreadEdge > 0 ? '+' : ''}{spreadEdge.toFixed(1)} pts edge
+                    <div
+                      className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-sm font-bold ${
+                        atsConf === 'low'
+                          ? 'bg-gray-100 text-gray-400'
+                          : atsConf === 'high'
+                            ? 'bg-green-600 text-white'
+                            : 'bg-blue-500 text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 object-contain" />
+                        <span>{pickHomeSpread ? home : away}</span>
                       </div>
-                    )}
-                    <div className="flex flex-col gap-1.5">
-                      <div
-                        className={`flex items-center justify-between px-2 py-1.5 rounded-lg text-sm font-medium ${
-                          !pickHomeSpread
-                            ? spreadStrong
-                              ? 'bg-green-700 text-white'
-                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
-                            : 'bg-gray-50 text-gray-500'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <img src={getLogoUrl(away)} alt="" className="w-4 h-4 object-contain" />
-                          <span>{away}</span>
-                        </div>
-                        <span className="font-mono">{formatSpread(-displaySpread)}</span>
-                      </div>
-                      <div
-                        className={`flex items-center justify-between px-2 py-1.5 rounded-lg text-sm font-medium ${
-                          pickHomeSpread
-                            ? spreadStrong
-                              ? 'bg-green-700 text-white'
-                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
-                            : 'bg-gray-50 text-gray-500'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <img src={getLogoUrl(home)} alt="" className="w-4 h-4 object-contain" />
-                          <span>{home}</span>
-                        </div>
-                        <span className="font-mono">{formatSpread(displaySpread)}</span>
-                      </div>
+                      <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
                     </div>
                   </div>
 
                   {/* Moneyline */}
                   <div className="p-3">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 text-center flex items-center justify-center gap-1">
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
                       Moneyline
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        mlConf === 'high' ? 'bg-green-500' : mlConf === 'medium' ? 'bg-yellow-500' : 'bg-red-400'
-                      }`}></span>
                     </div>
-                    <div className={`text-[10px] text-center mb-1.5 font-medium ${mlConf === 'high' ? 'text-green-600' : 'text-gray-400'}`}>
-                      {mlConf === 'high' ? (
-                        <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">77.9% hit rate</span>
-                      ) : (
-                        <span>{Math.round(Math.max(homeWinProb, 1 - homeWinProb) * 100)}% • {(prediction.mlEdge ?? 0).toFixed(0)}% edge</span>
-                      )}
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <div
-                        className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium ${
-                          !pickHomeML
-                            ? mlStrong
-                              ? 'bg-green-700 text-white'
-                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
-                            : 'bg-gray-50 text-gray-500'
-                        }`}
-                      >
-                        <img src={getLogoUrl(away)} alt="" className="w-4 h-4 object-contain" />
-                        <span>{away}</span>
-                      </div>
-                      <div
-                        className={`flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-lg text-sm font-medium ${
-                          pickHomeML
-                            ? mlStrong
-                              ? 'bg-green-700 text-white'
-                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
-                            : 'bg-gray-50 text-gray-500'
-                        }`}
-                      >
-                        <img src={getLogoUrl(home)} alt="" className="w-4 h-4 object-contain" />
-                        <span>{home}</span>
-                      </div>
+                    <div
+                      className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-bold ${
+                        mlConf === 'high'
+                          ? 'bg-green-600 text-white'
+                          : mlConf === 'medium'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-400'
+                      }`}
+                    >
+                      <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 object-contain" />
+                      <span>{pickHomeML ? home : away}</span>
                     </div>
                   </div>
 
                   {/* Over/Under */}
                   <div className="p-3">
-                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 text-center flex items-center justify-center gap-1">
+                    <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
                       Total
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        ouConf === 'high' ? 'bg-green-500' : ouConf === 'medium' ? 'bg-yellow-500' : 'bg-red-400'
-                      }`}></span>
                     </div>
-                    {hasVegas && (
-                      <div className={`text-[10px] text-center mb-1.5 font-medium ${ouConf === 'high' ? 'text-green-600' : 'text-gray-400'}`}>
-                        {ouConf === 'high' ? (
-                          <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">57.4% hit rate</span>
-                        ) : (
-                          <span>{totalEdge > 0 ? '+' : ''}{totalEdge.toFixed(1)} pts edge</span>
-                        )}
-                      </div>
-                    )}
-                    <div className="flex flex-col gap-1.5">
-                      <div
-                        className={`px-2 py-1.5 rounded-lg text-sm font-medium text-center ${
-                          pickOver
-                            ? ouStrong
-                              ? 'bg-green-700 text-white'
-                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
-                            : 'bg-gray-50 text-gray-500'
-                        }`}
-                      >
-                        O {Math.round(displayTotal * 2) / 2}
-                      </div>
-                      <div
-                        className={`px-2 py-1.5 rounded-lg text-sm font-medium text-center ${
-                          !pickOver
-                            ? ouStrong
-                              ? 'bg-green-700 text-white'
-                              : 'bg-green-100 text-green-800 ring-1 ring-green-300'
-                            : 'bg-gray-50 text-gray-500'
-                        }`}
-                      >
-                        U {Math.round(displayTotal * 2) / 2}
-                      </div>
+                    <div
+                      className={`px-2.5 py-2 rounded-lg text-sm font-bold text-center ${
+                        ouConf === 'high'
+                          ? 'bg-green-600 text-white'
+                          : ouConf === 'medium'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-400'
+                      }`}
+                    >
+                      {pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}
                     </div>
                   </div>
                 </div>

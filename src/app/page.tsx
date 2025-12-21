@@ -499,15 +499,17 @@ export default function Dashboard() {
             const isFinal = game.status === 'final';
             const awayScore = game.awayScore ?? 0;
             const homeScore = game.homeScore ?? 0;
-            const actualSpread = awayScore - homeScore; // positive = away won by X
             const actualTotal = awayScore + homeScore;
             const vegasSpread = prediction.vegasSpread ?? 0;
             const vegasTotal = prediction.vegasTotal ?? 44;
 
-            // Did our picks hit?
+            // Spread result: vegasSpread is from home perspective (positive = home underdog)
+            // Home covers if: homeScore + vegasSpread > awayScore
+            // Away covers if: awayScore > homeScore + vegasSpread
+            const homeAdjusted = homeScore + vegasSpread;
             const spreadResult: 'win' | 'loss' | 'push' | null = !isFinal ? null :
-              actualSpread === vegasSpread ? 'push' :
-              (pickHomeSpread ? actualSpread < vegasSpread : actualSpread > vegasSpread) ? 'win' : 'loss';
+              awayScore === homeAdjusted ? 'push' :
+              (pickHomeSpread ? awayScore < homeAdjusted : awayScore > homeAdjusted) ? 'win' : 'loss';
 
             const mlResult: 'win' | 'loss' | null = !isFinal ? null :
               (pickHomeML ? homeScore > awayScore : awayScore > homeScore) ? 'win' : 'loss';
@@ -766,7 +768,6 @@ export default function Dashboard() {
           games.filter(({ game }) => game.status === 'final').forEach(({ game, prediction }) => {
             const awayScore = game.awayScore ?? 0;
             const homeScore = game.homeScore ?? 0;
-            const actualSpread = awayScore - homeScore;
             const actualTotal = awayScore + homeScore;
             const vegasSpread = prediction.vegasSpread ?? 0;
             const vegasTotal = prediction.vegasTotal ?? 44;
@@ -783,9 +784,10 @@ export default function Dashboard() {
             const ouConf = prediction.ouConfidence || 'medium';
             const mlConf = prediction.mlConfidence || 'medium';
 
-            // ATS
-            if (actualSpread === vegasSpread) { atsP++; if (atsConf === 'high') hiAtsP++; }
-            else if (pickHomeSpread ? actualSpread < vegasSpread : actualSpread > vegasSpread) {
+            // ATS: home covers if homeScore + vegasSpread > awayScore
+            const homeAdjusted = homeScore + vegasSpread;
+            if (awayScore === homeAdjusted) { atsP++; if (atsConf === 'high') hiAtsP++; }
+            else if (pickHomeSpread ? awayScore < homeAdjusted : awayScore > homeAdjusted) {
               atsW++; if (atsConf === 'high') hiAtsW++;
             } else {
               atsL++; if (atsConf === 'high') hiAtsL++;
@@ -904,14 +906,15 @@ export default function Dashboard() {
               // Calculate results for this final game
               const awayScore = game.awayScore ?? 0;
               const homeScore = game.homeScore ?? 0;
-              const actualSpread = awayScore - homeScore;
               const actualTotal = awayScore + homeScore;
               const vegasSpread = prediction.vegasSpread ?? 0;
               const vegasTotal = prediction.vegasTotal ?? 44;
 
+              // Spread result: home covers if homeScore + vegasSpread > awayScore
+              const homeAdjusted = homeScore + vegasSpread;
               const spreadResult: 'win' | 'loss' | 'push' =
-                actualSpread === vegasSpread ? 'push' :
-                (pickHomeSpread ? actualSpread < vegasSpread : actualSpread > vegasSpread) ? 'win' : 'loss';
+                awayScore === homeAdjusted ? 'push' :
+                (pickHomeSpread ? awayScore < homeAdjusted : awayScore > homeAdjusted) ? 'win' : 'loss';
 
               const mlResult: 'win' | 'loss' =
                 (pickHomeML ? homeScore > awayScore : awayScore > homeScore) ? 'win' : 'loss';

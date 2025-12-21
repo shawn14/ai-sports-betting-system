@@ -347,16 +347,24 @@ export async function GET() {
       const awayTeam = teamsMap.get(game.awayTeamId);
       if (!homeTeam || !awayTeam) continue;
 
-      // Find matching odds by team names
+      // Find matching odds by team names and game time
       let vegasSpread: number | undefined;
       let vegasTotal: number | undefined;
+      const gameDate = new Date(game.gameTime || '').toISOString().split('T')[0];
+
       for (const [key, oddsArray] of oddsMap) {
         // Key format: "homeTeam_awayTeam_timestamp"
         const keyParts = key.split('_');
         const oddsHomeTeam = keyParts[0] || '';
         const oddsAwayTeam = keyParts[1] || '';
+        const oddsTime = keyParts.slice(2).join('_'); // Rejoin in case timestamp has underscores
+        const oddsDate = oddsTime ? new Date(oddsTime).toISOString().split('T')[0] : '';
 
-        if (matchesTeamName(oddsHomeTeam, homeTeam.name) && matchesTeamName(oddsAwayTeam, awayTeam.name)) {
+        // Match team names AND date
+        const teamsMatch = matchesTeamName(oddsHomeTeam, homeTeam.name) && matchesTeamName(oddsAwayTeam, awayTeam.name);
+        const dateMatches = !oddsDate || !gameDate || oddsDate === gameDate;
+
+        if (teamsMatch && dateMatches) {
           const consensus = getConsensusOdds(oddsArray);
           if (consensus) {
             vegasSpread = consensus.homeSpread;

@@ -15,14 +15,14 @@ export default function AboutPage() {
         <div className="bg-white rounded-xl p-6 border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">2024 Season Backtest Results</h2>
           <p className="text-sm text-gray-500 mb-4">
-            All predictions are backtested against the full 2024 NFL season (227 games through Week 15).
+            Results from 169 games with Vegas lines during the 2024 NFL season.
             Vegas lines are locked 1 hour before each game to ensure fair comparison.
           </p>
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <div className="text-2xl font-bold text-gray-700">50.0%</div>
+            <div className="bg-white rounded-xl p-4 border-2 border-green-500">
+              <div className="text-2xl font-bold text-green-600">55.7%</div>
               <div className="text-xs text-gray-500 mt-1">Against the Spread</div>
-              <div className="text-[10px] text-gray-400 mt-1">110-110-7</div>
+              <div className="text-[10px] text-gray-400 mt-1">93-74-2</div>
             </div>
             <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
               <div className="text-2xl font-bold text-gray-700">63.4%</div>
@@ -30,13 +30,13 @@ export default function AboutPage() {
               <div className="text-[10px] text-gray-400 mt-1">144-83</div>
             </div>
             <div className="bg-white rounded-xl p-4 border-2 border-green-500">
-              <div className="text-2xl font-bold text-green-600">56.7%</div>
+              <div className="text-2xl font-bold text-green-600">56.3%</div>
               <div className="text-xs text-gray-500 mt-1">Over/Under</div>
-              <div className="text-[10px] text-gray-400 mt-1">123-94-10</div>
+              <div className="text-[10px] text-gray-400 mt-1">94-73-2</div>
             </div>
           </div>
           <p className="text-xs text-gray-400 mt-4 text-center">
-            56.7% O/U is profitable at standard -110 odds. Break-even is 52.4%.
+            Both ATS and O/U are profitable at standard -110 odds. Break-even is 52.4%.
           </p>
         </div>
 

@@ -365,22 +365,28 @@ export async function GET(request: Request) {
     // 6. Merge backtest results (new + existing)
     const existingResults = existingState?.backtest?.results || [];
 
-    // Enrich existing results with historical odds if available
+    // Division lookup for situation flags
+    const DIVISIONS: Record<string, string[]> = {
+      'AFC East': ['BUF', 'MIA', 'NE', 'NYJ'],
+      'AFC North': ['BAL', 'CIN', 'CLE', 'PIT'],
+      'AFC South': ['HOU', 'IND', 'JAX', 'TEN'],
+      'AFC West': ['DEN', 'KC', 'LV', 'LAC'],
+      'NFC East': ['DAL', 'NYG', 'PHI', 'WAS'],
+      'NFC North': ['CHI', 'DET', 'GB', 'MIN'],
+      'NFC South': ['ATL', 'CAR', 'NO', 'TB'],
+      'NFC West': ['ARI', 'LAR', 'SEA', 'SF'],
+    };
+    const getDivision = (abbr: string) => Object.entries(DIVISIONS).find(([, teams]) => teams.includes(abbr))?.[0];
+
+    // Enrich existing results with historical odds and situation flags
     const enrichedExistingResults = existingResults.map(r => {
-      // Skip if already has Vegas data
-      if (r.vegasSpread !== undefined && r.atsResult !== undefined) {
-        return r;
-      }
-
       const storedOdds = historicalOdds[r.gameId];
-      if (!storedOdds) return r;
+      const vegasSpread = storedOdds?.vegasSpread ?? r.vegasSpread;
+      const vegasTotal = storedOdds?.vegasTotal ?? r.vegasTotal;
 
-      const vegasSpread = storedOdds.vegasSpread;
-      const vegasTotal = storedOdds.vegasTotal;
-
-      // Calculate ATS result vs Vegas
-      let atsResult: 'win' | 'loss' | 'push' | undefined;
-      if (vegasSpread !== undefined && r.actualSpread !== undefined) {
+      // Calculate ATS result vs Vegas (if not already set)
+      let atsResult = r.atsResult;
+      if (!atsResult && vegasSpread !== undefined && r.actualSpread !== undefined) {
         const pickHome = r.predictedSpread < vegasSpread;
         if (pickHome) {
           atsResult = r.actualSpread < vegasSpread ? 'win' : r.actualSpread > vegasSpread ? 'loss' : 'push';
@@ -389,9 +395,9 @@ export async function GET(request: Request) {
         }
       }
 
-      // Calculate O/U result vs Vegas
-      let ouVegasResult: 'win' | 'loss' | 'push' | undefined;
-      if (vegasTotal !== undefined && vegasTotal > 0 && r.actualTotal !== undefined) {
+      // Calculate O/U result vs Vegas (if not already set)
+      let ouVegasResult = r.ouVegasResult;
+      if (!ouVegasResult && vegasTotal !== undefined && vegasTotal > 0 && r.actualTotal !== undefined) {
         const pickOver = r.predictedTotal > vegasTotal;
         if (pickOver) {
           ouVegasResult = r.actualTotal > vegasTotal ? 'win' : r.actualTotal < vegasTotal ? 'loss' : 'push';
@@ -400,12 +406,30 @@ export async function GET(request: Request) {
         }
       }
 
+      // Calculate situation flags (if not already set)
+      const week = r.week || 0;
+      const absVegasSpread = vegasSpread !== undefined ? Math.abs(vegasSpread) : 0;
+      const eloDiff = Math.abs((r.homeElo || 1500) - (r.awayElo || 1500));
+
+      const isDivisional = r.isDivisional ?? (getDivision(r.homeTeam) === getDivision(r.awayTeam));
+      const isLateSeasonGame = r.isLateSeasonGame ?? (week >= 13);
+      const isLargeSpread = r.isLargeSpread ?? (absVegasSpread >= 7);
+      const isSmallSpread = r.isSmallSpread ?? (absVegasSpread <= 3 && absVegasSpread > 0);
+      const isMediumSpread = r.isMediumSpread ?? (absVegasSpread > 3 && absVegasSpread < 7);
+      const isEloMismatch = r.isEloMismatch ?? (eloDiff > 100);
+
       return {
         ...r,
         vegasSpread,
         vegasTotal,
         atsResult,
         ouVegasResult,
+        isDivisional,
+        isLateSeasonGame,
+        isLargeSpread,
+        isSmallSpread,
+        isMediumSpread,
+        isEloMismatch,
       };
     });
 

@@ -45,6 +45,56 @@ interface VegasStats {
   ouVegas: { wins: number; losses: number; pushes: number; winPct: number; gamesWithOdds: number };
 }
 
+interface SituationStats {
+  name: string;
+  wins: number;
+  losses: number;
+  pushes: number;
+  winPct: number;
+  total: number;
+  badge: string;
+  highlight: boolean;
+}
+
+function computeSituationStats(results: BacktestResult[]): SituationStats[] {
+  const situations = {
+    divisional: { name: 'Divisional Games', wins: 0, losses: 0, pushes: 0, badge: 'DIV' },
+    lateSeason: { name: 'Late Season (Wk 13+)', wins: 0, losses: 0, pushes: 0, badge: 'LATE SZN' },
+    largeSpread: { name: 'Large Spread (≥7)', wins: 0, losses: 0, pushes: 0, badge: 'BIG LINE' },
+    smallSpread: { name: 'Small Spread (≤3)', wins: 0, losses: 0, pushes: 0, badge: 'CLOSE' },
+    mediumSpread: { name: 'Medium Spread (3.5-6.5)', wins: 0, losses: 0, pushes: 0, badge: 'AVOID' },
+    eloMismatch: { name: 'Elo Mismatch (>100)', wins: 0, losses: 0, pushes: 0, badge: 'MISMATCH' },
+  };
+
+  for (const r of results) {
+    if (!r.atsResult || r.vegasSpread === undefined) continue;
+
+    const addResult = (key: keyof typeof situations) => {
+      if (r.atsResult === 'win') situations[key].wins++;
+      else if (r.atsResult === 'loss') situations[key].losses++;
+      else situations[key].pushes++;
+    };
+
+    if (r.isDivisional) addResult('divisional');
+    if (r.isLateSeasonGame) addResult('lateSeason');
+    if (r.isLargeSpread) addResult('largeSpread');
+    if (r.isSmallSpread) addResult('smallSpread');
+    if (r.isMediumSpread) addResult('mediumSpread');
+    if (r.isEloMismatch) addResult('eloMismatch');
+  }
+
+  return Object.values(situations).map(s => {
+    const total = s.wins + s.losses;
+    const winPct = total > 0 ? Math.round((s.wins / total) * 1000) / 10 : 0;
+    return {
+      ...s,
+      total: s.wins + s.losses + s.pushes,
+      winPct,
+      highlight: winPct >= 60 || (s.badge === 'AVOID' && winPct < 50),
+    };
+  }).filter(s => s.total > 0);
+}
+
 function computeVegasStats(results: BacktestResult[]): VegasStats {
   let atsWins = 0, atsLosses = 0, atsPushes = 0;
   let ouWins = 0, ouLosses = 0, ouPushes = 0;
@@ -318,6 +368,7 @@ export default function ResultsPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [vegasStats, setVegasStats] = useState<VegasStats | null>(null);
+  const [situationStats, setSituationStats] = useState<SituationStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAnalysis, setShowAnalysis] = useState(false);
 
@@ -335,6 +386,7 @@ export default function ResultsPage() {
         if (backtestResults.length > 0) {
           setAnalysis(computeAnalysis(backtestResults));
           setVegasStats(computeVegasStats(backtestResults));
+          setSituationStats(computeSituationStats(backtestResults));
         }
       } catch (error) {
         console.error('Error fetching backtest:', error);
@@ -430,6 +482,58 @@ export default function ResultsPage() {
                   <div className="text-xs text-gray-500 mt-1">{vegasStats.ouVegas.gamesWithOdds} games with Vegas lines</div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* 60%+ Situations Breakdown */}
+          {situationStats.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-4">
+              <h2 className="text-amber-800 font-bold text-sm mb-3">ATS Performance by Situation (60%+ Opportunities)</h2>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {situationStats.map((sit) => (
+                  <div
+                    key={sit.badge}
+                    className={`rounded-lg p-3 border ${
+                      sit.badge === 'AVOID'
+                        ? 'bg-red-50 border-red-200'
+                        : sit.winPct >= 60
+                        ? 'bg-green-50 border-green-300'
+                        : 'bg-white border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
+                        sit.badge === 'AVOID'
+                          ? 'bg-red-500 text-white'
+                          : sit.winPct >= 60
+                          ? 'bg-green-600 text-white'
+                          : 'bg-gray-400 text-white'
+                      }`}>
+                        {sit.badge}
+                      </span>
+                      <span className="text-xs text-gray-600 truncate">{sit.name}</span>
+                    </div>
+                    <div className="text-lg font-bold text-gray-900">
+                      {sit.wins}-{sit.losses}
+                      {sit.pushes > 0 && <span className="text-gray-400 text-sm">-{sit.pushes}</span>}
+                    </div>
+                    <div className={`text-lg font-mono font-bold ${
+                      sit.badge === 'AVOID'
+                        ? 'text-red-600'
+                        : sit.winPct >= 60
+                        ? 'text-green-600'
+                        : sit.winPct >= 55
+                        ? 'text-amber-600'
+                        : 'text-gray-500'
+                    }`}>
+                      {sit.winPct}%
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-amber-700 mt-3">
+                Focus on games with 60%+ situations. Avoid medium spreads (3.5-6.5 pts).
+              </p>
             </div>
           )}
 

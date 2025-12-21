@@ -139,11 +139,51 @@ export async function GET() {
         const historicalEvents = await fetchHistoricalOdds(dateKey);
         log(`Got ${historicalEvents.length} events from API`);
 
+        // Team abbreviation to name mapping
+        const teamNames: Record<string, string[]> = {
+          'ARI': ['Arizona Cardinals', 'Cardinals'],
+          'ATL': ['Atlanta Falcons', 'Falcons'],
+          'BAL': ['Baltimore Ravens', 'Ravens'],
+          'BUF': ['Buffalo Bills', 'Bills'],
+          'CAR': ['Carolina Panthers', 'Panthers'],
+          'CHI': ['Chicago Bears', 'Bears'],
+          'CIN': ['Cincinnati Bengals', 'Bengals'],
+          'CLE': ['Cleveland Browns', 'Browns'],
+          'DAL': ['Dallas Cowboys', 'Cowboys'],
+          'DEN': ['Denver Broncos', 'Broncos'],
+          'DET': ['Detroit Lions', 'Lions'],
+          'GB': ['Green Bay Packers', 'Packers'],
+          'HOU': ['Houston Texans', 'Texans'],
+          'IND': ['Indianapolis Colts', 'Colts'],
+          'JAX': ['Jacksonville Jaguars', 'Jaguars'],
+          'KC': ['Kansas City Chiefs', 'Chiefs'],
+          'LAC': ['Los Angeles Chargers', 'Chargers'],
+          'LAR': ['Los Angeles Rams', 'Rams'],
+          'LV': ['Las Vegas Raiders', 'Raiders'],
+          'MIA': ['Miami Dolphins', 'Dolphins'],
+          'MIN': ['Minnesota Vikings', 'Vikings'],
+          'NE': ['New England Patriots', 'Patriots'],
+          'NO': ['New Orleans Saints', 'Saints'],
+          'NYG': ['New York Giants', 'Giants'],
+          'NYJ': ['New York Jets', 'Jets'],
+          'PHI': ['Philadelphia Eagles', 'Eagles'],
+          'PIT': ['Pittsburgh Steelers', 'Steelers'],
+          'SEA': ['Seattle Seahawks', 'Seahawks'],
+          'SF': ['San Francisco 49ers', '49ers'],
+          'TB': ['Tampa Bay Buccaneers', 'Buccaneers'],
+          'TEN': ['Tennessee Titans', 'Titans'],
+          'WAS': ['Washington Commanders', 'Commanders'],
+        };
+
+        const matchesTeam = (apiTeam: string, abbr: string): boolean => {
+          const names = teamNames[abbr] || [];
+          return names.some(name => apiTeam.includes(name) || name.includes(apiTeam));
+        };
+
         for (const game of games) {
           // Find matching event
           const matchingEvent = historicalEvents.find(e =>
-            (e.home_team.includes(game.homeTeam) || game.homeTeam.includes(e.home_team.split(' ').pop() || '')) &&
-            (e.away_team.includes(game.awayTeam) || game.awayTeam.includes(e.away_team.split(' ').pop() || ''))
+            matchesTeam(e.home_team, game.homeTeam) && matchesTeam(e.away_team, game.awayTeam)
           );
 
           if (matchingEvent) {

@@ -356,11 +356,13 @@ export async function GET(request: Request) {
     };
 
     // 9. Upload to blob
-    log('Uploading to blob storage...');
-    const blob = await put('prediction-matrix-data.json', JSON.stringify(blobData), {
+    const jsonString = JSON.stringify(blobData);
+    log(`Uploading to blob storage... (${Math.round(jsonString.length / 1024)}KB)`);
+    const blob = await put('prediction-matrix-data.json', jsonString, {
       access: 'public',
       contentType: 'application/json',
       addRandomSuffix: false,
+      allowOverwrite: true,
     });
 
     log(`Blob uploaded: ${blob.url}`);

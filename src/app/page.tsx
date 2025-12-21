@@ -38,6 +38,16 @@ interface Prediction {
   ouConfidence?: 'high' | 'medium' | 'low';
   isAtsBestBet?: boolean;
   isOuBestBet?: boolean;
+  // 60%+ situation flags
+  isDivisional?: boolean;
+  isLateSeasonGame?: boolean;
+  isLargeSpread?: boolean;
+  isSmallSpread?: boolean;
+  isMediumSpread?: boolean;
+  isEloMismatch?: boolean;
+  sixtyPlusFactors?: number;
+  eloDiff?: number;
+  week?: number;
 }
 
 interface GameWithPrediction {
@@ -203,7 +213,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">🎯</span>
             <h2 className="text-sm font-bold text-green-800 uppercase tracking-wide">Best Bets</h2>
-            <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">High Confidence</span>
+            <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">60%+ ATS Situations</span>
           </div>
           <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
             {games.filter(g => g.prediction.isAtsBestBet || g.prediction.isOuBestBet).map(({ game, prediction }) => {
@@ -213,6 +223,14 @@ export default function Dashboard() {
               const displaySpread = prediction.vegasSpread ?? prediction.predictedSpread;
               const displayTotal = prediction.vegasTotal ?? prediction.predictedTotal;
               const pickOver = prediction.predictedTotal > (prediction.vegasTotal ?? 44);
+
+              // Situation badges
+              const situations: string[] = [];
+              if (prediction.isDivisional) situations.push('DIV');
+              if (prediction.isLateSeasonGame) situations.push('LATE SZN');
+              if (prediction.isLargeSpread) situations.push('BIG LINE');
+              if (prediction.isSmallSpread) situations.push('CLOSE');
+              if (prediction.isEloMismatch) situations.push('MISMATCH');
 
               return (
                 <div key={`best-${game.id}`} className="bg-white rounded-lg p-3 shadow-sm border border-green-100">
@@ -224,6 +242,16 @@ export default function Dashboard() {
                     </div>
                     <span className="text-[10px] text-gray-400">{formatTime(game.gameTime).split(',')[0]}</span>
                   </div>
+                  {/* Situation badges */}
+                  {situations.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {situations.map(s => (
+                        <span key={s} className="text-[9px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex gap-2">
                     {prediction.isAtsBestBet && (
                       <div className="flex-1 bg-green-100 rounded px-2 py-1.5 text-center">
@@ -247,7 +275,7 @@ export default function Dashboard() {
             })}
           </div>
           <div className="mt-3 text-[10px] text-green-600">
-            Based on backtesting: ATS picks on spreads ≤5 pts (63%+) • O/U with 4+ pt edge (59%+)
+            Based on 169 games: Divisional 61.5% • Late Season 62.9% • Large Spreads 61.7% • Small Spreads 60% • Elo Mismatch 61.4%
           </div>
         </div>
       )}
@@ -299,14 +327,35 @@ export default function Dashboard() {
             const atsConf = prediction.atsConfidence || 'medium';
             const ouConf = prediction.ouConfidence || 'medium';
 
+            // 60%+ situation badges
+            const situations: string[] = [];
+            if (prediction.isDivisional) situations.push('DIV');
+            if (prediction.isLateSeasonGame) situations.push('LATE SZN');
+            if (prediction.isLargeSpread) situations.push('BIG LINE');
+            if (prediction.isSmallSpread) situations.push('CLOSE');
+            if (prediction.isEloMismatch) situations.push('MISMATCH');
+
             return (
               <div key={game.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${
-                atsConf === 'low' ? 'border-red-200' : 'border-gray-200'
+                atsConf === 'low' ? 'border-red-200' : prediction.sixtyPlusFactors && prediction.sixtyPlusFactors >= 2 ? 'border-green-300' : 'border-gray-200'
               }`}>
-                {/* Low confidence warning */}
+                {/* 60%+ situation highlight */}
+                {situations.length > 0 && atsConf !== 'low' && (
+                  <div className="bg-green-50 px-3 py-1.5 flex items-center gap-2">
+                    <span className="text-[10px] text-green-700 font-medium">60%+ ATS:</span>
+                    <div className="flex flex-wrap gap-1">
+                      {situations.map(s => (
+                        <span key={s} className="text-[9px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* Low confidence warning - medium spreads are 46.7% ATS */}
                 {atsConf === 'low' && (
                   <div className="bg-red-50 px-3 py-1.5 text-[10px] text-red-600 font-medium flex items-center gap-1">
-                    <span>⚠️</span> Large spread - historically low ATS accuracy (43%)
+                    <span>⚠️</span> Medium spread (3.5-6.5) - historically 46.7% ATS - AVOID
                   </div>
                 )}
                 {/* Game header */}

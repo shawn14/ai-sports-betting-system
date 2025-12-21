@@ -26,6 +26,86 @@ interface BacktestResult {
   mlResult: 'win' | 'loss';
   ouPick?: 'over' | 'under';
   ouResult?: 'win' | 'loss' | 'push';
+  // Vegas odds data
+  vegasSpread?: number;
+  vegasTotal?: number;
+  atsResult?: 'win' | 'loss' | 'push';
+  ouVegasResult?: 'win' | 'loss' | 'push';
+  // 60%+ situation flags
+  isDivisional?: boolean;
+  isLateSeasonGame?: boolean;
+  isLargeSpread?: boolean;
+  isSmallSpread?: boolean;
+  isMediumSpread?: boolean;
+  isEloMismatch?: boolean;
+}
+
+interface VegasStats {
+  ats: { wins: number; losses: number; pushes: number; winPct: number; gamesWithOdds: number };
+  ouVegas: { wins: number; losses: number; pushes: number; winPct: number; gamesWithOdds: number };
+}
+
+function computeVegasStats(results: BacktestResult[]): VegasStats {
+  let atsWins = 0, atsLosses = 0, atsPushes = 0;
+  let ouWins = 0, ouLosses = 0, ouPushes = 0;
+  let gamesWithSpreadOdds = 0, gamesWithTotalOdds = 0;
+
+  for (const r of results) {
+    // ATS vs Vegas
+    if (r.vegasSpread !== undefined && r.vegasSpread !== null) {
+      gamesWithSpreadOdds++;
+      if (r.atsResult === 'win') atsWins++;
+      else if (r.atsResult === 'loss') atsLosses++;
+      else if (r.atsResult === 'push') atsPushes++;
+    }
+
+    // O/U vs Vegas
+    if (r.vegasTotal !== undefined && r.vegasTotal !== null && r.vegasTotal > 0) {
+      gamesWithTotalOdds++;
+      // Use stored result if available, otherwise calculate
+      if (r.ouVegasResult) {
+        if (r.ouVegasResult === 'win') ouWins++;
+        else if (r.ouVegasResult === 'loss') ouLosses++;
+        else ouPushes++;
+      } else {
+        // Fallback: calculate O/U result vs Vegas total
+        const actualTotal = r.actualTotal;
+        const vegasTotal = r.vegasTotal;
+        const predictedTotal = r.predictedTotal;
+        const pickOver = predictedTotal > vegasTotal;
+
+        if (pickOver) {
+          if (actualTotal > vegasTotal) ouWins++;
+          else if (actualTotal < vegasTotal) ouLosses++;
+          else ouPushes++;
+        } else {
+          if (actualTotal < vegasTotal) ouWins++;
+          else if (actualTotal > vegasTotal) ouLosses++;
+          else ouPushes++;
+        }
+      }
+    }
+  }
+
+  const atsTotal = atsWins + atsLosses;
+  const ouTotal = ouWins + ouLosses;
+
+  return {
+    ats: {
+      wins: atsWins,
+      losses: atsLosses,
+      pushes: atsPushes,
+      winPct: atsTotal > 0 ? Math.round((atsWins / atsTotal) * 1000) / 10 : 0,
+      gamesWithOdds: gamesWithSpreadOdds,
+    },
+    ouVegas: {
+      wins: ouWins,
+      losses: ouLosses,
+      pushes: ouPushes,
+      winPct: ouTotal > 0 ? Math.round((ouWins / ouTotal) * 1000) / 10 : 0,
+      gamesWithOdds: gamesWithTotalOdds,
+    },
+  };
 }
 
 interface Summary {
@@ -237,6 +317,7 @@ export default function ResultsPage() {
   const [results, setResults] = useState<BacktestResult[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [vegasStats, setVegasStats] = useState<VegasStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAnalysis, setShowAnalysis] = useState(false);
 
@@ -253,6 +334,7 @@ export default function ResultsPage() {
         // Compute analysis client-side from blob data
         if (backtestResults.length > 0) {
           setAnalysis(computeAnalysis(backtestResults));
+          setVegasStats(computeVegasStats(backtestResults));
         }
       } catch (error) {
         console.error('Error fetching backtest:', error);
@@ -316,43 +398,83 @@ export default function ResultsPage() {
 
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-3 gap-4">
-          {/* Spread */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <div className="text-gray-500 text-sm font-medium mb-1">Against the Spread</div>
-            <div className="text-3xl font-bold text-gray-900">
-              {summary.spread.wins}-{summary.spread.losses}
-              {summary.spread.pushes > 0 && <span className="text-gray-400">-{summary.spread.pushes}</span>}
-            </div>
-            <div className={`text-2xl font-mono font-bold ${summary.spread.winPct > 52.4 ? 'text-green-600' : summary.spread.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
-              {summary.spread.winPct}%
-            </div>
-            <div className="text-xs text-gray-400 mt-2">Need 52.4% to beat vig</div>
-          </div>
+        <div className="space-y-4">
+          {/* ATS vs Vegas - The Important Stats */}
+          {vegasStats && vegasStats.ats.gamesWithOdds > 0 && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+              <h2 className="text-green-800 font-bold text-sm mb-3">ATS vs Vegas Lines (What Matters for Betting)</h2>
+              <div className="grid grid-cols-2 gap-4">
+                {/* ATS vs Vegas Spread */}
+                <div className="bg-white rounded-lg p-4 border border-green-200">
+                  <div className="text-gray-600 text-sm font-medium mb-1">Spread vs Vegas</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {vegasStats.ats.wins}-{vegasStats.ats.losses}
+                    {vegasStats.ats.pushes > 0 && <span className="text-gray-400">-{vegasStats.ats.pushes}</span>}
+                  </div>
+                  <div className={`text-xl font-mono font-bold ${vegasStats.ats.winPct > 52.4 ? 'text-green-600' : vegasStats.ats.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+                    {vegasStats.ats.winPct}%
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">{vegasStats.ats.gamesWithOdds} games with Vegas lines</div>
+                </div>
 
-          {/* Moneyline */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <div className="text-gray-500 text-sm font-medium mb-1">Moneyline</div>
-            <div className="text-3xl font-bold text-gray-900">
-              {summary.moneyline.wins}-{summary.moneyline.losses}
+                {/* O/U vs Vegas Total */}
+                <div className="bg-white rounded-lg p-4 border border-green-200">
+                  <div className="text-gray-600 text-sm font-medium mb-1">O/U vs Vegas Total</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {vegasStats.ouVegas.wins}-{vegasStats.ouVegas.losses}
+                    {vegasStats.ouVegas.pushes > 0 && <span className="text-gray-400">-{vegasStats.ouVegas.pushes}</span>}
+                  </div>
+                  <div className={`text-xl font-mono font-bold ${vegasStats.ouVegas.winPct > 52.4 ? 'text-green-600' : vegasStats.ouVegas.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+                    {vegasStats.ouVegas.winPct}%
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">{vegasStats.ouVegas.gamesWithOdds} games with Vegas lines</div>
+                </div>
+              </div>
             </div>
-            <div className={`text-2xl font-mono font-bold ${summary.moneyline.winPct > 50 ? 'text-green-600' : 'text-red-500'}`}>
-              {summary.moneyline.winPct}%
-            </div>
-            <div className="text-xs text-gray-400 mt-2">Picking winners straight up</div>
-          </div>
+          )}
 
-          {/* Over/Under */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
-            <div className="text-gray-500 text-sm font-medium mb-1">Over/Under</div>
-            <div className="text-3xl font-bold text-gray-900">
-              {summary.overUnder.wins}-{summary.overUnder.losses}
-              {summary.overUnder.pushes > 0 && <span className="text-gray-400">-{summary.overUnder.pushes}</span>}
+          {/* Directional Accuracy - For Reference */}
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+            <h2 className="text-gray-600 font-bold text-sm mb-3">Directional Accuracy (Prediction vs Outcome)</h2>
+            <div className="grid grid-cols-3 gap-4">
+              {/* Spread Direction */}
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="text-gray-500 text-xs font-medium mb-1">Spread Direction</div>
+                <div className="text-xl font-bold text-gray-900">
+                  {summary.spread.wins}-{summary.spread.losses}
+                  {summary.spread.pushes > 0 && <span className="text-gray-400 text-lg">-{summary.spread.pushes}</span>}
+                </div>
+                <div className={`text-lg font-mono font-bold ${summary.spread.winPct > 52.4 ? 'text-green-600' : summary.spread.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+                  {summary.spread.winPct}%
+                </div>
+                <div className="text-xs text-gray-400 mt-1">Predicted margin covered</div>
+              </div>
+
+              {/* Moneyline */}
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="text-gray-500 text-xs font-medium mb-1">Moneyline</div>
+                <div className="text-xl font-bold text-gray-900">
+                  {summary.moneyline.wins}-{summary.moneyline.losses}
+                </div>
+                <div className={`text-lg font-mono font-bold ${summary.moneyline.winPct > 50 ? 'text-green-600' : 'text-red-500'}`}>
+                  {summary.moneyline.winPct}%
+                </div>
+                <div className="text-xs text-gray-400 mt-1">Picking winners straight up</div>
+              </div>
+
+              {/* Over/Under Direction */}
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="text-gray-500 text-xs font-medium mb-1">O/U Direction</div>
+                <div className="text-xl font-bold text-gray-900">
+                  {summary.overUnder.wins}-{summary.overUnder.losses}
+                  {summary.overUnder.pushes > 0 && <span className="text-gray-400 text-lg">-{summary.overUnder.pushes}</span>}
+                </div>
+                <div className={`text-lg font-mono font-bold ${summary.overUnder.winPct > 52.4 ? 'text-green-600' : summary.overUnder.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
+                  {summary.overUnder.winPct}%
+                </div>
+                <div className="text-xs text-gray-400 mt-1">vs league avg (44 pts)</div>
+              </div>
             </div>
-            <div className={`text-2xl font-mono font-bold ${summary.overUnder.winPct > 52.4 ? 'text-green-600' : summary.overUnder.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
-              {summary.overUnder.winPct}%
-            </div>
-            <div className="text-xs text-gray-400 mt-2">vs league avg (44 pts)</div>
           </div>
         </div>
       )}

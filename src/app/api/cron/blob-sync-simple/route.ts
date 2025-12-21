@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { put, head } from '@vercel/blob';
 import { fetchNFLTeams, fetchNFLSchedule, fetchAllCompletedGames } from '@/services/espn';
 import { updateEloAfterGame } from '@/services/elo';
-import { Team } from '@/types';
+import { fetchNFLOdds, getConsensusOdds } from '@/services/odds';
+import { Team, Odds } from '@/types';
 
 // Constants
 const LEAGUE_AVG_PPG = 22;
@@ -264,11 +265,21 @@ export async function GET() {
       ...(existingState?.backtest?.results || []),
     ];
 
-    // 7. Fetch upcoming games and generate predictions
+    // 7. Fetch upcoming games and Vegas odds
     log('Fetching upcoming games...');
     const upcomingGames = await fetchNFLSchedule();
     const upcoming = upcomingGames.filter(g => g.status !== 'final');
     log(`Found ${upcoming.length} upcoming games`);
+
+    // Fetch Vegas odds
+    log('Fetching Vegas odds...');
+    let oddsMap = new Map<string, Partial<Odds>[]>();
+    try {
+      oddsMap = await fetchNFLOdds();
+      log(`Fetched odds for ${oddsMap.size} games`);
+    } catch (err) {
+      log(`Failed to fetch odds: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
 
     const gamesWithPredictions = [];
     for (const game of upcoming) {
@@ -276,6 +287,20 @@ export async function GET() {
       const homeTeam = teamsMap.get(game.homeTeamId);
       const awayTeam = teamsMap.get(game.awayTeamId);
       if (!homeTeam || !awayTeam) continue;
+
+      // Find matching odds by team names
+      let vegasSpread: number | undefined;
+      let vegasTotal: number | undefined;
+      for (const [key, oddsArray] of oddsMap) {
+        if (key.includes(homeTeam.name) && key.includes(awayTeam.name)) {
+          const consensus = getConsensusOdds(oddsArray);
+          if (consensus) {
+            vegasSpread = consensus.homeSpread;
+            vegasTotal = consensus.total;
+          }
+          break;
+        }
+      }
 
       const { homeScore: predHome, awayScore: predAway } = predictScore(
         homeTeam.eloRating, awayTeam.eloRating,
@@ -300,6 +325,8 @@ export async function GET() {
           predictedTotal: predHome + predAway,
           homeWinProbability: homeWinProb,
           confidence: 0.5,
+          vegasSpread,
+          vegasTotal,
         },
       });
     }

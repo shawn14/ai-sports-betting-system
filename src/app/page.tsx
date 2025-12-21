@@ -95,7 +95,7 @@ export default function Dashboard() {
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [showBestBets, setShowBestBets] = useState(true);
+  const [sortBy, setSortBy] = useState<'time' | 'confidence'>('confidence');
   const scoreboardRef = useRef<HTMLDivElement>(null);
 
   const scrollScoreboard = (direction: 'left' | 'right') => {
@@ -439,110 +439,33 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Best Bets Section - Collapsible */}
-      {games.filter(g => g.prediction.isAtsBestBet || g.prediction.isOuBestBet || g.prediction.isMlBestBet).length > 0 && (
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 overflow-hidden">
-          <button
-            onClick={() => setShowBestBets(!showBestBets)}
-            className="w-full flex items-center justify-between p-3 hover:bg-green-100/50 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-base">🎯</span>
-              <h2 className="text-sm font-bold text-green-800 uppercase tracking-wide">Best Bets</h2>
-              <span className="text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
-                {games.filter(g => g.prediction.isAtsBestBet || g.prediction.isOuBestBet || g.prediction.isMlBestBet).length} games
-              </span>
-            </div>
-            <svg
-              className={`w-5 h-5 text-green-600 transition-transform ${showBestBets ? 'rotate-180' : ''}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {showBestBets && (
-          <div className="px-4 pb-4">
-          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
-            {games.filter(g => g.prediction.isAtsBestBet || g.prediction.isOuBestBet || g.prediction.isMlBestBet).map(({ game, prediction }) => {
-              const away = game.awayTeam?.abbreviation || 'AWAY';
-              const home = game.homeTeam?.abbreviation || 'HOME';
-              const pickHomeSpread = prediction.predictedSpread < 0;
-              const displaySpread = prediction.vegasSpread ?? prediction.predictedSpread;
-              const displayTotal = prediction.vegasTotal ?? prediction.predictedTotal;
-              const pickOver = prediction.predictedTotal > (prediction.vegasTotal ?? 44);
-              const pickHomeML = prediction.homeWinProbability > 0.5;
-
-              // Situation badges
-              const situations: string[] = [];
-              if (prediction.isDivisional) situations.push('DIV');
-              if (prediction.isLateSeasonGame) situations.push('LATE SZN');
-              if (prediction.isLargeSpread) situations.push('BIG LINE');
-              if (prediction.isSmallSpread) situations.push('CLOSE');
-              if (prediction.isEloMismatch) situations.push('MISMATCH');
-
-              return (
-                <div key={`best-${game.id}`} className="bg-white rounded-lg p-3 shadow-sm border border-green-100">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <img src={getLogoUrl(away)} alt={away} className="w-5 h-5 object-contain" />
-                      <span className="text-xs text-gray-500">@</span>
-                      <img src={getLogoUrl(home)} alt={home} className="w-5 h-5 object-contain" />
-                    </div>
-                    <span className="text-[10px] text-gray-400">{formatTime(game.gameTime).split(',')[0]}</span>
-                  </div>
-                  {/* Situation badges */}
-                  {situations.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {situations.map(s => (
-                        <span key={s} className="text-[9px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    {prediction.isAtsBestBet && (
-                      <div className="flex-1 bg-green-100 rounded px-2 py-1.5 text-center">
-                        <div className="text-[10px] text-green-600 font-medium">ATS</div>
-                        <div className="text-sm font-bold text-green-800">
-                          {pickHomeSpread ? home : away} {formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}
-                        </div>
-                      </div>
-                    )}
-                    {prediction.isMlBestBet && (
-                      <div className="flex-1 bg-green-100 rounded px-2 py-1.5 text-center">
-                        <div className="text-[10px] text-green-600 font-medium">ML 78%</div>
-                        <div className="text-sm font-bold text-green-800">
-                          {pickHomeML ? home : away}
-                        </div>
-                      </div>
-                    )}
-                    {prediction.isOuBestBet && (
-                      <div className="flex-1 bg-green-100 rounded px-2 py-1.5 text-center">
-                        <div className="text-[10px] text-green-600 font-medium">O/U 60%</div>
-                        <div className="text-sm font-bold text-green-800">
-                          {pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-3 text-[10px] text-green-600">
-            High confidence picks: ML 15%+ edge = 77.9% • O/U 5+ pt edge = 59.7% • ATS w/ 60%+ factors
-          </div>
-          </div>
-        )}
-        </div>
-      )}
-
       {/* Upcoming Picks Header */}
       <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-        <h1 className="text-xl font-bold text-gray-900">This Week's Picks</h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold text-gray-900">This Week's Picks</h1>
+          <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+            <button
+              onClick={() => setSortBy('confidence')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                sortBy === 'confidence'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Best Picks
+            </button>
+            <button
+              onClick={() => setSortBy('time')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                sortBy === 'time'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              By Time
+            </button>
+          </div>
+        </div>
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-600 rounded-full"></span> High conf</span>
           <span className="flex items-center gap-1"><span className="w-2 h-2 bg-yellow-500 rounded-full"></span> Medium</span>
@@ -556,7 +479,21 @@ export default function Dashboard() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {games.map(({ game, prediction }) => {
+          {[...games].sort((a, b) => {
+            if (sortBy === 'time') {
+              return new Date(a.game.gameTime).getTime() - new Date(b.game.gameTime).getTime();
+            }
+            // Sort by confidence: ML best bets first, then O/U, then ATS, then by edge
+            const aScore = (a.prediction.isMlBestBet ? 100 : 0) +
+                          (a.prediction.isOuBestBet ? 50 : 0) +
+                          (a.prediction.isAtsBestBet ? 25 : 0) +
+                          (a.prediction.mlEdge ?? 0);
+            const bScore = (b.prediction.isMlBestBet ? 100 : 0) +
+                          (b.prediction.isOuBestBet ? 50 : 0) +
+                          (b.prediction.isAtsBestBet ? 25 : 0) +
+                          (b.prediction.mlEdge ?? 0);
+            return bScore - aScore;
+          }).map(({ game, prediction }) => {
             const away = game.awayTeam?.abbreviation || 'AWAY';
             const home = game.homeTeam?.abbreviation || 'HOME';
             const ourSpread = prediction.predictedSpread;
@@ -828,7 +765,7 @@ export default function Dashboard() {
                     {hasVegas && (
                       <div className={`text-[10px] text-center mb-1.5 font-medium ${ouConf === 'high' ? 'text-green-600' : 'text-gray-400'}`}>
                         {ouConf === 'high' ? (
-                          <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">59.7% hit rate</span>
+                          <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">57.4% hit rate</span>
                         ) : (
                           <span>{totalEdge > 0 ? '+' : ''}{totalEdge.toFixed(1)} pts edge</span>
                         )}

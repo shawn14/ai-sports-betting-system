@@ -31,14 +31,16 @@ export async function GET() {
       });
     }
 
-    // Fetch blob data
-    const response = await fetch(blobMetadata.url);
+    // Fetch blob data with cache busting
+    const response = await fetch(`${blobMetadata.url}?t=${Date.now()}`, {
+      cache: 'no-store',
+    });
     const jsonData = await response.json();
 
     return NextResponse.json(jsonData, {
       headers: {
-        // Cache for 6 hours, serve stale for 10 minutes while revalidating
-        'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=600',
+        // Cache for 5 minutes, serve stale for 1 minute while revalidating
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
         'Content-Type': 'application/json',
       },
     });

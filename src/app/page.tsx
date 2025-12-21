@@ -463,8 +463,11 @@ export default function Dashboard() {
           No upcoming games. Check back later.
         </div>
       ) : (
+        <>
+        {/* Upcoming Games */}
         <div className="grid gap-4 md:grid-cols-2">
           {[...games]
+            .filter(({ game }) => game.status !== 'final')
             .sort((a, b) => new Date(a.game.gameTime).getTime() - new Date(b.game.gameTime).getTime())
             .map(({ game, prediction }) => {
             const away = game.awayTeam?.abbreviation || 'AWAY';
@@ -491,6 +494,27 @@ export default function Dashboard() {
             const atsConf = prediction.atsConfidence || 'medium';
             const ouConf = prediction.ouConfidence || 'medium';
             const mlConf = prediction.mlConfidence || 'medium';
+
+            // Result calculation for final games
+            const isFinal = game.status === 'final';
+            const awayScore = game.awayScore ?? 0;
+            const homeScore = game.homeScore ?? 0;
+            const actualSpread = awayScore - homeScore; // positive = away won by X
+            const actualTotal = awayScore + homeScore;
+            const vegasSpread = prediction.vegasSpread ?? 0;
+            const vegasTotal = prediction.vegasTotal ?? 44;
+
+            // Did our picks hit?
+            const spreadResult: 'win' | 'loss' | 'push' | null = !isFinal ? null :
+              actualSpread === vegasSpread ? 'push' :
+              (pickHomeSpread ? actualSpread < vegasSpread : actualSpread > vegasSpread) ? 'win' : 'loss';
+
+            const mlResult: 'win' | 'loss' | null = !isFinal ? null :
+              (pickHomeML ? homeScore > awayScore : awayScore > homeScore) ? 'win' : 'loss';
+
+            const ouResult: 'win' | 'loss' | 'push' | null = !isFinal ? null :
+              actualTotal === vegasTotal ? 'push' :
+              (pickOver ? actualTotal > vegasTotal : actualTotal < vegasTotal) ? 'win' : 'loss';
 
             // 60%+ situation badges
             const situations: string[] = [];
@@ -533,8 +557,21 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="text-right">
-                        <div className="font-mono text-lg font-bold text-gray-900">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</div>
-                        <div className="text-xs text-gray-500">{formatTime(game.gameTime)}</div>
+                        {isFinal ? (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400 font-mono">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</span>
+                              <span className="text-gray-300">→</span>
+                              <span className="font-mono text-lg font-bold text-gray-900">{awayScore}-{homeScore}</span>
+                            </div>
+                            <div className="text-xs font-semibold text-gray-500">FINAL</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="font-mono text-lg font-bold text-gray-900">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</div>
+                            <div className="text-xs text-gray-500">{formatTime(game.gameTime)}</div>
+                          </>
+                        )}
                       </div>
                       <div className="flex items-center text-gray-400 group-hover:text-red-600 transition-colors">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -630,20 +667,29 @@ export default function Dashboard() {
                     <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
                       Spread
                     </div>
-                    <div
-                      className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-sm font-bold ${
-                        atsConf === 'low'
-                          ? 'bg-gray-100 text-gray-400'
-                          : atsConf === 'high'
-                            ? 'bg-green-600 text-white'
-                            : 'bg-blue-500 text-white'
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 object-contain" />
-                        <span>{pickHomeSpread ? home : away}</span>
+                    <div className="relative">
+                      <div
+                        className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-sm font-bold ${
+                          atsConf === 'low'
+                            ? 'bg-gray-100 text-gray-400'
+                            : atsConf === 'high'
+                              ? 'bg-green-600 text-white'
+                              : 'bg-blue-500 text-white'
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 object-contain" />
+                          <span>{pickHomeSpread ? home : away}</span>
+                        </div>
+                        <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
                       </div>
-                      <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
+                      {spreadResult && (
+                        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                          spreadResult === 'win' ? 'bg-green-500' : spreadResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
+                        }`}>
+                          {spreadResult === 'win' ? '✓' : spreadResult === 'loss' ? '✗' : '–'}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -652,17 +698,26 @@ export default function Dashboard() {
                     <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
                       Moneyline
                     </div>
-                    <div
-                      className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-bold ${
-                        mlConf === 'high'
-                          ? 'bg-green-600 text-white'
-                          : mlConf === 'medium'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 text-gray-400'
-                      }`}
-                    >
-                      <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 object-contain" />
-                      <span>{pickHomeML ? home : away}</span>
+                    <div className="relative">
+                      <div
+                        className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-bold ${
+                          mlConf === 'high'
+                            ? 'bg-green-600 text-white'
+                            : mlConf === 'medium'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-100 text-gray-400'
+                        }`}
+                      >
+                        <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 object-contain" />
+                        <span>{pickHomeML ? home : away}</span>
+                      </div>
+                      {mlResult && (
+                        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                          mlResult === 'win' ? 'bg-green-500' : 'bg-red-500'
+                        }`}>
+                          {mlResult === 'win' ? '✓' : '✗'}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -671,16 +726,25 @@ export default function Dashboard() {
                     <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
                       Total
                     </div>
-                    <div
-                      className={`px-2.5 py-2 rounded-lg text-sm font-bold text-center ${
-                        ouConf === 'high'
-                          ? 'bg-green-600 text-white'
-                          : ouConf === 'medium'
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 text-gray-400'
-                      }`}
-                    >
-                      {pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}
+                    <div className="relative">
+                      <div
+                        className={`px-2.5 py-2 rounded-lg text-sm font-bold text-center ${
+                          ouConf === 'high'
+                            ? 'bg-green-600 text-white'
+                            : ouConf === 'medium'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-100 text-gray-400'
+                        }`}
+                      >
+                        {pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}
+                      </div>
+                      {ouResult && (
+                        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                          ouResult === 'win' ? 'bg-green-500' : ouResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
+                        }`}>
+                          {ouResult === 'win' ? '✓' : ouResult === 'loss' ? '✗' : '–'}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -688,6 +752,296 @@ export default function Dashboard() {
             );
           })}
         </div>
+
+        {/* Results Tally - only show if there are final games */}
+        {games.some(({ game }) => game.status === 'final') && (() => {
+          // Calculate records from final games
+          let atsW = 0, atsL = 0, atsP = 0;
+          let mlW = 0, mlL = 0;
+          let ouW = 0, ouL = 0, ouP = 0;
+          let hiAtsW = 0, hiAtsL = 0, hiAtsP = 0;
+          let hiMlW = 0, hiMlL = 0;
+          let hiOuW = 0, hiOuL = 0, hiOuP = 0;
+
+          games.filter(({ game }) => game.status === 'final').forEach(({ game, prediction }) => {
+            const awayScore = game.awayScore ?? 0;
+            const homeScore = game.homeScore ?? 0;
+            const actualSpread = awayScore - homeScore;
+            const actualTotal = awayScore + homeScore;
+            const vegasSpread = prediction.vegasSpread ?? 0;
+            const vegasTotal = prediction.vegasTotal ?? 44;
+            const ourSpread = prediction.predictedSpread;
+            const ourTotal = prediction.predictedTotal;
+            const homeWinProb = prediction.homeWinProbability;
+            const hasVegas = prediction.vegasSpread !== undefined;
+
+            const pickHomeSpread = ourSpread < 0;
+            const pickHomeML = homeWinProb > 0.5;
+            const pickOver = hasVegas ? ourTotal > prediction.vegasTotal! : ourTotal > 44;
+
+            const atsConf = prediction.atsConfidence || 'medium';
+            const ouConf = prediction.ouConfidence || 'medium';
+            const mlConf = prediction.mlConfidence || 'medium';
+
+            // ATS
+            if (actualSpread === vegasSpread) { atsP++; if (atsConf === 'high') hiAtsP++; }
+            else if (pickHomeSpread ? actualSpread < vegasSpread : actualSpread > vegasSpread) {
+              atsW++; if (atsConf === 'high') hiAtsW++;
+            } else {
+              atsL++; if (atsConf === 'high') hiAtsL++;
+            }
+
+            // ML
+            const mlHit = pickHomeML ? homeScore > awayScore : awayScore > homeScore;
+            if (mlHit) { mlW++; if (mlConf === 'high') hiMlW++; }
+            else { mlL++; if (mlConf === 'high') hiMlL++; }
+
+            // O/U
+            if (actualTotal === vegasTotal) { ouP++; if (ouConf === 'high') hiOuP++; }
+            else if (pickOver ? actualTotal > vegasTotal : actualTotal < vegasTotal) {
+              ouW++; if (ouConf === 'high') hiOuW++;
+            } else {
+              ouL++; if (ouConf === 'high') hiOuL++;
+            }
+          });
+
+          const hasHighConv = (hiAtsW + hiAtsL + hiAtsP + hiMlW + hiMlL + hiOuW + hiOuL + hiOuP) > 0;
+
+          return (
+            <div className="mt-8 mb-4 space-y-3">
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-lg font-bold text-gray-500">This Week's Results</h2>
+                <div className="flex-1 h-px bg-gray-200"></div>
+              </div>
+
+              {/* Overall Record */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">All Picks</span>
+                  <div className="flex items-center gap-6 text-sm">
+                    <div className="text-center">
+                      <div className="text-[10px] text-gray-400 uppercase">ATS</div>
+                      <div className={`font-mono font-bold ${atsW > atsL ? 'text-green-600' : atsW < atsL ? 'text-red-600' : 'text-gray-600'}`}>
+                        {atsW}-{atsL}{atsP > 0 ? `-${atsP}` : ''}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-[10px] text-gray-400 uppercase">ML</div>
+                      <div className={`font-mono font-bold ${mlW > mlL ? 'text-green-600' : mlW < mlL ? 'text-red-600' : 'text-gray-600'}`}>
+                        {mlW}-{mlL}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-[10px] text-gray-400 uppercase">O/U</div>
+                      <div className={`font-mono font-bold ${ouW > ouL ? 'text-green-600' : ouW < ouL ? 'text-red-600' : 'text-gray-600'}`}>
+                        {ouW}-{ouL}{ouP > 0 ? `-${ouP}` : ''}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* High Conviction Only */}
+              {hasHighConv && (
+                <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-green-700 flex items-center gap-2">
+                      <span className="w-3 h-3 bg-green-600 rounded"></span>
+                      High Conviction
+                    </span>
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="text-center">
+                        <div className="text-[10px] text-green-500 uppercase">ATS</div>
+                        <div className={`font-mono font-bold ${hiAtsW > hiAtsL ? 'text-green-600' : hiAtsW < hiAtsL ? 'text-red-600' : 'text-gray-600'}`}>
+                          {hiAtsW}-{hiAtsL}{hiAtsP > 0 ? `-${hiAtsP}` : ''}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-[10px] text-green-500 uppercase">ML</div>
+                        <div className={`font-mono font-bold ${hiMlW > hiMlL ? 'text-green-600' : hiMlW < hiMlL ? 'text-red-600' : 'text-gray-600'}`}>
+                          {hiMlW}-{hiMlL}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-[10px] text-green-500 uppercase">O/U</div>
+                        <div className={`font-mono font-bold ${hiOuW > hiOuL ? 'text-green-600' : hiOuW < hiOuL ? 'text-red-600' : 'text-gray-600'}`}>
+                          {hiOuW}-{hiOuL}{hiOuP > 0 ? `-${hiOuP}` : ''}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Final Games */}
+        {games.some(({ game }) => game.status === 'final') && (
+          <div className="grid gap-4 md:grid-cols-2">
+            {[...games]
+              .filter(({ game }) => game.status === 'final')
+              .sort((a, b) => new Date(b.game.gameTime).getTime() - new Date(a.game.gameTime).getTime())
+              .map(({ game, prediction }) => {
+              const away = game.awayTeam?.abbreviation || 'AWAY';
+              const home = game.homeTeam?.abbreviation || 'HOME';
+              const ourSpread = prediction.predictedSpread;
+              const ourTotal = prediction.predictedTotal;
+              const homeWinProb = prediction.homeWinProbability;
+
+              const displaySpread = prediction.vegasSpread ?? ourSpread;
+              const displayTotal = prediction.vegasTotal ?? ourTotal;
+              const hasVegas = prediction.vegasSpread !== undefined;
+
+              const pickHomeSpread = ourSpread < 0;
+              const pickHomeML = homeWinProb > 0.5;
+              const pickOver = hasVegas ? ourTotal > prediction.vegasTotal! : ourTotal > 44;
+
+              const atsConf = prediction.atsConfidence || 'medium';
+              const ouConf = prediction.ouConfidence || 'medium';
+              const mlConf = prediction.mlConfidence || 'medium';
+
+              // Calculate results for this final game
+              const awayScore = game.awayScore ?? 0;
+              const homeScore = game.homeScore ?? 0;
+              const actualSpread = awayScore - homeScore;
+              const actualTotal = awayScore + homeScore;
+              const vegasSpread = prediction.vegasSpread ?? 0;
+              const vegasTotal = prediction.vegasTotal ?? 44;
+
+              const spreadResult: 'win' | 'loss' | 'push' =
+                actualSpread === vegasSpread ? 'push' :
+                (pickHomeSpread ? actualSpread < vegasSpread : actualSpread > vegasSpread) ? 'win' : 'loss';
+
+              const mlResult: 'win' | 'loss' =
+                (pickHomeML ? homeScore > awayScore : awayScore > homeScore) ? 'win' : 'loss';
+
+              const ouResult: 'win' | 'loss' | 'push' =
+                actualTotal === vegasTotal ? 'push' :
+                (pickOver ? actualTotal > vegasTotal : actualTotal < vegasTotal) ? 'win' : 'loss';
+
+              return (
+                <div key={game.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden opacity-90">
+                  {/* Game header */}
+                  <a href={`/game/${game.id}`} className="group block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <img src={getLogoUrl(away)} alt={away} className="w-10 h-10 object-contain" />
+                          <span className="font-bold text-gray-900">{away}</span>
+                        </div>
+                        <span className="text-gray-400 text-sm">@</span>
+                        <div className="flex items-center gap-2">
+                          <img src={getLogoUrl(home)} alt={home} className="w-10 h-10 object-contain" />
+                          <span className="font-bold text-gray-900">{home}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-gray-400 font-mono">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</span>
+                            <span className="text-gray-300">→</span>
+                            <span className="font-mono text-lg font-bold text-gray-900">{awayScore}-{homeScore}</span>
+                          </div>
+                          <div className="text-xs font-semibold text-gray-500">FINAL</div>
+                        </div>
+                        <div className="flex items-center text-gray-400 group-hover:text-red-600 transition-colors">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+
+                  {/* Picks grid with results */}
+                  <div className="grid grid-cols-3 divide-x divide-gray-100">
+                    {/* Spread */}
+                    <div className="p-3">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
+                        Spread
+                      </div>
+                      <div className="relative">
+                        <div
+                          className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-sm font-bold ${
+                            atsConf === 'low'
+                              ? 'bg-gray-100 text-gray-400'
+                              : atsConf === 'high'
+                                ? 'bg-green-600 text-white'
+                                : 'bg-blue-500 text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 object-contain" />
+                            <span>{pickHomeSpread ? home : away}</span>
+                          </div>
+                          <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
+                        </div>
+                        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                          spreadResult === 'win' ? 'bg-green-500' : spreadResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
+                        }`}>
+                          {spreadResult === 'win' ? '✓' : spreadResult === 'loss' ? '✗' : '–'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Moneyline */}
+                    <div className="p-3">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
+                        Moneyline
+                      </div>
+                      <div className="relative">
+                        <div
+                          className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-bold ${
+                            mlConf === 'high'
+                              ? 'bg-green-600 text-white'
+                              : mlConf === 'medium'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-100 text-gray-400'
+                          }`}
+                        >
+                          <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 object-contain" />
+                          <span>{pickHomeML ? home : away}</span>
+                        </div>
+                        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                          mlResult === 'win' ? 'bg-green-500' : 'bg-red-500'
+                        }`}>
+                          {mlResult === 'win' ? '✓' : '✗'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Over/Under */}
+                    <div className="p-3">
+                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
+                        Total
+                      </div>
+                      <div className="relative">
+                        <div
+                          className={`px-2.5 py-2 rounded-lg text-sm font-bold text-center ${
+                            ouConf === 'high'
+                              ? 'bg-green-600 text-white'
+                              : ouConf === 'medium'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-gray-100 text-gray-400'
+                          }`}
+                        >
+                          {pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}
+                        </div>
+                        <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                          ouResult === 'win' ? 'bg-green-500' : ouResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
+                        }`}>
+                          {ouResult === 'win' ? '✓' : ouResult === 'loss' ? '✗' : '–'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        </>
       )}
     </div>
   );

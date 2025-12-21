@@ -627,19 +627,24 @@ export async function GET(request: Request) {
 
       const weatherImpact = getWeatherImpact(weather);
 
-      const { homeScore: predHome, awayScore: predAway } = predictScore(
+      const { homeScore: predHomeRaw, awayScore: predAwayRaw } = predictScore(
         homeTeam.eloRating, awayTeam.eloRating,
         homeTeam.ppg || LEAGUE_AVG_PPG, homeTeam.ppgAllowed || LEAGUE_AVG_PPG,
         awayTeam.ppg || LEAGUE_AVG_PPG, awayTeam.ppgAllowed || LEAGUE_AVG_PPG
       );
 
+      // Apply weather impact to both team scores (split evenly)
+      // This keeps scores summing to total and spread mostly unchanged
+      const weatherDelta = weatherImpact * 3;  // Optimal multiplier from backtesting
+      const perTeamDelta = weatherDelta / 2;
+      const predHome = predHomeRaw - perTeamDelta;
+      const predAway = predAwayRaw - perTeamDelta;
+
       const adjustedHomeElo = homeTeam.eloRating + ELO_HOME_ADVANTAGE;
       const homeWinProb = 1 / (1 + Math.pow(10, (awayTeam.eloRating - adjustedHomeElo) / 400));
 
       const predictedSpread = calculateSpread(predHome, predAway);
-      // Apply weather impact to total (bad weather = lower scoring)
-      // Optimal multiplier of 3 based on backtesting analysis (55.7% win rate)
-      const predictedTotal = (predHome + predAway) - (weatherImpact * 3);
+      const predictedTotal = predHome + predAway;
 
       // 60%+ Situation Detection (based on backtesting 169 games)
       const absVegasSpread = vegasSpread !== undefined ? Math.abs(vegasSpread) : 3;
@@ -745,8 +750,11 @@ export async function GET(request: Request) {
             windSpeed: weather.windSpeed,
             conditions: weather.conditions,
             precipitation: weather.precipitation,
+            impact: weatherImpact,
+            totalDelta: weatherDelta,
+            perTeamDelta,
           } : null,
-          weatherImpact,
+          weatherImpact,  // Keep for backwards compatibility
           // Injury data
           injuries: injuryReport ? getGameInjuryImpact(injuryReport, homeTeam.abbreviation, awayTeam.abbreviation) : null,
         },

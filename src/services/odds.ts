@@ -32,7 +32,9 @@ export async function fetchNFLOdds(): Promise<Map<string, Partial<Odds>[]>> {
   const apiKey = process.env.NEXT_PUBLIC_ODDS_API_KEY;
   if (!apiKey) throw new Error('Odds API key not configured');
 
-  const url = `${ODDS_API_BASE}/sports/americanfootball_nfl/odds/?apiKey=${apiKey}&regions=us&markets=spreads,totals,h2h&oddsFormat=american`;
+  // Add timestamp to bust any caching
+  const timestamp = Date.now();
+  const url = `${ODDS_API_BASE}/sports/americanfootball_nfl/odds/?apiKey=${apiKey}&regions=us&markets=spreads,totals,h2h&oddsFormat=american&_t=${timestamp}`;
 
   const response = await fetch(url, {
     cache: 'no-store',
@@ -44,6 +46,15 @@ export async function fetchNFLOdds(): Promise<Map<string, Partial<Odds>[]>> {
 
   const data: OddsAPIEvent[] = await response.json();
   const oddsMap = new Map<string, Partial<Odds>[]>();
+
+  // Debug: log first event's totals
+  if (data.length > 0 && data[0].bookmakers?.length > 0) {
+    const firstEvent = data[0];
+    const firstBook = firstEvent.bookmakers[0];
+    const totals = firstBook.markets.find(m => m.key === 'totals');
+    console.log(`[Odds API Debug] First event: ${firstEvent.away_team} @ ${firstEvent.home_team}`);
+    console.log(`[Odds API Debug] First bookmaker totals:`, JSON.stringify(totals));
+  }
 
   for (const event of data) {
     const gameKey = `${event.home_team}_${event.away_team}_${event.commence_time}`;

@@ -481,8 +481,8 @@ export default function Dashboard() {
             const displayTotal = prediction.vegasTotal ?? ourTotal;
             const hasVegas = prediction.vegasSpread !== undefined;
 
-            // Spread pick: negative spread = home favored
-            const pickHomeSpread = ourSpread < 0;
+            // Spread pick: pick home if we favor home more than Vegas
+            const pickHomeSpread = ourSpread < displaySpread;
 
             // ML pick: based on win probability
             const pickHomeML = homeWinProb > 0.5;
@@ -770,7 +770,7 @@ export default function Dashboard() {
             const spreadForGrading = prediction.vegasSpread ?? ourSpread;
             const vegasTotal = prediction.vegasTotal ?? 44;
 
-            const pickHomeSpread = ourSpread < 0;
+            const pickHomeSpread = ourSpread < spreadForGrading; // Pick home if we favor home more than Vegas
             const pickHomeML = homeWinProb > 0.5;
             const pickOver = hasVegas ? ourTotal > prediction.vegasTotal! : ourTotal > 44;
 
@@ -895,7 +895,7 @@ export default function Dashboard() {
               const displayTotal = prediction.vegasTotal ?? ourTotal;
               const hasVegas = prediction.vegasSpread !== undefined;
 
-              const pickHomeSpread = ourSpread < 0;
+              const pickHomeSpread = ourSpread < displaySpread; // Pick home if we favor home more than Vegas
               const pickHomeML = homeWinProb > 0.5;
               const pickOver = hasVegas ? ourTotal > prediction.vegasTotal! : ourTotal > 44;
 

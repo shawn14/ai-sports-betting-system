@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         source: '/prediction-data.json',
         destination: 'https://0luulmjdaimldet9.public.blob.vercel-storage.com/prediction-matrix-data.json',
       },
+      {
+        source: '/nba-prediction-data.json',
+        destination: 'https://0luulmjdaimldet9.public.blob.vercel-storage.com/nba-prediction-data.json',
+      },
     ];
   },
 };

@@ -9,7 +9,6 @@ export default function NavBar() {
   // Determine base paths based on current section
   const rankingsPath = isNBA ? '/nba/rankings' : '/rankings';
   const resultsPath = isNBA ? '/nba/results' : '/results';
-  const homePath = isNBA ? '/nba' : '/';
 
   // Active link styling
   const isActive = (path: string) => {
@@ -49,7 +48,7 @@ export default function NavBar() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-4 sm:gap-8">
-              <a href={homePath} className="flex items-center gap-2 min-w-0">
+              <a href="/" className="flex items-center gap-2 min-w-0">
                 <div className={`w-7 h-7 sm:w-8 sm:h-8 ${logoColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
                   <span className="text-white font-bold text-xs sm:text-sm">PM</span>
                 </div>

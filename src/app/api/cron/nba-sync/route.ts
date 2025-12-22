@@ -341,7 +341,8 @@ export async function GET(request: Request) {
     log(`Loaded ${Object.keys(historicalOdds).length} historical odds records`);
 
     const isFirstRun = !existingState || !existingState.processedGameIds?.length;
-    log(isFirstRun ? 'First run - will initialize teams' : `Found ${existingState.processedGameIds.length} processed games`);
+    const processedCount = existingState?.processedGameIds?.length || 0;
+    log(isFirstRun ? 'First run - will initialize teams' : `Found ${processedCount} processed games`);
 
     // 2. Build team map
     const teamsMap = new Map<string, TeamData>();

@@ -660,13 +660,7 @@ export async function GET(request: Request) {
       const isOuBestBet = totalEdge >= 5;
       const isMlBestBet = mlEdge >= 15;
 
-      gamesWithPredictions.push({
-        game: {
-          ...game,
-          homeTeam: { id: homeTeam.id, name: homeTeam.name, abbreviation: homeTeam.abbreviation },
-          awayTeam: { id: awayTeam.id, name: awayTeam.name, abbreviation: awayTeam.abbreviation },
-        },
-        let lineMovement = existingOdds ? {
+      let lineMovement = existingOdds ? {
           openingSpread: existingOdds.openingSpread,
           openingTotal: existingOdds.openingTotal,
           closingSpread: existingOdds.closingSpread,
@@ -687,6 +681,12 @@ export async function GET(request: Request) {
           }
         }
 
+      gamesWithPredictions.push({
+        game: {
+          ...game,
+          homeTeam: { id: homeTeam.id, name: homeTeam.name, abbreviation: homeTeam.abbreviation },
+          awayTeam: { id: awayTeam.id, name: awayTeam.name, abbreviation: awayTeam.abbreviation },
+        },
         prediction: {
           gameId: game.id,
           predictedHomeScore: predHome,

@@ -1,7 +1,7 @@
-# NFL Betting System Architecture
+# NFL + NBA Betting System Architecture
 
 ## Overview
-This is a Next.js-based NFL betting prediction system that uses Elo ratings, team statistics, weather data, and injury reports to generate betting predictions. The system runs on Vercel with a hybrid storage architecture combining Firebase Firestore and Vercel Blob Storage.
+This is a Next.js-based NFL/NBA betting prediction system that uses Elo ratings, team statistics, weather data, and injury reports to generate betting predictions. The system runs on Vercel with Firebase Firestore as the source of truth and Vercel Blob Storage as the fast read cache for the frontend.
 
 ## System Architecture
 
@@ -14,8 +14,8 @@ This is a Next.js-based NFL betting prediction system that uses Elo ratings, tea
                                     │
                                     ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    Vercel Cron (Every 4 hours)                       │
-│              /api/cron/blob-sync-simple/route.ts                     │
+│                  Vercel Cron (Every 2 hours)                         │
+│      /api/cron/blob-sync-simple + /api/cron/nba-sync                 │
 └─────────────────────────────────────────────────────────────────────┘
                                     │
                     ┌───────────────┴───────────────┐
@@ -23,12 +23,12 @@ This is a Next.js-based NFL betting prediction system that uses Elo ratings, tea
          ┌──────────────────┐            ┌──────────────────┐
          │  Firebase         │            │  Vercel Blob     │
          │  Firestore        │            │  Storage         │
-         │  (Deprecated)     │            │  (Active)        │
+         │  (Source of Truth)│            │  (Read Cache)    │
          └──────────────────┘            └──────────────────┘
                                                    │
                                                    ▼
-                                    prediction-matrix-data.json
-                                         (Public JSON)
+                             prediction-matrix-data.json (NFL)
+                               nba-prediction-data.json (NBA)
                                                    │
                                                    ▼
                                          ┌──────────────────┐
@@ -44,10 +44,10 @@ This is a Next.js-based NFL betting prediction system that uses Elo ratings, tea
 
 ### Primary Data Flow (Current System)
 
-**Cron Job → External APIs → In-Memory Processing → Vercel Blob → Frontend**
+**Cron Job → External APIs → In-Memory Processing → Firestore → Blob → Frontend**
 
-1. **Vercel Cron Trigger** (every 4 hours)
-   - Endpoint: `/api/cron/blob-sync-simple/route.ts`
+1. **Vercel Cron Trigger** (every 2 hours)
+   - Endpoints: `/api/cron/blob-sync-simple/route.ts` (NFL), `/api/cron/nba-sync/route.ts` (NBA)
    - Runs with max duration: 300 seconds (5 minutes)
 
 2. **Data Fetching** (Parallel from multiple APIs)
@@ -57,37 +57,44 @@ This is a Next.js-based NFL betting prediction system that uses Elo ratings, tea
    - ESPN Injuries: Player injury status by team
 
 3. **In-Memory Processing**
-   - Reads previous blob state (if exists)
+   - Reads Firestore state for processed games, locked odds, caches
    - Processes completed games chronologically
    - Updates Elo ratings game-by-game
    - Generates predictions for upcoming games
    - Runs backtest on all historical games
 
-4. **Blob Upload**
-   - Writes single JSON file to Vercel Blob Storage
-   - Public access at: `prediction-matrix-data.json`
-   - Contains: predictions, teams, backtest results, recent scores
+4. **Firestore Persist**
+   - Canonical writes to Firestore collections (teams, games, odds locks, predictions, results)
+   - Stores sport state (`sports/{sport}`) with last sync metadata
 
-5. **Frontend Consumption**
+5. **Blob Upload**
+   - Writes JSON snapshot to Vercel Blob Storage
+   - Public access: `prediction-matrix-data.json` (NFL), `nba-prediction-data.json` (NBA)
+   - Heartbeats: `cron-heartbeat-nfl.json`, `cron-heartbeat-nba.json`
+
+6. **Frontend Consumption**
    - Frontend fetches JSON directly from blob
    - No database queries needed for display
    - Near-instant load times
-
-### Legacy Data Flow (Deprecated)
-
-**Firebase Firestore** - Still imported but no longer actively used in production. The system previously used Firebase for:
-- Storing teams in `teams_v2` collection
-- Storing games in `games_v2` collection
-- Storing odds in `odds_v2` collection
-- Storing predictions in `predictions_v2` collection
 
 ---
 
 ## 2. Storage Architecture
 
-### Vercel Blob Storage (Primary - Active)
+### Firebase Firestore (Primary - Active)
 
-**File:** `prediction-matrix-data.json`
+**Documents:**
+- `sports/nfl` and `sports/nba` store last sync metadata and blob write info.
+- Subcollections (canonical): `teams`, `games`, `oddsLocks`, `predictions`, `results`
+- NFL-only caches: `weather`, `injuries`
+
+**Key Features:**
+- Durable source of truth for scoring and history
+- Supports incremental updates and backtests
+
+### Vercel Blob Storage (Read Cache)
+
+**Files:** `prediction-matrix-data.json` (NFL), `nba-prediction-data.json` (NBA)
 
 **Contains:**
 ```typescript
@@ -107,19 +114,8 @@ This is a Next.js-based NFL betting prediction system that uses Elo ratings, tea
 
 **Key Features:**
 - **Public access**: No authentication needed
-- **Single source of truth**: All data in one JSON file
-- **No database queries**: Frontend fetches directly
-- **Caching strategy**: Frontend uses `cache: 'no-cache'` for fresh data
-
-### Firebase Firestore (Legacy - Deprecated)
-
-**Collections:**
-- `teams_v2` - Team data (id, name, abbreviation, eloRating, ppg, etc.)
-- `games_v2` - Game records (scores, status, venue, week, etc.)
-- `odds_v2` - Betting odds by bookmaker
-- `predictions_v2` - Generated predictions
-
-**Status:** Code still exists but not actively used. The system now uses in-memory processing and blob storage exclusively.
+- **Fast reads**: CDN-backed for the frontend
+- **Derived data**: Firestore remains canonical
 
 ### Caching Strategy
 
@@ -524,7 +520,7 @@ interface BacktestResult {
 
 #### `/api/cron/blob-sync-simple` (Primary)
 - **Method**: GET
-- **Trigger**: Vercel Cron (every 4 hours)
+- **Trigger**: Vercel Cron (every 2 hours)
 - **Duration**: Up to 300 seconds
 - **Function**:
   1. Fetch teams from ESPN
@@ -535,8 +531,15 @@ interface BacktestResult {
   6. Process completed games for Elo updates
   7. Generate predictions for upcoming games
   8. Run full backtest on all games
-  9. Upload JSON to Vercel Blob
+  9. Persist canonical data to Firestore
+  10. Upload JSON to Vercel Blob
 - **Output**: `prediction-matrix-data.json` in blob storage
+
+#### `/api/cron/nba-sync` (Primary - NBA)
+- **Method**: GET
+- **Trigger**: Vercel Cron (every 2 hours, offset by 30 minutes)
+- **Duration**: Up to 300 seconds
+- **Output**: `nba-prediction-data.json` in blob storage
 
 #### `/prediction-data.json` (Frontend endpoint)
 - **Method**: GET (via fetch)
@@ -547,9 +550,7 @@ interface BacktestResult {
 ### Legacy/Alternative Endpoints
 
 #### `/api/cron/blob-sync` (Deprecated)
-- Previous version using Firebase
-- Still exists but not used
-- Demonstrates old architecture
+- Legacy implementation; kept for reference
 
 ### Admin Endpoints (Development/Testing)
 
@@ -679,13 +680,13 @@ Dashboard
 **Data Flow:**
 1. `useEffect` → `fetchData()` on mount
 2. Fetch `/prediction-data.json` (no-cache)
-3. If no data → trigger `/api/cron/blob-sync`
+3. If no data → trigger `/api/cron/blob-sync-simple`
 4. Set state: `games`, `recentGames`
 5. Render components
 
 **Manual Sync:**
 ```typescript
-syncAll() → fetch('/api/cron/blob-sync') → fetchData()
+syncAll() → fetch('/api/cron/blob-sync-simple') → fetchData()
 ```
 
 ### Styling System
@@ -728,24 +729,32 @@ NEXT_PUBLIC_ODDS_API_KEY=<your_odds_api_key>
 NEXT_PUBLIC_WEATHER_API_KEY=<your_openweather_key>
 CRON_SECRET=<your_cron_secret>
 BLOB_READ_WRITE_TOKEN=<vercel_blob_token>
+NEXT_PUBLIC_FIREBASE_API_KEY=<firebase_api_key>
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<firebase_auth_domain>
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=<firebase_project_id>
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<firebase_storage_bucket>
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<firebase_messaging_sender_id>
+NEXT_PUBLIC_FIREBASE_APP_ID=<firebase_app_id>
 ```
 
 **Vercel Blob Storage:**
-- File: `prediction-matrix-data.json`
+- Files: `prediction-matrix-data.json`, `nba-prediction-data.json`
 - Access: Public
-- Updates: Every 4 hours via cron
+- Updates: Every 2 hours via cron
 
 **Cron Configuration** (`vercel.json`):
 ```json
 {
   "crons": [{
     "path": "/api/cron/blob-sync-simple",
-    "schedule": "0 */4 * * *"
+    "schedule": "0 */2 * * *"
+  }, {
+    "path": "/api/cron/nba-sync",
+    "schedule": "30 */2 * * *"
   }]
 }
 ```
-- Runs at: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 UTC
-- Frequency: Every 4 hours
+- Runs at: every 2 hours (NBA offset by 30 minutes)
 
 ---
 
@@ -759,7 +768,7 @@ BLOB_READ_WRITE_TOKEN=<vercel_blob_token>
 
 ### Computation
 - In-memory processing only
-- No database writes during cron (write only to blob)
+- Canonical writes to Firestore during cron (blob is a read cache)
 - Chronological game processing (single pass)
 - Efficient Map structures for lookups
 
@@ -767,7 +776,7 @@ BLOB_READ_WRITE_TOKEN=<vercel_blob_token>
 - Weather cache: 6 hours → reduces API calls
 - Injury cache: 6 hours → reduces API calls
 - Historical odds: Permanent → never refetch
-- Cron frequency: 4 hours → balances freshness vs cost
+- Cron frequency: 2 hours → balances freshness vs cost
 
 ### Frontend Optimizations
 - Next.js server components
@@ -781,14 +790,14 @@ BLOB_READ_WRITE_TOKEN=<vercel_blob_token>
 
 ### What's Stored Where
 
-**Vercel Blob (Primary)**
+**Firestore (Primary)**
 - ✅ All predictions
 - ✅ Team Elo ratings (current state)
 - ✅ Backtest results
 - ✅ Historical Vegas odds
-- ✅ Weather cache
-- ✅ Injury cache
+- ✅ Weather and injury caches
 - ✅ Recent game results
+- ✅ Cron metadata and blob write info
 
 **Not Persisted (Regenerated Each Run)**
 - Team PPG stats (fetched fresh from ESPN)
@@ -796,10 +805,9 @@ BLOB_READ_WRITE_TOKEN=<vercel_blob_token>
 - Latest Vegas odds
 - Current week weather
 
-**Firebase Firestore (Deprecated)**
-- ❌ No longer actively used
-- Code exists for legacy compatibility
-- Could be removed in future cleanup
+**Vercel Blob (Read Cache)**
+- ✅ Frontend snapshots (NFL + NBA)
+- ✅ Cron heartbeats
 
 ---
 
@@ -851,7 +859,7 @@ isEloMismatch = abs(homeElo - awayElo) > 100;
 ### Data Validation
 - Team matching: Fuzzy matching for odds by team name + date
 - Missing scores: Skip games without complete data
-- Undefined values: Sanitized before Firestore writes (though not used)
+- Undefined values: Sanitized before Firestore writes
 - Date parsing: All dates converted to ISO strings for consistency
 
 ### Caching Fallbacks
@@ -864,7 +872,7 @@ isEloMismatch = abs(homeElo - awayElo) > 100;
 ## 15. Future Improvements (Ideas)
 
 ### Potential Enhancements
-1. **Database removal**: Remove Firebase entirely, full blob-only architecture
+1. **Schema hardening**: Add validation for stored Firestore documents
 2. **Injury impact modeling**: Quantify injury impact on spreads/totals
 3. **Weather correlation**: More sophisticated weather impact model
 4. **Live updating**: WebSocket or polling for in-game updates
@@ -879,29 +887,29 @@ isEloMismatch = abs(homeElo - awayElo) > 100;
 
 ## 16. Architecture Decisions
 
-### Why Vercel Blob instead of Database?
-1. **Performance**: Single JSON fetch vs multiple database queries
-2. **Cost**: Blob storage cheaper than database reads
-3. **Simplicity**: No ORM, no migrations, no indexes
-4. **Caching**: Built-in CDN with Vercel Blob
-5. **Deployment**: No database provisioning needed
+### Why Firestore + Blob?
+1. **Durability**: Firestore is canonical and survives blob failures
+2. **Performance**: Blob provides fast, CDN-backed reads
+3. **Scoring**: Post-game results are stored and queryable
+4. **Reliability**: Cron heartbeats and state tracking for monitoring
+5. **Flexibility**: Firestore supports future analytics and user features
 
 ### Why In-Memory Processing?
 1. **Speed**: No database round trips during computation
-2. **Consistency**: Single atomic update to blob
+2. **Consistency**: Single canonical write to Firestore, then blob publish
 3. **Simplicity**: Easier to reason about state
 4. **Debugging**: Logs show complete run from start to finish
 
-### Why Cron Every 4 Hours?
-1. **API costs**: Reduces calls to paid APIs
-2. **Freshness**: Balances timeliness vs cost
-3. **Game schedule**: NFL games don't change that rapidly
-4. **Resource usage**: Limits Vercel function invocations
+### Why Cron Every 2 Hours?
+1. **API costs**: Balances paid API usage with freshness
+2. **Freshness**: Keeps odds/weather/injuries current
+3. **Game schedule**: Handles NFL week transitions and NBA daily games
+4. **Resource usage**: Keeps Vercel invocations reasonable
 
 ### Why Two Cron Routes?
-- `/api/cron/blob-sync`: Legacy version with Firebase
-- `/api/cron/blob-sync-simple`: Active version (blob-only)
-- Keep both during transition, will remove old version later
+- `/api/cron/blob-sync-simple`: NFL pipeline
+- `/api/cron/nba-sync`: NBA pipeline
+- `/api/cron/blob-sync`: Legacy version retained for reference
 
 ---
 
@@ -913,7 +921,8 @@ src/
 │   ├── page.tsx                    # Main dashboard
 │   ├── api/
 │   │   ├── cron/
-│   │   │   ├── blob-sync-simple/route.ts  # PRIMARY CRON
+│   │   │   ├── blob-sync-simple/route.ts  # PRIMARY CRON (NFL)
+│   │   │   ├── nba-sync/route.ts          # PRIMARY CRON (NBA)
 │   │   │   ├── blob-sync/route.ts         # Legacy (deprecated)
 │   │   │   └── sync/route.ts              # Legacy
 │   │   └── admin/
@@ -947,6 +956,7 @@ src/
 
 ### Health Checks
 - Check blob generation timestamp: `blobData.generated`
+- Check cron heartbeat blobs: `cron-heartbeat-nfl.json`, `cron-heartbeat-nba.json`
 - Verify upcoming games count > 0
 - Check backtest summary win percentages
 - Verify historical odds exist for recent games
@@ -960,16 +970,16 @@ src/
 
 ## Summary
 
-This NFL betting system is a **serverless, blob-based prediction engine** that:
+This NFL/NBA betting system is a **serverless prediction engine** that:
 
-1. **Fetches** data from ESPN, The Odds API, OpenWeather, and ESPN Injuries
+1. **Fetches** data from ESPN, The Odds API, OpenWeather, and NFL.com injuries
 2. **Processes** games chronologically to maintain accurate Elo ratings
 3. **Predicts** spreads, totals, and moneylines using calibrated models
-4. **Backtests** on all historical games to validate accuracy
+4. **Backtests** on historical games to validate accuracy
 5. **Identifies** high-confidence situations (60%+ ATS scenarios)
 6. **Caches** weather, injuries, and Vegas odds to reduce API costs
-7. **Stores** everything in a single public JSON blob for instant frontend access
-8. **Updates** every 4 hours via Vercel Cron
-9. **Displays** predictions with confidence indicators, weather, and injury impacts
+7. **Stores** canonical data in Firestore with blob snapshots for instant frontend access
+8. **Updates** every 2 hours via Vercel Cron
+9. **Publishes** heartbeat blobs for cron monitoring
 
-The architecture prioritizes **simplicity, performance, and cost-efficiency** by eliminating database queries and using in-memory processing with blob storage as the single source of truth.
+The architecture prioritizes **reliability and speed** by keeping Firestore as the source of truth and using blob storage as a CDN-backed cache.

@@ -37,13 +37,12 @@ export async function GET() {
     });
     const jsonData = await response.json();
 
-    return NextResponse.json(jsonData, {
-      headers: {
-        // Cache for 5 minutes, serve stale for 1 minute while revalidating
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=60',
-        'Content-Type': 'application/json',
-      },
-    });
+      return NextResponse.json(jsonData, {
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+          'Content-Type': 'application/json',
+        },
+      });
   } catch (error) {
     console.error('Error fetching blob data:', error);
     return NextResponse.json({

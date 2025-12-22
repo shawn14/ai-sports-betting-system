@@ -11,53 +11,6 @@ const ELO_HOME_ADVANTAGE = 48;       // Same Elo bonus structure
 const SPREAD_REGRESSION = 0.55;      // Optimized - 55% regression to mean
 const ELO_CAP = 20;                  // Optimized
 
-// NBA Team name mapping for Odds API matching
-const NBA_TEAM_NAME_VARIANTS: Record<string, string[]> = {
-  'Atlanta Hawks': ['Hawks', 'Atlanta'],
-  'Boston Celtics': ['Celtics', 'Boston'],
-  'Brooklyn Nets': ['Nets', 'Brooklyn'],
-  'Charlotte Hornets': ['Hornets', 'Charlotte'],
-  'Chicago Bulls': ['Bulls', 'Chicago'],
-  'Cleveland Cavaliers': ['Cavaliers', 'Cleveland', 'Cavs'],
-  'Dallas Mavericks': ['Mavericks', 'Dallas', 'Mavs'],
-  'Denver Nuggets': ['Nuggets', 'Denver'],
-  'Detroit Pistons': ['Pistons', 'Detroit'],
-  'Golden State Warriors': ['Warriors', 'Golden State'],
-  'Houston Rockets': ['Rockets', 'Houston'],
-  'Indiana Pacers': ['Pacers', 'Indiana'],
-  'Los Angeles Clippers': ['Clippers', 'LA Clippers'],
-  'Los Angeles Lakers': ['Lakers', 'LA Lakers'],
-  'Memphis Grizzlies': ['Grizzlies', 'Memphis'],
-  'Miami Heat': ['Heat', 'Miami'],
-  'Milwaukee Bucks': ['Bucks', 'Milwaukee'],
-  'Minnesota Timberwolves': ['Timberwolves', 'Minnesota', 'Wolves'],
-  'New Orleans Pelicans': ['Pelicans', 'New Orleans'],
-  'New York Knicks': ['Knicks', 'New York'],
-  'Oklahoma City Thunder': ['Thunder', 'Oklahoma City', 'OKC'],
-  'Orlando Magic': ['Magic', 'Orlando'],
-  'Philadelphia 76ers': ['76ers', 'Philadelphia', 'Sixers'],
-  'Phoenix Suns': ['Suns', 'Phoenix'],
-  'Portland Trail Blazers': ['Trail Blazers', 'Portland', 'Blazers'],
-  'Sacramento Kings': ['Kings', 'Sacramento'],
-  'San Antonio Spurs': ['Spurs', 'San Antonio'],
-  'Toronto Raptors': ['Raptors', 'Toronto'],
-  'Utah Jazz': ['Jazz', 'Utah'],
-  'Washington Wizards': ['Wizards', 'Washington'],
-};
-
-function matchesTeamName(oddsTeamName: string, ourTeamName: string): boolean {
-  if (oddsTeamName === ourTeamName) return true;
-  if (oddsTeamName.includes(ourTeamName) || ourTeamName.includes(oddsTeamName)) return true;
-
-  for (const [fullName, variants] of Object.entries(NBA_TEAM_NAME_VARIANTS)) {
-    if (oddsTeamName.includes(fullName) || fullName === oddsTeamName) {
-      if (variants.some(v => ourTeamName.includes(v) || v.includes(ourTeamName))) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
 
 interface TeamData {
   id: string;
@@ -256,72 +209,37 @@ async function fetchAllCompletedNBAGames(log: (msg: string) => void): Promise<an
   );
 }
 
-async function fetchNBAOdds(): Promise<Map<string, any[]>> {
-  const oddsMap = new Map<string, any[]>();
-
+// Fetch odds from ESPN's FREE odds API (no API key needed!)
+async function fetchESPNOdds(eventId: string): Promise<{ homeSpread: number; total: number; homeML?: number; awayML?: number } | null> {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_ODDS_API_KEY;
-    if (!apiKey) {
-      console.log('No Odds API key configured');
-      return oddsMap;
-    }
-
-    const url = `https://api.the-odds-api.com/v4/sports/basketball_nba/odds/?apiKey=${apiKey}&regions=us&markets=spreads,totals,h2h&oddsFormat=american`;
+    const url = `https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/events/${eventId}/competitions/${eventId}/odds`;
     const response = await fetch(url);
 
     if (!response.ok) {
-      console.error('Odds API error:', response.status);
-      return oddsMap;
+      return null;
     }
 
     const data = await response.json();
 
-    for (const game of data) {
-      const key = `${game.home_team}_${game.away_team}_${game.commence_time}`;
-      const bookmakers = game.bookmakers || [];
+    // Get the first provider's odds (typically ESPN BET)
+    const odds = data.items?.[0];
+    if (!odds) return null;
 
-      const oddsArray: any[] = [];
-      for (const bookmaker of bookmakers) {
-        const spreads = bookmaker.markets?.find((m: any) => m.key === 'spreads');
-        const totals = bookmaker.markets?.find((m: any) => m.key === 'totals');
-        const h2h = bookmaker.markets?.find((m: any) => m.key === 'h2h');
+    const homeSpread = odds.spread;
+    const total = odds.overUnder;
 
-        if (spreads || totals) {
-          const homeSpreadOutcome = spreads?.outcomes?.find((o: any) => o.name === game.home_team);
-          const overOutcome = totals?.outcomes?.find((o: any) => o.name === 'Over');
+    if (homeSpread === undefined || total === undefined) return null;
 
-          oddsArray.push({
-            bookmaker: bookmaker.key,
-            homeSpread: homeSpreadOutcome?.point,
-            total: overOutcome?.point,
-            homeML: h2h?.outcomes?.find((o: any) => o.name === game.home_team)?.price,
-            awayML: h2h?.outcomes?.find((o: any) => o.name === game.away_team)?.price,
-          });
-        }
-      }
-
-      if (oddsArray.length > 0) {
-        oddsMap.set(key, oddsArray);
-      }
-    }
-
-    return oddsMap;
+    return {
+      homeSpread,
+      total,
+      homeML: odds.homeTeamOdds?.moneyLine,
+      awayML: odds.awayTeamOdds?.moneyLine,
+    };
   } catch (error) {
-    console.error('Failed to fetch NBA odds:', error);
-    return oddsMap;
+    // Silently fail - odds just won't be available for this game
+    return null;
   }
-}
-
-function getConsensusOdds(oddsArray: any[]): { homeSpread: number; total: number } | null {
-  const spreads = oddsArray.map(o => o.homeSpread).filter((s): s is number => s !== undefined);
-  const totals = oddsArray.map(o => o.total).filter((t): t is number => t !== undefined);
-
-  if (spreads.length === 0 || totals.length === 0) return null;
-
-  return {
-    homeSpread: spreads.reduce((a, b) => a + b, 0) / spreads.length,
-    total: totals.reduce((a, b) => a + b, 0) / totals.length,
-  };
 }
 
 function predictScore(
@@ -615,31 +533,10 @@ export async function GET(request: Request) {
       return true;
     });
 
-    // 7. Fetch Vegas odds only for games that need them
+    // 7. Generate predictions for all current games (fetch odds inline via ESPN FREE API)
     const upcomingGames = allGames.filter(g => g.status !== 'final');
-    const gamesNeedingOdds = upcomingGames.filter(g => {
-      if (!g.id) return false;
-      const existing = historicalOdds[g.id];
-      // Don't need odds if already locked
-      if (existing?.lockedAt) return false;
-      return true;
-    });
-
-    let oddsMap = new Map<string, any[]>();
-    if (gamesNeedingOdds.length > 0) {
-      log(`Fetching NBA Vegas odds for ${gamesNeedingOdds.length} games that need them...`);
-      try {
-        oddsMap = await fetchNBAOdds();
-        log(`Fetched odds for ${oddsMap.size} games`);
-      } catch (err) {
-        log(`Failed to fetch odds: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      }
-    } else {
-      log('All NBA games already have locked odds - skipping odds API call');
-    }
-
-    // 8. Generate predictions for all current games
     const gamesWithPredictions = [];
+    let oddsFetched = 0;
 
     for (const game of allGames) {
       if (!game.id || !game.homeTeamId || !game.awayTeamId) continue;
@@ -647,10 +544,9 @@ export async function GET(request: Request) {
       const awayTeam = teamsMap.get(game.awayTeamId);
       if (!homeTeam || !awayTeam) continue;
 
-      // Find matching odds
+      // Get odds for this game
       let vegasSpread: number | undefined;
       let vegasTotal: number | undefined;
-      const gameDate = new Date(game.gameTime || '').toISOString().split('T')[0];
       const gameTime = new Date(game.gameTime || '');
       const now = new Date();
       const hoursUntilGame = (gameTime.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -667,33 +563,19 @@ export async function GET(request: Request) {
       } else if (oddsAreLocked) {
         vegasSpread = existingOdds.vegasSpread;
         vegasTotal = existingOdds.vegasTotal;
-      } else {
-        // Fetch latest odds
-        for (const [key, oddsArray] of oddsMap) {
-          const keyParts = key.split('_');
-          const oddsHomeTeam = keyParts[0] || '';
-          const oddsAwayTeam = keyParts[1] || '';
-          const oddsTime = keyParts.slice(2).join('_');
-          const oddsDate = oddsTime ? new Date(oddsTime).toISOString().split('T')[0] : '';
-
-          const teamsMatch = matchesTeamName(oddsHomeTeam, homeTeam.name) && matchesTeamName(oddsAwayTeam, awayTeam.name);
-          const dateMatches = !oddsDate || !gameDate || oddsDate === gameDate;
-
-          if (teamsMatch && dateMatches) {
-            const consensus = getConsensusOdds(oddsArray);
-            if (consensus) {
-              vegasSpread = consensus.homeSpread;
-              vegasTotal = consensus.total;
-              if (vegasSpread !== undefined && vegasTotal !== undefined) {
-                historicalOdds[game.id] = {
-                  vegasSpread,
-                  vegasTotal,
-                  capturedAt: new Date().toISOString(),
-                };
-              }
-            }
-            break;
-          }
+      } else if (game.status !== 'final') {
+        // Fetch latest odds from ESPN's FREE API (only for non-final games)
+        const espnOdds = await fetchESPNOdds(game.id);
+        if (espnOdds) {
+          vegasSpread = espnOdds.homeSpread;
+          vegasTotal = espnOdds.total;
+          oddsFetched++;
+          // Store in historical odds
+          historicalOdds[game.id] = {
+            vegasSpread,
+            vegasTotal,
+            capturedAt: new Date().toISOString(),
+          };
         }
       }
 
@@ -764,7 +646,7 @@ export async function GET(request: Request) {
       });
     }
 
-    log(`Generated predictions for ${gamesWithPredictions.length} games`);
+    log(`Generated predictions for ${gamesWithPredictions.length} games (fetched ${oddsFetched} odds from ESPN FREE API)`);
 
     // 9. Build blob data
     const spreadTotal = spreadWins + spreadLosses;

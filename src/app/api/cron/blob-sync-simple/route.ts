@@ -2,10 +2,9 @@ import { NextResponse } from 'next/server';
 import { put, head } from '@vercel/blob';
 import { fetchNFLTeams, fetchNFLSchedule, fetchAllCompletedGames } from '@/services/espn';
 import { updateEloAfterGame } from '@/services/elo';
-import { fetchNFLOdds, getConsensusOdds } from '@/services/odds';
 import { fetchWeatherForVenue, getWeatherImpact } from '@/services/weather';
 import { fetchInjuries, getGameInjuryImpact, InjuryReport } from '@/services/injuries';
-import { Team, Odds, WeatherData } from '@/types';
+import { Team, WeatherData } from '@/types';
 
 // Constants - Optimized via simulation (927 parameter combinations tested)
 // Previous: ELO_TO_POINTS=0.0593, HOME_FIELD_ADVANTAGE=2.28, SPREAD_REGRESSION=0.55, ELO_CAP=4
@@ -18,56 +17,38 @@ const ELO_HOME_ADVANTAGE = 48;
 const SPREAD_REGRESSION = 0.45;    // Was 0.55 - less regression toward 0
 const ELO_CAP = 16;                // Max ±8 pts per team to prevent unrealistic scores
 
-// Team name mapping for Odds API matching
-const TEAM_NAME_VARIANTS: Record<string, string[]> = {
-  'Arizona Cardinals': ['Cardinals', 'Arizona'],
-  'Atlanta Falcons': ['Falcons', 'Atlanta'],
-  'Baltimore Ravens': ['Ravens', 'Baltimore'],
-  'Buffalo Bills': ['Bills', 'Buffalo'],
-  'Carolina Panthers': ['Panthers', 'Carolina'],
-  'Chicago Bears': ['Bears', 'Chicago'],
-  'Cincinnati Bengals': ['Bengals', 'Cincinnati'],
-  'Cleveland Browns': ['Browns', 'Cleveland'],
-  'Dallas Cowboys': ['Cowboys', 'Dallas'],
-  'Denver Broncos': ['Broncos', 'Denver'],
-  'Detroit Lions': ['Lions', 'Detroit'],
-  'Green Bay Packers': ['Packers', 'Green Bay'],
-  'Houston Texans': ['Texans', 'Houston'],
-  'Indianapolis Colts': ['Colts', 'Indianapolis'],
-  'Jacksonville Jaguars': ['Jaguars', 'Jacksonville'],
-  'Kansas City Chiefs': ['Chiefs', 'Kansas City'],
-  'Las Vegas Raiders': ['Raiders', 'Las Vegas'],
-  'Los Angeles Chargers': ['Chargers', 'LA Chargers'],
-  'Los Angeles Rams': ['Rams', 'LA Rams'],
-  'Miami Dolphins': ['Dolphins', 'Miami'],
-  'Minnesota Vikings': ['Vikings', 'Minnesota'],
-  'New England Patriots': ['Patriots', 'New England'],
-  'New Orleans Saints': ['Saints', 'New Orleans'],
-  'New York Giants': ['Giants', 'NY Giants'],
-  'New York Jets': ['Jets', 'NY Jets'],
-  'Philadelphia Eagles': ['Eagles', 'Philadelphia'],
-  'Pittsburgh Steelers': ['Steelers', 'Pittsburgh'],
-  'San Francisco 49ers': ['49ers', 'San Francisco'],
-  'Seattle Seahawks': ['Seahawks', 'Seattle'],
-  'Tampa Bay Buccaneers': ['Buccaneers', 'Tampa Bay'],
-  'Tennessee Titans': ['Titans', 'Tennessee'],
-  'Washington Commanders': ['Commanders', 'Washington'],
-};
 
-function matchesTeamName(oddsTeamName: string, ourTeamName: string): boolean {
-  // Direct match
-  if (oddsTeamName === ourTeamName) return true;
-  if (oddsTeamName.includes(ourTeamName) || ourTeamName.includes(oddsTeamName)) return true;
+// Fetch odds from ESPN's FREE odds API (no API key needed!)
+async function fetchESPNOdds(eventId: string): Promise<{ homeSpread: number; total: number; homeML?: number; awayML?: number } | null> {
+  try {
+    const url = `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${eventId}/competitions/${eventId}/odds`;
+    const response = await fetch(url);
 
-  // Check variants
-  for (const [fullName, variants] of Object.entries(TEAM_NAME_VARIANTS)) {
-    if (oddsTeamName.includes(fullName) || fullName === oddsTeamName) {
-      if (variants.some(v => ourTeamName.includes(v) || v.includes(ourTeamName))) {
-        return true;
-      }
+    if (!response.ok) {
+      return null;
     }
+
+    const data = await response.json();
+
+    // Get the first provider's odds (typically ESPN BET)
+    const odds = data.items?.[0];
+    if (!odds) return null;
+
+    const homeSpread = odds.spread;
+    const total = odds.overUnder;
+
+    if (homeSpread === undefined || total === undefined) return null;
+
+    return {
+      homeSpread,
+      total,
+      homeML: odds.homeTeamOdds?.moneyLine,
+      awayML: odds.awayTeamOdds?.moneyLine,
+    };
+  } catch (error) {
+    // Silently fail - odds just won't be available for this game
+    return null;
   }
-  return false;
 }
 
 interface TeamData {
@@ -498,34 +479,15 @@ export async function GET(request: Request) {
       return true;
     });
 
-    // 7. Fetch all current week games and Vegas odds
+    // 7. Fetch all current week games
     log('Fetching current week games...');
     const allWeekGames = await fetchNFLSchedule();
     // Include all games (final, in-progress, and scheduled) for the current week
     const upcoming = allWeekGames;
     log(`Found ${upcoming.length} games for current week`);
 
-    // Only fetch odds if there are games that need them (not yet stored or locked)
-    const gamesNeedingOdds = upcoming.filter(g => {
-      if (!g.id) return false;
-      const existing = historicalOdds[g.id];
-      // Don't need odds if already locked or if game is final
-      if (existing?.lockedAt || g.status === 'final') return false;
-      return true;
-    });
-
-    let oddsMap = new Map<string, Partial<Odds>[]>();
-    if (gamesNeedingOdds.length > 0) {
-      log(`Fetching Vegas odds for ${gamesNeedingOdds.length} games that need them...`);
-      try {
-        oddsMap = await fetchNFLOdds();
-        log(`Fetched odds for ${oddsMap.size} games`);
-      } catch (err) {
-        log(`Failed to fetch odds: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      }
-    } else {
-      log('All games already have locked odds - skipping odds API call');
-    }
+    // Track how many odds we fetch from ESPN FREE API
+    let oddsFetched = 0;
 
     // Determine current week from upcoming games
     const currentWeek = upcoming.length > 0 ? (upcoming[0].week || 1) : 1;
@@ -591,10 +553,9 @@ export async function GET(request: Request) {
       const awayTeam = teamsMap.get(game.awayTeamId);
       if (!homeTeam || !awayTeam) continue;
 
-      // Find matching odds by team names and game time
+      // Get odds for this game
       let vegasSpread: number | undefined;
       let vegasTotal: number | undefined;
-      const gameDate = new Date(game.gameTime || '').toISOString().split('T')[0];
       const gameTime = new Date(game.gameTime || '');
       const now = new Date();
       const hoursUntilGame = (gameTime.getTime() - now.getTime()) / (1000 * 60 * 60);
@@ -614,36 +575,19 @@ export async function GET(request: Request) {
         // Use already locked odds - don't update
         vegasSpread = existingOdds.vegasSpread;
         vegasTotal = existingOdds.vegasTotal;
-      } else {
-        // Odds not locked yet - fetch latest and store
-        for (const [key, oddsArray] of oddsMap) {
-          // Key format: "homeTeam_awayTeam_timestamp"
-          const keyParts = key.split('_');
-          const oddsHomeTeam = keyParts[0] || '';
-          const oddsAwayTeam = keyParts[1] || '';
-          const oddsTime = keyParts.slice(2).join('_'); // Rejoin in case timestamp has underscores
-          const oddsDate = oddsTime ? new Date(oddsTime).toISOString().split('T')[0] : '';
-
-          // Match team names AND date
-          const teamsMatch = matchesTeamName(oddsHomeTeam, homeTeam.name) && matchesTeamName(oddsAwayTeam, awayTeam.name);
-          const dateMatches = !oddsDate || !gameDate || oddsDate === gameDate;
-
-          if (teamsMatch && dateMatches) {
-            const consensus = getConsensusOdds(oddsArray);
-            if (consensus) {
-              vegasSpread = consensus.homeSpread;
-              vegasTotal = consensus.total;
-              // Store in historical odds (will be locked once within 1 hour of game)
-              if (vegasSpread !== undefined && vegasTotal !== undefined) {
-                historicalOdds[game.id] = {
-                  vegasSpread,
-                  vegasTotal,
-                  capturedAt: new Date().toISOString(),
-                };
-              }
-            }
-            break;
-          }
+      } else if (game.status !== 'final') {
+        // Fetch latest odds from ESPN's FREE API (only for non-final games)
+        const espnOdds = await fetchESPNOdds(game.id);
+        if (espnOdds) {
+          vegasSpread = espnOdds.homeSpread;
+          vegasTotal = espnOdds.total;
+          oddsFetched++;
+          // Store in historical odds (will be locked once within 1 hour of game)
+          historicalOdds[game.id] = {
+            vegasSpread,
+            vegasTotal,
+            capturedAt: new Date().toISOString(),
+          };
         }
       }
 
@@ -833,7 +777,8 @@ export async function GET(request: Request) {
       });
     }
 
-    // Log weather stats
+    // Log odds and weather stats
+    log(`Fetched ${oddsFetched} odds from ESPN FREE API`);
     const gamesWithWeather = gamesWithPredictions.filter((g: any) => g.prediction.weather).length;
     log(`Weather data: ${gamesWithWeather}/${gamesWithPredictions.length} games`);
 

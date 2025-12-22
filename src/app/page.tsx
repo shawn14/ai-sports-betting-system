@@ -498,7 +498,7 @@ export default function Dashboard() {
 
       {/* Upcoming Picks Header */}
       <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-        <h1 className="text-xl font-bold text-gray-900">This Week's Picks</h1>
+        <h1 className="text-xl font-bold text-gray-900">Upcoming Picks</h1>
         <div className="flex items-center gap-3 text-xs text-gray-500">
           <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-600 rounded"></span> Strong</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-500 rounded"></span> Lean</span>

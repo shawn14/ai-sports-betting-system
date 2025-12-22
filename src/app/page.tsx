@@ -706,7 +706,19 @@ export default function Dashboard() {
                 {/* Vegas line status */}
                 {hasVegas && (
                   <div className="px-3 sm:px-4 py-1 sm:py-1.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-[9px] sm:text-[10px]">
-                    <span className="text-gray-500">Vegas</span>
+                    <div className="flex flex-col">
+                      <span className="text-gray-500">Vegas</span>
+                      {lineOpeningSpread !== undefined && lineCurrentSpread !== undefined && (
+                        <span className="text-[9px] text-gray-400">
+                          Spread: {formatSpread(lineOpeningSpread)} → {formatSpread(lineCurrentSpread)}
+                        </span>
+                      )}
+                      {lineOpeningTotal !== undefined && lineCurrentTotal !== undefined && (
+                        <span className="text-[9px] text-gray-400">
+                          Total: {Math.round(lineOpeningTotal * 2) / 2} → {Math.round(lineCurrentTotal * 2) / 2}
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-2">
                       {lineOpeningSpread !== undefined && (
                         <div className="relative group">
@@ -719,7 +731,7 @@ export default function Dashboard() {
                           </button>
                           <div className="absolute right-0 mt-2 hidden w-52 rounded-md border border-gray-200 bg-white p-2 text-[10px] text-gray-600 shadow-lg group-hover:block">
                             <div className="font-semibold text-gray-900 mb-1">Line Movement</div>
-                            <div>Spread: {lineOpeningSpread} → {lineCurrentSpread ?? '—'}</div>
+                            <div>Spread: {formatSpread(lineOpeningSpread)} → {lineCurrentSpread !== undefined ? formatSpread(lineCurrentSpread) : '—'}</div>
                             <div>Total: {lineOpeningTotal ?? '—'} → {lineCurrentTotal ?? '—'}</div>
                             {spreadMove !== undefined && (
                               <div className="mt-1">

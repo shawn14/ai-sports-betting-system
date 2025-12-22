@@ -369,6 +369,8 @@ export default function NBADashboard() {
             .map(({ game, prediction }) => {
               const away = game.awayTeam?.abbreviation || 'AWAY';
               const home = game.homeTeam?.abbreviation || 'HOME';
+              const awayLabel = game.awayTeam?.name || away;
+              const homeLabel = game.homeTeam?.name || home;
               const ourSpread = prediction.predictedSpread;
               const ourTotal = prediction.predictedTotal;
               const homeWinProb = prediction.homeWinProbability;
@@ -390,8 +392,8 @@ export default function NBADashboard() {
               const spreadMoveTeam = spreadMove === undefined || spreadMove === 0
                 ? null
                 : spreadMove > 0
-                  ? away
-                  : home;
+                  ? awayLabel
+                  : homeLabel;
 
               const pickHomeSpread = ourSpread < displaySpread; // Pick home if we favor home more than Vegas
               const pickHomeML = homeWinProb > 0.5;
@@ -462,7 +464,7 @@ export default function NBADashboard() {
                   )}
                   {spreadMove !== undefined && spreadMove !== 0 && (
                     <div className="px-3 sm:px-4 pb-1 sm:pb-1.5 bg-gray-50 border-b border-gray-100 text-[9px] sm:text-[10px] text-gray-500">
-                      Line moved {Math.abs(spreadMove)} toward {spreadMoveTeam}.
+                      Line moved {spreadMove > 0 ? '+' : '-'}{Math.abs(spreadMove)} toward {spreadMoveTeam}.
                     </div>
                   )}
 

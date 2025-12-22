@@ -177,8 +177,10 @@ export default function NBADashboard() {
   };
 
   const formatSpread = (spread: number) => {
-    if (spread > 0) return `+${spread}`;
-    return spread.toString();
+    // Round to nearest 0.5
+    const rounded = Math.round(spread * 2) / 2;
+    if (rounded > 0) return `+${rounded}`;
+    return rounded.toString();
   };
 
   const getLogoUrl = (abbr: string) => {

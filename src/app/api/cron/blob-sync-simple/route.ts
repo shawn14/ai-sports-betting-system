@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
-import { put, head } from '@vercel/blob';
+import { put } from '@vercel/blob';
 import { fetchNFLTeams, fetchNFLSchedule, fetchAllCompletedGames } from '@/services/espn';
 import { updateEloAfterGame } from '@/services/elo';
 import { fetchWeatherForVenue, getWeatherImpact } from '@/services/weather';
 import { fetchInjuries, getGameInjuryImpact, InjuryReport } from '@/services/injuries';
 import { Team, WeatherData } from '@/types';
+import {
+  SportKey,
+  getSportState,
+  setSportState,
+  getDocsList,
+  getDocsMap,
+  saveDocsBatch,
+} from '@/services/firestore-store';
 
 // Constants - Optimized via simulation (927 parameter combinations tested)
 // Previous: ELO_TO_POINTS=0.0593, HOME_FIELD_ADVANTAGE=2.28, SPREAD_REGRESSION=0.55, ELO_CAP=4
@@ -167,7 +175,8 @@ async function fetchExistingBlob(): Promise<BlobState | null> {
   try {
     const blobInfo = await head('prediction-matrix-data.json');
     if (!blobInfo?.url) return null;
-    const response = await fetch(blobInfo.url);
+    // Cache-bust to avoid stale CDN reads
+    const response = await fetch(`${blobInfo.url}?t=${Date.now()}`, { cache: 'no-store' });
     return await response.json();
   } catch {
     return null;
@@ -834,6 +843,19 @@ export async function GET(request: Request) {
     log(`Uploading to blob... (${Math.round(jsonString.length / 1024)}KB)`);
 
     const blob = await put('prediction-matrix-data.json', jsonString, {
+      access: 'public',
+      contentType: 'application/json',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+    });
+
+    // Write heartbeat for cron monitoring
+    await put('cron-heartbeat.json', JSON.stringify({
+      lastRun: new Date().toISOString(),
+      route: 'blob-sync-simple',
+      success: true,
+      gamesProcessed: newGames.length,
+    }), {
       access: 'public',
       contentType: 'application/json',
       addRandomSuffix: false,

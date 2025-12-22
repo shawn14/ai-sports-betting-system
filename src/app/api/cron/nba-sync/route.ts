@@ -301,7 +301,8 @@ async function fetchExistingBlob(): Promise<BlobState | null> {
   try {
     const blobInfo = await head('nba-prediction-data.json');
     if (!blobInfo?.url) return null;
-    const response = await fetch(blobInfo.url);
+    // Cache-bust to avoid stale CDN reads
+    const response = await fetch(`${blobInfo.url}?t=${Date.now()}`, { cache: 'no-store' });
     return await response.json();
   } catch {
     return null;
@@ -689,6 +690,19 @@ export async function GET(request: Request) {
     log(`Uploading to blob... (${Math.round(jsonString.length / 1024)}KB)`);
 
     const blob = await put('nba-prediction-data.json', jsonString, {
+      access: 'public',
+      contentType: 'application/json',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+    });
+
+    // Write heartbeat for cron monitoring
+    await put('nba-cron-heartbeat.json', JSON.stringify({
+      lastRun: new Date().toISOString(),
+      route: 'nba-sync',
+      success: true,
+      gamesProcessed: newGames.length,
+    }), {
       access: 'public',
       contentType: 'application/json',
       addRandomSuffix: false,

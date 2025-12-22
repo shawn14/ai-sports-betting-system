@@ -412,8 +412,11 @@ export default function ResultsPage() {
     );
   }
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
+  const formatDate = (date?: string) => {
+    if (!date) return '—';
+    const parsed = Date.parse(date);
+    if (Number.isNaN(parsed)) return '—';
+    return new Date(parsed).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
     });

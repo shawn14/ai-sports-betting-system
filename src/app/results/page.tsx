@@ -412,8 +412,15 @@ export default function ResultsPage() {
     );
   }
 
-  const formatDate = (date?: string) => {
+  const formatDate = (date?: string | { _seconds?: number }) => {
     if (!date) return '—';
+    if (typeof date === 'object' && typeof date._seconds === 'number') {
+      return new Date(date._seconds * 1000).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      });
+    }
+    if (typeof date !== 'string') return '—';
     const parsed = Date.parse(date);
     if (Number.isNaN(parsed)) return '—';
     return new Date(parsed).toLocaleDateString('en-US', {

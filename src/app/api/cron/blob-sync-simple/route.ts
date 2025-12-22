@@ -450,11 +450,22 @@ export async function GET(request: Request) {
     log(`Processed ${newGames.length} new games. Spread: ${spreadWins}-${spreadLosses}`);
 
     // 6. Merge backtest results (new + existing)
+    const coerceGameTime = (value: any) => {
+      if (!value) return value;
+      if (typeof value === 'string') return value;
+      if (typeof value === 'number') return new Date(value).toISOString();
+      if (typeof value === 'object' && typeof value._seconds === 'number') {
+        return new Date(value._seconds * 1000).toISOString();
+      }
+      return value;
+    };
+
     const existingResults = shouldReset
       ? []
       : (await getDocsList<any>(sport, 'results')).map(r => ({
         ...r,
         gameId: r.gameId || r.id,
+        gameTime: coerceGameTime(r.gameTime),
       }));
 
     // Division lookup for situation flags

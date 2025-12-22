@@ -434,38 +434,40 @@ export default function NBADashboard() {
 
                   {/* Vegas line status */}
                   {hasVegas && (
-                    <div className="px-3 sm:px-4 py-1 sm:py-1.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-[9px] sm:text-[10px]">
-                      <div className="flex flex-col">
-                        <span className="text-gray-500">Vegas</span>
-                        {lineOpeningSpread !== undefined && lineCurrentSpread !== undefined && (
-                          <span className="text-[9px] text-gray-400">
-                            Spread: {formatSpread(lineOpeningSpread)} → {formatSpread(lineCurrentSpread)}
-                          </span>
-                        )}
-                        {lineOpeningTotal !== undefined && lineCurrentTotal !== undefined && (
-                          <span className="text-[9px] text-gray-400">
-                            Total: {Math.round(lineOpeningTotal * 2) / 2} → {Math.round(lineCurrentTotal * 2) / 2}
-                          </span>
-                        )}
+                    <>
+                      <div className="px-3 sm:px-4 py-1 sm:py-1.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-[9px] sm:text-[10px]">
+                        <div className="flex flex-col">
+                          <span className="text-gray-500">Vegas</span>
+                          {lineOpeningSpread !== undefined && lineCurrentSpread !== undefined && (
+                            <span className="text-[9px] text-gray-400">
+                              Spread: {formatSpread(lineOpeningSpread)} → {formatSpread(lineCurrentSpread)}
+                            </span>
+                          )}
+                          {lineOpeningTotal !== undefined && lineCurrentTotal !== undefined && (
+                            <span className="text-[9px] text-gray-400">
+                              Total: {Math.round(lineOpeningTotal * 2) / 2} → {Math.round(lineCurrentTotal * 2) / 2}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {prediction.oddsLockedAt ? (
+                            <span className="text-green-600 font-medium flex items-center gap-1">
+                              <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                              </svg>
+                              Locked
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">Live</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        {prediction.oddsLockedAt ? (
-                          <span className="text-green-600 font-medium flex items-center gap-1">
-                            <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                            </svg>
-                            Locked
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">Live</span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  {spreadMove !== undefined && spreadMove !== 0 && (
-                    <div className="px-3 sm:px-4 pb-1 sm:pb-1.5 bg-gray-50 border-b border-gray-100 text-[9px] sm:text-[10px] text-gray-500">
-                      Line moved {spreadMove > 0 ? '+' : '-'}{Math.abs(spreadMove)} toward {spreadMoveTeam}.
-                    </div>
+                      {spreadMove !== undefined && spreadMove !== 0 && (
+                        <div className="px-3 sm:px-4 pb-1 sm:pb-1.5 bg-gray-50 border-b border-gray-100 text-[9px] sm:text-[10px] text-gray-500">
+                          Line moved {spreadMove > 0 ? '+' : '-'}{Math.abs(spreadMove)} toward {spreadMoveTeam}.
+                        </div>
+                      )}
+                    </>
                   )}
 
                   {/* Picks grid */}

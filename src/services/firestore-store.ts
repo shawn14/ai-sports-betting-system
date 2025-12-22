@@ -47,7 +47,7 @@ export async function getSportState(sport: SportKey): Promise<SportState | null>
 
 export async function setSportState(sport: SportKey, state: SportState): Promise<void> {
   const ref = doc(db, 'sports', sport);
-  await setDoc(ref, sanitizeForFirestore(state), { merge: true });
+  await setDoc(ref, sanitizeForFirestore(state as Record<string, unknown>), { merge: true });
 }
 
 export async function getDocsMap<T>(

@@ -89,10 +89,27 @@ interface GameWithPrediction {
   prediction: Prediction;
 }
 
+interface CronHealthState {
+  lastSyncAt?: string;
+  lastBlobWriteAt?: string;
+  lastBlobUrl?: string;
+  lastBlobSizeKb?: number;
+  season?: number;
+  currentWeek?: number;
+}
+
+interface CronHealthResponse {
+  nfl?: CronHealthState | null;
+  nba?: CronHealthState | null;
+  error?: string;
+  message?: string;
+}
+
 export default function Dashboard() {
   const [games, setGames] = useState<GameWithPrediction[]>([]);
   const [recentGames, setRecentGames] = useState<Game[]>([]);
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
+  const [cronHealth, setCronHealth] = useState<CronHealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const scoreboardRef = useRef<HTMLDivElement>(null);
@@ -177,7 +194,7 @@ export default function Dashboard() {
     setSyncing(true);
     try {
       // Trigger blob sync which does everything in one call
-      await fetch('/api/cron/blob-sync');
+      await fetch('/api/cron/blob-sync-simple');
       await fetchData();
     } catch (err) {
       console.error('Sync failed:', err);
@@ -186,12 +203,24 @@ export default function Dashboard() {
     }
   }, [fetchData]);
 
+  const fetchCronHealth = useCallback(async () => {
+    try {
+      const response = await fetch('/api/cron/health', { cache: 'no-cache' });
+      const data = await response.json();
+      setCronHealth(data);
+    } catch (error) {
+      console.error('Error fetching cron health:', error);
+      setCronHealth({ error: 'Failed to load cron health' });
+    }
+  }, []);
+
   useEffect(() => {
     const init = async () => {
       const hasData = await fetchData();
       if (!hasData) {
         await syncAll();
       }
+      fetchCronHealth();
       // Fetch live scores
       fetchLiveScores();
     };
@@ -200,7 +229,17 @@ export default function Dashboard() {
     // Refresh live scores every 30 seconds
     const interval = setInterval(fetchLiveScores, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchCronHealth, fetchData, fetchLiveScores, syncAll]);
+
+  const formatHealthTime = (value?: string) => {
+    if (!value) return '—';
+    return new Date(value).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  };
 
   const formatTime = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -455,6 +494,25 @@ export default function Dashboard() {
           <span className="flex items-center gap-1"><span className="w-3 h-3 bg-green-600 rounded"></span> Strong</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-500 rounded"></span> Lean</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 bg-gray-300 rounded"></span> Avoid</span>
+        </div>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-lg p-4 text-sm text-gray-600">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-xs uppercase tracking-wide text-gray-400">Data Refresh</span>
+          {cronHealth?.error ? (
+            <span className="text-red-600">{cronHealth.error}</span>
+          ) : (
+            <>
+              <span className="font-medium text-gray-900">NFL</span>
+              <span>Last sync: {formatHealthTime(cronHealth?.nfl?.lastSyncAt)}</span>
+              <span>Blob: {formatHealthTime(cronHealth?.nfl?.lastBlobWriteAt)}</span>
+              <span>Week: {cronHealth?.nfl?.currentWeek ?? '—'}</span>
+              <span className="font-medium text-gray-900">NBA</span>
+              <span>Last sync: {formatHealthTime(cronHealth?.nba?.lastSyncAt)}</span>
+              <span>Blob: {formatHealthTime(cronHealth?.nba?.lastBlobWriteAt)}</span>
+            </>
+          )}
         </div>
       </div>
 

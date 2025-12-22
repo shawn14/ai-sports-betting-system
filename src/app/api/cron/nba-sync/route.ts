@@ -1,7 +1,15 @@
 import { NextResponse } from 'next/server';
-import { put, head } from '@vercel/blob';
+import { put } from '@vercel/blob';
 import { updateEloAfterGame } from '@/services/elo';
 import { Team } from '@/types';
+import {
+  SportKey,
+  getSportState,
+  setSportState,
+  getDocsList,
+  getDocsMap,
+  saveDocsBatch,
+} from '@/services/firestore-store';
 
 // NBA Constants - Optimized via backtesting (178 games, 56.6% ATS, 59.9% O/U)
 const LEAGUE_AVG_PPG = 112;          // NBA average ~112 PPG
@@ -297,18 +305,6 @@ function calculateSpread(homeScore: number, awayScore: number): number {
   return Math.round(rawSpread * (1 - SPREAD_REGRESSION) * 2) / 2;
 }
 
-async function fetchExistingBlob(): Promise<BlobState | null> {
-  try {
-    const blobInfo = await head('nba-prediction-data.json');
-    if (!blobInfo?.url) return null;
-    // Cache-bust to avoid stale CDN reads
-    const response = await fetch(`${blobInfo.url}?t=${Date.now()}`, { cache: 'no-store' });
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const forceReset = searchParams.get('reset') === 'true';
@@ -322,13 +318,27 @@ export async function GET(request: Request) {
   try {
     log('Starting NBA sync...');
 
-    // 1. Load existing blob state
-    const rawExistingState = await fetchExistingBlob();
-    const historicalOdds: Record<string, HistoricalOdds> = rawExistingState?.historicalOdds || {};
-    log(`Loaded ${Object.keys(historicalOdds).length} historical odds records`);
+    const sport: SportKey = 'nba';
+    const rawState = await getSportState(sport);
 
-    log(forceReset ? 'RESET requested - reprocessing all games' : 'Checking existing blob state...');
-    const existingState = forceReset ? null : rawExistingState;
+    // Fetch current schedule early to detect season changes
+    const currentSchedule = await fetchNBASchedule();
+    const currentSeason = currentSchedule[0]?.season || rawState?.season || new Date().getFullYear();
+
+    const seasonChanged = rawState?.season && rawState.season !== currentSeason;
+    const shouldReset = forceReset || seasonChanged;
+
+    if (seasonChanged) {
+      log(`Season changed (${rawState?.season} -> ${currentSeason}) - resetting state`);
+    }
+
+    log(shouldReset ? 'RESET requested - reprocessing all games' : 'Loading Firestore state...');
+    const existingState = shouldReset ? null : rawState;
+
+    const historicalOdds: Record<string, HistoricalOdds> = shouldReset
+      ? {}
+      : await getDocsMap<HistoricalOdds>(sport, 'oddsLocks');
+    log(`Loaded ${Object.keys(historicalOdds).length} historical odds records`);
 
     const isFirstRun = !existingState || !existingState.processedGameIds?.length;
     log(isFirstRun ? 'First run - will initialize teams' : `Found ${existingState.processedGameIds.length} processed games`);
@@ -336,11 +346,12 @@ export async function GET(request: Request) {
     // 2. Build team map
     const teamsMap = new Map<string, TeamData>();
 
-    if (existingState?.teams?.length && !forceReset) {
-      for (const team of existingState.teams) {
+    const existingTeams = shouldReset ? [] : await getDocsList<TeamData>(sport, 'teams');
+    if (existingTeams.length && !shouldReset) {
+      for (const team of existingTeams) {
         teamsMap.set(team.id, team);
       }
-      log(`Loaded ${teamsMap.size} teams with existing Elos`);
+      log(`Loaded ${teamsMap.size} teams with existing Elos from Firestore`);
     } else {
       log('Fetching NBA teams from ESPN...');
       const espnTeams = await fetchNBATeams();
@@ -369,13 +380,12 @@ export async function GET(request: Request) {
       log('First run - fetching ALL completed NBA games from season start...');
       completedGames = await fetchAllCompletedNBAGames(log);
       // Also fetch today's scheduled games
-      const todayGames = await fetchNBASchedule();
-      const scheduledGames = todayGames.filter(g => g.status !== 'final');
+      const scheduledGames = currentSchedule.filter(g => g.status !== 'final');
       allGames = [...completedGames, ...scheduledGames];
       log(`Found ${completedGames.length} completed games + ${scheduledGames.length} upcoming`);
     } else {
       log('Fetching NBA schedule...');
-      allGames = await fetchNBASchedule();
+      allGames = currentSchedule;
       completedGames = allGames.filter(g => g.status === 'final');
       log(`Found ${allGames.length} games (${completedGames.length} completed)`);
     }
@@ -388,14 +398,14 @@ export async function GET(request: Request) {
     newGames.sort((a, b) => new Date(a.gameTime || 0).getTime() - new Date(b.gameTime || 0).getTime());
 
     // 5. Process new games - update Elos
-    let spreadWins = existingState?.backtest?.summary?.spread?.wins || 0;
-    let spreadLosses = existingState?.backtest?.summary?.spread?.losses || 0;
-    let spreadPushes = existingState?.backtest?.summary?.spread?.pushes || 0;
-    let mlWins = existingState?.backtest?.summary?.moneyline?.wins || 0;
-    let mlLosses = existingState?.backtest?.summary?.moneyline?.losses || 0;
-    let ouWins = existingState?.backtest?.summary?.overUnder?.wins || 0;
-    let ouLosses = existingState?.backtest?.summary?.overUnder?.losses || 0;
-    let ouPushes = existingState?.backtest?.summary?.overUnder?.pushes || 0;
+    let spreadWins = existingState?.backtestSummary?.spread?.wins || 0;
+    let spreadLosses = existingState?.backtestSummary?.spread?.losses || 0;
+    let spreadPushes = existingState?.backtestSummary?.spread?.pushes || 0;
+    let mlWins = existingState?.backtestSummary?.moneyline?.wins || 0;
+    let mlLosses = existingState?.backtestSummary?.moneyline?.losses || 0;
+    let ouWins = existingState?.backtestSummary?.overUnder?.wins || 0;
+    let ouLosses = existingState?.backtestSummary?.overUnder?.losses || 0;
+    let ouPushes = existingState?.backtestSummary?.overUnder?.pushes || 0;
 
     const newBacktestResults: unknown[] = [];
 
@@ -523,7 +533,12 @@ export async function GET(request: Request) {
     log(`Processed ${newGames.length} new games. Spread: ${spreadWins}-${spreadLosses}`);
 
     // 6. Merge backtest results
-    const existingResults = existingState?.backtest?.results || [];
+    const existingResults = shouldReset
+      ? []
+      : (await getDocsList<any>(sport, 'results')).map(r => ({
+        ...r,
+        gameId: r.gameId || r.id,
+      }));
     const seenGameIds = new Set<string>();
     const allBacktestResults = [
       ...newBacktestResults,
@@ -685,9 +700,67 @@ export async function GET(request: Request) {
       },
     };
 
-    // 10. Upload
+    // 10. Persist to Firestore (source of truth)
+    const syncTimestamp = new Date().toISOString();
+
+    const teamDocs = Array.from(teamsMap.values()).map(team => ({
+      id: team.id,
+      data: {
+        ...team,
+        sport,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const gameDocs = allGames.map(game => ({
+      id: game.id,
+      data: {
+        ...game,
+        sport,
+        gameTime: game.gameTime ? new Date(game.gameTime).toISOString() : undefined,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const predictionDocs = gamesWithPredictions.map((entry: any) => ({
+      id: entry.game.id,
+      data: {
+        ...entry.prediction,
+        sport,
+        gameId: entry.game.id,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const resultDocs = allBacktestResults.map((result: any) => ({
+      id: result.gameId,
+      data: {
+        ...result,
+        sport,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const oddsDocs = Object.entries(historicalOdds).map(([gameId, odds]) => ({
+      id: gameId,
+      data: {
+        ...odds,
+        gameId,
+        sport,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    await saveDocsBatch(sport, 'teams', teamDocs);
+    await saveDocsBatch(sport, 'games', gameDocs);
+    await saveDocsBatch(sport, 'predictions', predictionDocs);
+    await saveDocsBatch(sport, 'results', resultDocs);
+    await saveDocsBatch(sport, 'oddsLocks', oddsDocs);
+
+    // 11. Upload
     const jsonString = JSON.stringify(blobData);
-    log(`Uploading to blob... (${Math.round(jsonString.length / 1024)}KB)`);
+    const blobSizeKb = Math.round(jsonString.length / 1024);
+    log(`Uploading to blob... (${blobSizeKb}KB)`);
 
     const blob = await put('nba-prediction-data.json', jsonString, {
       access: 'public',
@@ -696,12 +769,25 @@ export async function GET(request: Request) {
       allowOverwrite: true,
     });
 
+    await setSportState(sport, {
+      lastSyncAt: syncTimestamp,
+      lastBlobWriteAt: new Date().toISOString(),
+      lastBlobUrl: blob.url,
+      lastBlobSizeKb: blobSizeKb,
+      season: currentSeason,
+      processedGameIds: Array.from(processedGameIds),
+      backtestSummary: blobData.backtest.summary,
+    });
+
     // Write heartbeat for cron monitoring
-    await put('nba-cron-heartbeat.json', JSON.stringify({
+    await put('cron-heartbeat-nba.json', JSON.stringify({
       lastRun: new Date().toISOString(),
       route: 'nba-sync',
       success: true,
+      blobUrl: blob.url,
+      blobSizeKb,
       gamesProcessed: newGames.length,
+      totalGamesProcessed: processedGameIds.size,
     }), {
       access: 'public',
       contentType: 'application/json',

@@ -23,7 +23,7 @@ export async function GET() {
           },
           results: [],
         },
-        error: 'Data not synced yet. Run /api/cron/blob-sync to generate data.',
+        error: 'Data not synced yet. Run /api/cron/blob-sync-simple to generate data.',
       }, {
         headers: {
           'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',

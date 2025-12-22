@@ -171,18 +171,6 @@ function calculateSpread(homeScore: number, awayScore: number): number {
   return Math.round(rawSpread * (1 - SPREAD_REGRESSION) * 2) / 2;
 }
 
-async function fetchExistingBlob(): Promise<BlobState | null> {
-  try {
-    const blobInfo = await head('prediction-matrix-data.json');
-    if (!blobInfo?.url) return null;
-    // Cache-bust to avoid stale CDN reads
-    const response = await fetch(`${blobInfo.url}?t=${Date.now()}`, { cache: 'no-store' });
-    return await response.json();
-  } catch {
-    return null;
-  }
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const forceReset = searchParams.get('reset') === 'true';
@@ -194,20 +182,51 @@ export async function GET(request: Request) {
   };
 
   try {
-    // 1. Always read existing blob to preserve historical odds
-    const rawExistingState = await fetchExistingBlob();
+    const sport: SportKey = 'nfl';
+    const rawState = await getSportState(sport);
 
-    // Preserve historical odds across resets
-    const historicalOdds: Record<string, HistoricalOdds> = rawExistingState?.historicalOdds || {};
+    // Fetch current week schedule early to detect season/week changes
+    log('Fetching current week schedule...');
+    let currentWeekSchedule = await fetchNFLSchedule();
+    let currentWeek = currentWeekSchedule[0]?.week || rawState?.currentWeek || 1;
+    let currentSeason = currentWeekSchedule[0]?.season || rawState?.season || new Date().getFullYear();
+
+    const hasUpcomingGames = currentWeekSchedule.some(g => g.status !== 'final');
+    if (!hasUpcomingGames && currentWeekSchedule.length > 0) {
+      const nextWeek = currentWeek + 1;
+      const nextWeekSchedule = await fetchNFLSchedule(nextWeek);
+      if (nextWeekSchedule.length > 0) {
+        log(`Advancing to next week schedule (Week ${nextWeek})`);
+        currentWeekSchedule = nextWeekSchedule;
+        currentWeek = nextWeekSchedule[0]?.week || nextWeek;
+        currentSeason = nextWeekSchedule[0]?.season || currentSeason;
+      }
+    }
+
+    const seasonChanged = rawState?.season && rawState.season !== currentSeason;
+    const shouldReset = forceReset || seasonChanged;
+
+    if (seasonChanged) {
+      log(`Season changed (${rawState?.season} -> ${currentSeason}) - resetting state`);
+    }
+
+    log(shouldReset ? 'RESET requested - reprocessing all games with new parameters' : 'Loading Firestore state...');
+    const existingState = shouldReset ? null : rawState;
+
+    // Load cached data from Firestore
+    const historicalOdds: Record<string, HistoricalOdds> = shouldReset
+      ? {}
+      : await getDocsMap<HistoricalOdds>(sport, 'oddsLocks');
     log(`Loaded ${Object.keys(historicalOdds).length} historical odds records`);
 
-    // Preserve weather cache (refresh every 6 hours)
-    const weatherCache: Record<string, CachedWeather> = rawExistingState?.weatherCache || {};
+    const weatherCache: Record<string, CachedWeather> = shouldReset
+      ? {}
+      : await getDocsMap<CachedWeather>(sport, 'weather');
     const WEATHER_CACHE_HOURS = 6;
 
-    // On reset, ignore processed games but keep odds
-    log(forceReset ? 'RESET requested - reprocessing all games with new parameters (preserving Vegas odds)' : 'Checking existing blob state...');
-    const existingState = forceReset ? null : rawExistingState;
+    const injuriesByWeek: Record<string, CachedInjuries> = shouldReset
+      ? {}
+      : await getDocsMap<CachedInjuries>(sport, 'injuries');
 
     const isFirstRun = !existingState || !existingState.processedGameIds?.length;
     log(isFirstRun ? 'First run - will process all games' : `Found ${existingState.processedGameIds.length} processed games`);
@@ -215,12 +234,12 @@ export async function GET(request: Request) {
     // 2. Build team map from existing state or fresh from ESPN
     const teamsMap = new Map<string, TeamData>();
 
-    if (existingState?.teams?.length && !forceReset) {
-      // Use existing Elo ratings (unless reset)
-      for (const team of existingState.teams) {
+    const existingTeams = shouldReset ? [] : await getDocsList<TeamData>(sport, 'teams');
+    if (existingTeams.length && !shouldReset) {
+      for (const team of existingTeams) {
         teamsMap.set(team.id, team);
       }
-      log(`Loaded ${teamsMap.size} teams with existing Elos`);
+      log(`Loaded ${teamsMap.size} teams with existing Elos from Firestore`);
     } else {
       // First run or reset - fetch fresh from ESPN
       log('Fetching NFL teams from ESPN...');
@@ -260,7 +279,7 @@ export async function GET(request: Request) {
       completedGames = await fetchAllCompletedGames();
     } else {
       log('Fetching current week games...');
-      completedGames = (await fetchNFLSchedule()).filter(g => g.status === 'final');
+      completedGames = currentWeekSchedule.filter(g => g.status === 'final');
     }
 
     // Filter to only unprocessed games
@@ -271,14 +290,14 @@ export async function GET(request: Request) {
     newGames.sort((a, b) => new Date(a.gameTime || 0).getTime() - new Date(b.gameTime || 0).getTime());
 
     // 5. Process new games - update Elos and track results
-    let spreadWins = existingState?.backtest?.summary?.spread?.wins || 0;
-    let spreadLosses = existingState?.backtest?.summary?.spread?.losses || 0;
-    let spreadPushes = existingState?.backtest?.summary?.spread?.pushes || 0;
-    let mlWins = existingState?.backtest?.summary?.moneyline?.wins || 0;
-    let mlLosses = existingState?.backtest?.summary?.moneyline?.losses || 0;
-    let ouWins = existingState?.backtest?.summary?.overUnder?.wins || 0;
-    let ouLosses = existingState?.backtest?.summary?.overUnder?.losses || 0;
-    let ouPushes = existingState?.backtest?.summary?.overUnder?.pushes || 0;
+    let spreadWins = existingState?.backtestSummary?.spread?.wins || 0;
+    let spreadLosses = existingState?.backtestSummary?.spread?.losses || 0;
+    let spreadPushes = existingState?.backtestSummary?.spread?.pushes || 0;
+    let mlWins = existingState?.backtestSummary?.moneyline?.wins || 0;
+    let mlLosses = existingState?.backtestSummary?.moneyline?.losses || 0;
+    let ouWins = existingState?.backtestSummary?.overUnder?.wins || 0;
+    let ouLosses = existingState?.backtestSummary?.overUnder?.losses || 0;
+    let ouPushes = existingState?.backtestSummary?.overUnder?.pushes || 0;
 
     const newBacktestResults: unknown[] = [];
 
@@ -406,7 +425,12 @@ export async function GET(request: Request) {
     log(`Processed ${newGames.length} new games. Spread: ${spreadWins}-${spreadLosses}`);
 
     // 6. Merge backtest results (new + existing)
-    const existingResults = existingState?.backtest?.results || [];
+    const existingResults = shouldReset
+      ? []
+      : (await getDocsList<any>(sport, 'results')).map(r => ({
+        ...r,
+        gameId: r.gameId || r.id,
+      }));
 
     // Division lookup for situation flags
     const DIVISIONS: Record<string, string[]> = {
@@ -488,9 +512,8 @@ export async function GET(request: Request) {
       return true;
     });
 
-    // 7. Fetch all current week games
-    log('Fetching current week games...');
-    const allWeekGames = await fetchNFLSchedule();
+    // 7. Fetch all current week games (already loaded)
+    const allWeekGames = currentWeekSchedule;
     // Include all games (final, in-progress, and scheduled) for the current week
     const upcoming = allWeekGames;
     log(`Found ${upcoming.length} games for current week`);
@@ -498,15 +521,11 @@ export async function GET(request: Request) {
     // Track how many odds we fetch from ESPN FREE API
     let oddsFetched = 0;
 
-    // Determine current week from upcoming games
-    const currentWeek = upcoming.length > 0 ? (upcoming[0].week || 1) : 1;
-
     // Injury caching strategy:
     // - Past weeks: stored permanently in injuriesByWeek (never refetch)
     // - Current week: refresh every 6 hours
     const INJURY_CACHE_HOURS = 6;
-    const injuriesByWeek: Record<string, CachedInjuries> = rawExistingState?.injuriesByWeek || {};
-    let currentWeekInjuriesCache: CachedInjuries | undefined = rawExistingState?.currentWeekInjuriesCache;
+    let currentWeekInjuriesCache: CachedInjuries | undefined = injuriesByWeek[String(currentWeek)];
     let injuryReport: InjuryReport | null = null;
 
     // Check if current week cache is still valid
@@ -522,13 +541,6 @@ export async function GET(request: Request) {
       injuryReport = currentWeekInjuriesCache.data;
       log(`Using cached Week ${currentWeek} injuries (${Math.round(injuryCacheAge * 10) / 10}h old)`);
     } else {
-      // If we had a previous week cached, save it permanently before fetching new
-      if (currentWeekInjuriesCache && currentWeekInjuriesCache.week !== currentWeek) {
-        const prevWeek = currentWeekInjuriesCache.week;
-        injuriesByWeek[String(prevWeek)] = currentWeekInjuriesCache;
-        log(`Saved Week ${prevWeek} injuries to permanent storage`);
-      }
-
       log(`Fetching fresh Week ${currentWeek} injuries...`);
       try {
         injuryReport = await fetchInjuries();
@@ -542,6 +554,7 @@ export async function GET(request: Request) {
             fetchedAt: new Date().toISOString(),
             week: currentWeek,
           };
+          injuriesByWeek[String(currentWeek)] = currentWeekInjuriesCache;
         }
       } catch (err) {
         log(`Failed to fetch injuries: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -838,9 +851,96 @@ export async function GET(request: Request) {
       },
     };
 
-    // 9. Upload
+    // 9. Persist to Firestore (source of truth)
+    const syncTimestamp = new Date().toISOString();
+
+    const teamDocs = Array.from(teamsMap.values()).map(team => ({
+      id: team.id,
+      data: {
+        ...team,
+        sport,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const gamesToStore = new Map<string, any>();
+    for (const game of upcoming) {
+      if (game.id) gamesToStore.set(game.id, game);
+    }
+    for (const game of newGames) {
+      if (game.id) gamesToStore.set(game.id, game);
+    }
+
+    const gameDocs = Array.from(gamesToStore.values()).map(game => ({
+      id: game.id,
+      data: {
+        ...game,
+        sport,
+        gameTime: game.gameTime ? new Date(game.gameTime).toISOString() : undefined,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const predictionDocs = gamesWithPredictions.map((entry: any) => ({
+      id: entry.game.id,
+      data: {
+        ...entry.prediction,
+        sport,
+        gameId: entry.game.id,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const resultDocs = allBacktestResults.map((result: any) => ({
+      id: result.gameId,
+      data: {
+        ...result,
+        sport,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const oddsDocs = Object.entries(historicalOdds).map(([gameId, odds]) => ({
+      id: gameId,
+      data: {
+        ...odds,
+        gameId,
+        sport,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const weatherDocs = Object.entries(weatherCache).map(([gameId, weather]) => ({
+      id: gameId,
+      data: {
+        ...weather,
+        gameId,
+        sport,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    const injuriesDocs = Object.entries(injuriesByWeek).map(([weekKey, injuries]) => ({
+      id: weekKey,
+      data: {
+        ...injuries,
+        sport,
+        updatedAt: syncTimestamp,
+      },
+    }));
+
+    await saveDocsBatch(sport, 'teams', teamDocs);
+    await saveDocsBatch(sport, 'games', gameDocs);
+    await saveDocsBatch(sport, 'predictions', predictionDocs);
+    await saveDocsBatch(sport, 'results', resultDocs);
+    await saveDocsBatch(sport, 'oddsLocks', oddsDocs);
+    await saveDocsBatch(sport, 'weather', weatherDocs);
+    await saveDocsBatch(sport, 'injuries', injuriesDocs);
+
+    // 10. Upload
     const jsonString = JSON.stringify(blobData);
-    log(`Uploading to blob... (${Math.round(jsonString.length / 1024)}KB)`);
+    const blobSizeKb = Math.round(jsonString.length / 1024);
+    log(`Uploading to blob... (${blobSizeKb}KB)`);
 
     const blob = await put('prediction-matrix-data.json', jsonString, {
       access: 'public',
@@ -849,12 +949,26 @@ export async function GET(request: Request) {
       allowOverwrite: true,
     });
 
+    await setSportState(sport, {
+      lastSyncAt: syncTimestamp,
+      lastBlobWriteAt: new Date().toISOString(),
+      lastBlobUrl: blob.url,
+      lastBlobSizeKb: blobSizeKb,
+      season: currentSeason,
+      currentWeek,
+      processedGameIds: Array.from(processedGameIds),
+      backtestSummary: blobData.backtest.summary,
+    });
+
     // Write heartbeat for cron monitoring
-    await put('cron-heartbeat.json', JSON.stringify({
+    await put('cron-heartbeat-nfl.json', JSON.stringify({
       lastRun: new Date().toISOString(),
       route: 'blob-sync-simple',
       success: true,
+      blobUrl: blob.url,
+      blobSizeKb,
       gamesProcessed: newGames.length,
+      totalGamesProcessed: processedGameIds.size,
     }), {
       access: 'public',
       contentType: 'application/json',

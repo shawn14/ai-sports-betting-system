@@ -735,6 +735,7 @@ NEXT_PUBLIC_FIREBASE_PROJECT_ID=<firebase_project_id>
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=<firebase_storage_bucket>
 NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=<firebase_messaging_sender_id>
 NEXT_PUBLIC_FIREBASE_APP_ID=<firebase_app_id>
+FIREBASE_ADMIN_CREDENTIALS=<service_account_json_or_base64>
 ```
 
 **Vercel Blob Storage:**

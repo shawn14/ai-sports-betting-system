@@ -3,13 +3,13 @@ import { put } from '@vercel/blob';
 import { updateEloAfterGame } from '@/services/elo';
 import { Team } from '@/types';
 import {
-  SportKey,
   getSportState,
   setSportState,
   getDocsList,
   getDocsMap,
   saveDocsBatch,
-} from '@/services/firestore-store';
+} from '@/services/firestore-admin-store';
+import { SportKey } from '@/services/firestore-types';
 
 // NBA Constants - Optimized via backtesting (178 games, 56.6% ATS, 59.9% O/U)
 const LEAGUE_AVG_PPG = 112;          // NBA average ~112 PPG

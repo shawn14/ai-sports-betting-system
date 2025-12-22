@@ -6,13 +6,13 @@ import { fetchWeatherForVenue, getWeatherImpact } from '@/services/weather';
 import { fetchInjuries, getGameInjuryImpact, InjuryReport } from '@/services/injuries';
 import { Team, WeatherData } from '@/types';
 import {
-  SportKey,
   getSportState,
   setSportState,
   getDocsList,
   getDocsMap,
   saveDocsBatch,
-} from '@/services/firestore-store';
+} from '@/services/firestore-admin-store';
+import { SportKey } from '@/services/firestore-types';
 
 // Constants - Optimized via simulation (927 parameter combinations tested)
 // Previous: ELO_TO_POINTS=0.0593, HOME_FIELD_ADVANTAGE=2.28, SPREAD_REGRESSION=0.55, ELO_CAP=4

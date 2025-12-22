@@ -1,12 +1,4 @@
-import { db } from '@/lib/firebase';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  writeBatch,
-} from 'firebase/firestore';
+import { adminDb } from '@/lib/firebase-admin';
 import { SportKey, SportState } from '@/services/firestore-types';
 
 const MAX_BATCH_SIZE = 400;
@@ -22,23 +14,23 @@ export function sanitizeForFirestore<T extends Record<string, unknown>>(obj: T):
 }
 
 export async function getSportState(sport: SportKey): Promise<SportState | null> {
-  const ref = doc(db, 'sports', sport);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return null;
+  const ref = adminDb.collection('sports').doc(sport);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
   return snap.data() as SportState;
 }
 
 export async function setSportState(sport: SportKey, state: SportState): Promise<void> {
-  const ref = doc(db, 'sports', sport);
-  await setDoc(ref, sanitizeForFirestore(state as Record<string, unknown>), { merge: true });
+  const ref = adminDb.collection('sports').doc(sport);
+  await ref.set(sanitizeForFirestore(state as Record<string, unknown>), { merge: true });
 }
 
 export async function getDocsMap<T>(
   sport: SportKey,
   subcollection: string
 ): Promise<Record<string, T>> {
-  const ref = collection(db, 'sports', sport, subcollection);
-  const snap = await getDocs(ref);
+  const ref = adminDb.collection('sports').doc(sport).collection(subcollection);
+  const snap = await ref.get();
   const data: Record<string, T> = {};
   for (const docSnap of snap.docs) {
     data[docSnap.id] = docSnap.data() as T;
@@ -50,8 +42,8 @@ export async function getDocsList<T>(
   sport: SportKey,
   subcollection: string
 ): Promise<Array<T & { id: string }>> {
-  const ref = collection(db, 'sports', sport, subcollection);
-  const snap = await getDocs(ref);
+  const ref = adminDb.collection('sports').doc(sport).collection(subcollection);
+  const snap = await ref.get();
   return snap.docs.map(d => ({ id: d.id, ...(d.data() as T) }));
 }
 
@@ -62,10 +54,10 @@ export async function saveDocsBatch<T extends Record<string, unknown>>(
 ): Promise<void> {
   if (docs.length === 0) return;
   for (let i = 0; i < docs.length; i += MAX_BATCH_SIZE) {
-    const batch = writeBatch(db);
+    const batch = adminDb.batch();
     const slice = docs.slice(i, i + MAX_BATCH_SIZE);
     for (const item of slice) {
-      const ref = doc(db, 'sports', sport, subcollection, item.id);
+      const ref = adminDb.collection('sports').doc(sport).collection(subcollection).doc(item.id);
       batch.set(ref, sanitizeForFirestore(item.data), { merge: true });
     }
     await batch.commit();

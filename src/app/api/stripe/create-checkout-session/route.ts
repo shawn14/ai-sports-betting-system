@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       ? (snapshot.data()?.stripeCustomerId as string | undefined)
       : undefined;
 
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2024-06-20' });
+    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
 
     const customerId = existingCustomerId || (await stripe.customers.create({
       email: decodedToken.email,

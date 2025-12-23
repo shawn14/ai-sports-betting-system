@@ -24,6 +24,18 @@ export async function POST(request: Request) {
     );
   }
 
+  // Ensure the admin app is initialized before verifying tokens.
+  let adminDb;
+  try {
+    adminDb = getAdminDb();
+  } catch (error) {
+    console.error('Firebase admin init error:', error);
+    return NextResponse.json(
+      { error: 'Firebase admin initialization failed.' },
+      { status: 500 }
+    );
+  }
+
   const authHeader = request.headers.get('authorization') || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
   if (!token) {
@@ -45,7 +57,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const adminDb = getAdminDb();
     const userRef = adminDb.collection('users').doc(decodedToken.uid);
     const snapshot = await userRef.get();
     const existingCustomerId = snapshot.exists

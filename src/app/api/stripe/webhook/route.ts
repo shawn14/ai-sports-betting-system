@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import { getAdminDb } from '@/lib/firebase-admin';
 
 export const runtime = 'nodejs';
+export const maxDuration = 30; // Allow 30 seconds for Firebase cold start
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
@@ -44,26 +45,41 @@ export async function POST(request: Request) {
   }
 
   try {
-    const adminDb = getAdminDb();
     console.log('Stripe webhook received:', event.type);
 
-    switch (event.type) {
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        const uid = session.metadata?.uid || session.client_reference_id;
-        if (!uid) break;
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      const uid = session.metadata?.uid || session.client_reference_id;
+      const adminDb = getAdminDb();
+      const userRef = uid
+        ? adminDb.collection('users').doc(uid)
+        : await resolveUserRefByCustomer(session.customer as string | null);
 
-        const userRef = adminDb.collection('users').doc(uid);
-        await userRef.set(
-          {
-            stripeCustomerId: session.customer || undefined,
-            subscriptionStatus: session.payment_status === 'paid' ? 'active' : 'trialing',
-            isPremium: true,
-          },
-          { merge: true }
+      if (!userRef) {
+        console.error(
+          'checkout.session.completed: No user found for session',
+          session.id,
+          'customer:',
+          session.customer
         );
-        break;
+        return NextResponse.json({ received: true });
       }
+
+      await userRef.set(
+        {
+          stripeCustomerId: session.customer || undefined,
+          subscriptionStatus: session.payment_status === 'paid' ? 'active' : 'trialing',
+          isPremium: true,
+        },
+        { merge: true }
+      );
+
+      return NextResponse.json({ received: true, uid: userRef.id });
+    }
+
+    const adminDb = getAdminDb();
+
+    switch (event.type) {
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
@@ -72,18 +88,20 @@ export async function POST(request: Request) {
         const userRef = uid
           ? adminDb.collection('users').doc(uid)
           : await resolveUserRefByCustomer(subscription.customer as string);
-        if (!userRef) break;
+        if (!userRef) {
+          console.error(`${event.type}: No user found for subscription`, subscription.id, 'customer:', subscription.customer);
+          break;
+        }
+        console.log(`${event.type}: Updating user`, userRef.id, 'status:', subscription.status);
 
         const priceId = subscription.items.data[0]?.price?.id;
-        await userRef.set(
-          {
-            subscriptionStatus: subscription.status,
-            currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-            priceId: priceId || undefined,
-            isPremium: subscription.status === 'active' || subscription.status === 'trialing',
-          },
-          { merge: true }
-        );
+        const subData: Record<string, unknown> = {
+          subscriptionStatus: subscription.status,
+          currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+          isPremium: subscription.status === 'active' || subscription.status === 'trialing',
+        };
+        if (priceId) subData.priceId = priceId;
+        await userRef.set(subData, { merge: true });
         break;
       }
       default:
@@ -93,6 +111,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ received: true });
   } catch (error) {
     console.error('Stripe webhook handler error:', error);
-    return NextResponse.json({ error: 'Webhook handler failed.' }, { status: 500 });
+    return NextResponse.json({ error: 'Webhook handler failed.', details: String(error) }, { status: 500 });
   }
 }

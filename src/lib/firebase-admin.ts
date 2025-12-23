@@ -1,5 +1,5 @@
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, initializeFirestore } from 'firebase-admin/firestore';
 
 let cachedDb: ReturnType<typeof getFirestore> | null = null;
 
@@ -43,6 +43,7 @@ export function getAdminDb() {
     ? initializeApp({ credential: cert(serviceAccount) })
     : getApps()[0];
 
-  cachedDb = getFirestore(adminApp);
+  // preferRest avoids gRPC hanging in some serverless environments (e.g., webhooks).
+  cachedDb = initializeFirestore(adminApp, { preferRest: true });
   return cachedDb;
 }

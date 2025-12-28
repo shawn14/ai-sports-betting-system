@@ -1,0 +1,265 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import RequireAuth from '@/components/RequireAuth';
+import { useAuth } from '@/components/AuthProvider';
+
+interface LiveGame {
+  id: string;
+  away: string;
+  home: string;
+  awayScore: number;
+  homeScore: number;
+  period: number;
+  clock: string;
+  status: 'live' | 'final' | 'scheduled';
+  gameTime?: string;
+}
+
+interface CalibrationData {
+  seasonYear: number;
+  leagueAvgQuarter: number[];
+  teamAvgQuarter: Record<string, number[]>;
+  gapMultipliers: Record<string, Record<string, { avg: number; samples: number }>>;
+}
+
+const REG_MINUTES = 48;
+const QUARTER_MINUTES = 12;
+const OT_MINUTES = 5;
+
+function parseClock(clock: string): { minutes: number; seconds: number } | null {
+  if (!clock) return null;
+
+  // Handle "MM:SS" format (e.g., "8:39")
+  const colonMatch = clock.match(/(\d+):(\d+)/);
+  if (colonMatch) {
+    const minutes = Number.parseInt(colonMatch[1], 10);
+    const seconds = Number.parseInt(colonMatch[2], 10);
+    if (Number.isNaN(minutes) || Number.isNaN(seconds)) return null;
+    return { minutes, seconds };
+  }
+
+  // Handle seconds-only format (e.g., "37.1" when under 1 minute)
+  const secondsMatch = clock.match(/^(\d+(?:\.\d+)?)$/);
+  if (secondsMatch) {
+    const totalSeconds = Number.parseFloat(secondsMatch[1]);
+    if (Number.isNaN(totalSeconds)) return null;
+    return { minutes: 0, seconds: totalSeconds };
+  }
+
+  return null;
+}
+
+function getMinutesElapsed(period: number, clock: string): number | null {
+  const parsed = parseClock(clock);
+  if (!parsed || period < 1) return null;
+  const timeRemaining = parsed.minutes + parsed.seconds / 60;
+  if (period <= 4) {
+    const elapsedInPeriod = Math.max(0, QUARTER_MINUTES - timeRemaining);
+    return (period - 1) * QUARTER_MINUTES + elapsedInPeriod;
+  }
+  const otIndex = period - 4;
+  const elapsedInOt = Math.max(0, OT_MINUTES - timeRemaining);
+  return REG_MINUTES + (otIndex - 1) * OT_MINUTES + elapsedInOt;
+}
+
+export default function NBALiveTrackerPage() {
+  const { user } = useAuth();
+  const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [calibration, setCalibration] = useState<CalibrationData | null>(null);
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    const fetchLiveScores = async () => {
+      try {
+        const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard');
+        const data = await response.json();
+
+        const games: LiveGame[] = data.events?.map((event: any) => {
+          const competition = event.competitions?.[0];
+          const homeTeam = competition?.competitors?.find((c: any) => c.homeAway === 'home');
+          const awayTeam = competition?.competitors?.find((c: any) => c.homeAway === 'away');
+
+          let status: LiveGame['status'] = 'scheduled';
+          if (event.status?.type?.state === 'in') status = 'live';
+          else if (event.status?.type?.state === 'post') status = 'final';
+
+          return {
+            id: event.id,
+            away: awayTeam?.team?.abbreviation || 'AWAY',
+            home: homeTeam?.team?.abbreviation || 'HOME',
+            awayScore: Number.parseInt(awayTeam?.score || '0', 10),
+            homeScore: Number.parseInt(homeTeam?.score || '0', 10),
+            period: event.status?.period || 0,
+            clock: event.status?.displayClock || '',
+            status,
+            gameTime: event.date,
+          };
+        }) || [];
+
+        const liveOnly = games.filter(game => game.status === 'live');
+        setLiveGames(liveOnly);
+
+      } catch (error) {
+        console.error('Error fetching live scores:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLiveScores();
+    intervalId = setInterval(fetchLiveScores, 30000);
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
+
+  useEffect(() => {
+    const loadCalibration = async () => {
+      try {
+        const response = await fetch('/nba-pace-calibration.json', { cache: 'no-cache' });
+        const data = await response.json();
+        if (data?.teamAvgQuarter) {
+          setCalibration(data);
+        }
+      } catch (error) {
+        setCalibration(null);
+      }
+    };
+
+    loadCalibration();
+  }, []);
+
+  const sortedGames = useMemo(() => {
+    return [...liveGames].sort((a, b) => a.home.localeCompare(b.home));
+  }, [liveGames]);
+
+  return (
+    <RequireAuth>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">NBA Live Pace Tracker</h1>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">
+              Live run rate vs Vegas total (48-minute projection).
+            </p>
+          </div>
+          <div className="text-xs text-gray-400">
+            {loading ? 'Loading…' : `${sortedGames.length} live games`}
+          </div>
+        </div>
+
+        {sortedGames.length === 0 && !loading && (
+          <div className="bg-white border border-gray-200 rounded-xl p-6 text-center text-sm text-gray-500">
+            No live NBA games right now.
+          </div>
+        )}
+
+        <div className="grid gap-3 sm:gap-4">
+          {sortedGames.map(game => {
+            const totalPoints = game.homeScore + game.awayScore;
+            const minutesElapsed = getMinutesElapsed(game.period, game.clock);
+            const runRate = minutesElapsed ? totalPoints / minutesElapsed : null;
+            const rawProjectedTotal = runRate ? runRate * REG_MINUTES : null;
+            let calibratedProjectedTotal = rawProjectedTotal;
+            let projectedHome: number | null = null;
+            let projectedAway: number | null = null;
+
+            if (calibration && minutesElapsed !== null && game.period <= 4) {
+              const homeAvg = calibration.teamAvgQuarter[game.home];
+              const awayAvg = calibration.teamAvgQuarter[game.away];
+              const clockParts = parseClock(game.clock);
+              if (homeAvg && awayAvg && clockParts) {
+                const timeRemaining = clockParts.minutes + clockParts.seconds / 60;
+                const quarterIndex = Math.max(0, game.period - 1);
+                const homeRemaining = homeAvg
+                  .slice(quarterIndex + 1)
+                  .reduce((sum, val) => sum + val, 0) + homeAvg[quarterIndex] * (timeRemaining / QUARTER_MINUTES);
+                const awayRemaining = awayAvg
+                  .slice(quarterIndex + 1)
+                  .reduce((sum, val) => sum + val, 0) + awayAvg[quarterIndex] * (timeRemaining / QUARTER_MINUTES);
+                const expectedRemaining = homeRemaining + awayRemaining;
+
+                const gap = Math.abs(game.homeScore - game.awayScore);
+                const gapKey = gap <= 4 ? 'close' : gap <= 9 ? 'small' : gap <= 14 ? 'medium' : 'large';
+                const checkpoint = game.period <= 1 ? 'Q1' : game.period <= 2 ? 'HALF' : 'Q3';
+                const multiplier = calibration.gapMultipliers?.[checkpoint]?.[gapKey]?.avg ?? 1;
+
+                if (expectedRemaining > 0) {
+                  calibratedProjectedTotal = totalPoints + expectedRemaining * multiplier;
+                  projectedHome = game.homeScore + homeRemaining * multiplier;
+                  projectedAway = game.awayScore + awayRemaining * multiplier;
+                }
+              }
+            }
+
+            return (
+              <div
+                key={game.id}
+                className={`border rounded-xl p-3 sm:p-4 bg-white ${
+                  'border-gray-200'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="font-semibold text-gray-900 text-sm sm:text-base">
+                    {game.away} @ {game.home}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Q{game.period} {game.clock}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 sm:gap-3 mt-3">
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-[10px] uppercase text-gray-400">Score</div>
+                    <div className="text-sm sm:text-base font-bold text-gray-900">
+                      {game.awayScore}-{game.homeScore}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-[10px] uppercase text-gray-400">Elapsed</div>
+                    <div className="text-sm sm:text-base font-bold text-gray-900">
+                      {minutesElapsed !== null ? minutesElapsed.toFixed(1) : '--'}m
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-[10px] uppercase text-gray-400">Run Rate</div>
+                    <div className="text-sm sm:text-base font-bold text-gray-900">
+                      {runRate !== null ? runRate.toFixed(2) : '--'}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-[10px] uppercase text-gray-400">Proj Total</div>
+                    <div className="text-sm sm:text-base font-bold text-gray-900">
+                      {rawProjectedTotal !== null ? rawProjectedTotal.toFixed(1) : '--'}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-[10px] uppercase text-gray-400">Calibrated</div>
+                    <div className="text-sm sm:text-base font-bold text-gray-900">
+                      {calibratedProjectedTotal !== null ? calibratedProjectedTotal.toFixed(1) : '--'}
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded-lg p-2 text-center">
+                    <div className="text-[10px] uppercase text-gray-400">Proj Final</div>
+                    <div className="text-sm sm:text-base font-bold text-gray-900">
+                      {projectedHome !== null && projectedAway !== null
+                        ? `${projectedAway.toFixed(0)}-${projectedHome.toFixed(0)}`
+                        : calibratedProjectedTotal !== null && totalPoints > 0
+                        ? `${(calibratedProjectedTotal * (game.awayScore / totalPoints)).toFixed(0)}-${(calibratedProjectedTotal * (game.homeScore / totalPoints)).toFixed(0)}`
+                        : '--'}
+                    </div>
+                    <div className="text-[9px] text-gray-400">Pace projection</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </RequireAuth>
+  );
+}

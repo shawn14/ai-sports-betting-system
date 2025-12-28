@@ -7,6 +7,8 @@ interface BacktestResult {
   gameTime: string;
   homeTeam: string;
   awayTeam: string;
+  homeTeamId?: string;
+  awayTeamId?: string;
   homeElo: number;
   awayElo: number;
   predictedHomeScore: number;
@@ -29,11 +31,128 @@ interface BacktestResult {
   vegasTotal?: number;
   atsResult?: 'win' | 'loss' | 'push';
   ouVegasResult?: 'win' | 'loss' | 'push';
+  isDivisional?: boolean;
+  isLateSeasonGame?: boolean;
+  isLargeSpread?: boolean;
+  isSmallSpread?: boolean;
+  isMediumSpread?: boolean;
+  isEloMismatch?: boolean;
+  sixtyPlusFactors?: number;
+  eloDiff?: number;
+  conviction?: {
+    level: 'elite' | 'high' | 'moderate' | 'low';
+    isHighConviction?: boolean;
+    expectedWinPct?: number;
+    picksVegasFavorite?: boolean;
+    eloAligned?: boolean;
+    eloGap?: number;
+    restFavorsPick?: boolean;
+    avoidReason?: string;
+  };
 }
 
 interface VegasStats {
   ats: { wins: number; losses: number; pushes: number; winPct: number; gamesWithOdds: number };
   ouVegas: { wins: number; losses: number; pushes: number; winPct: number; gamesWithOdds: number };
+}
+
+interface SituationStats {
+  name: string;
+  wins: number;
+  losses: number;
+  pushes: number;
+  winPct: number;
+  total: number;
+  badge: string;
+  highlight: boolean;
+}
+
+interface HighConvictionStats {
+  ats: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+  ou: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+  ml: { wins: number; losses: number; winPct: number; total: number };
+}
+
+function computeHighConvictionStats(results: BacktestResult[]): HighConvictionStats {
+  let atsW = 0, atsL = 0, atsP = 0;
+  let ouW = 0, ouL = 0, ouP = 0;
+  let mlW = 0, mlL = 0;
+
+  for (const r of results) {
+    // Calculate confidence based on edge (same thresholds as sync)
+    const spreadEdge = r.vegasSpread !== undefined ? Math.abs(r.predictedSpread - r.vegasSpread) : 0;
+    const totalEdge = r.vegasTotal !== undefined ? Math.abs(r.predictedTotal - r.vegasTotal) : 0;
+    const mlEdge = Math.abs(r.homeWinProb - 0.5) * 100;
+
+    // High conviction ATS (edge >= 2 pts)
+    if (spreadEdge >= 2 && r.atsResult) {
+      if (r.atsResult === 'win') atsW++;
+      else if (r.atsResult === 'loss') atsL++;
+      else atsP++;
+    }
+
+    // High conviction O/U (edge >= 5 pts)
+    if (totalEdge >= 5 && r.ouVegasResult) {
+      if (r.ouVegasResult === 'win') ouW++;
+      else if (r.ouVegasResult === 'loss') ouL++;
+      else ouP++;
+    }
+
+    // High conviction ML (edge >= 15%)
+    if (mlEdge >= 15 && r.mlResult) {
+      if (r.mlResult === 'win') mlW++;
+      else mlL++;
+    }
+  }
+
+  const atsTotal = atsW + atsL;
+  const ouTotal = ouW + ouL;
+  const mlTotal = mlW + mlL;
+
+  return {
+    ats: { wins: atsW, losses: atsL, pushes: atsP, winPct: atsTotal > 0 ? Math.round((atsW / atsTotal) * 1000) / 10 : 0, total: atsW + atsL + atsP },
+    ou: { wins: ouW, losses: ouL, pushes: ouP, winPct: ouTotal > 0 ? Math.round((ouW / ouTotal) * 1000) / 10 : 0, total: ouW + ouL + ouP },
+    ml: { wins: mlW, losses: mlL, winPct: mlTotal > 0 ? Math.round((mlW / mlTotal) * 1000) / 10 : 0, total: mlTotal },
+  };
+}
+
+function computeSituationStats(results: BacktestResult[]): SituationStats[] {
+  const situations = {
+    divisional: { name: 'Divisional Games', wins: 0, losses: 0, pushes: 0, badge: 'DIV' },
+    lateSeason: { name: 'Late Season (Mar+)', wins: 0, losses: 0, pushes: 0, badge: 'LATE SZN' },
+    largeSpread: { name: 'Large Spread (≥7)', wins: 0, losses: 0, pushes: 0, badge: 'BIG LINE' },
+    smallSpread: { name: 'Small Spread (≤3)', wins: 0, losses: 0, pushes: 0, badge: 'CLOSE' },
+    mediumSpread: { name: 'Medium Spread (3.5-6.5)', wins: 0, losses: 0, pushes: 0, badge: 'AVOID' },
+    eloMismatch: { name: 'Elo Mismatch (>100)', wins: 0, losses: 0, pushes: 0, badge: 'MISMATCH' },
+  };
+
+  for (const r of results) {
+    if (!r.atsResult || r.vegasSpread === undefined) continue;
+
+    const addResult = (key: keyof typeof situations) => {
+      if (r.atsResult === 'win') situations[key].wins++;
+      else if (r.atsResult === 'loss') situations[key].losses++;
+      else situations[key].pushes++;
+    };
+
+    if (r.isDivisional) addResult('divisional');
+    if (r.isLateSeasonGame) addResult('lateSeason');
+    if (r.isLargeSpread) addResult('largeSpread');
+    if (r.isSmallSpread) addResult('smallSpread');
+    if (r.isMediumSpread) addResult('mediumSpread');
+    if (r.isEloMismatch) addResult('eloMismatch');
+  }
+
+  return Object.values(situations).map(s => {
+    const total = s.wins + s.losses;
+    const winPct = total > 0 ? Math.round((s.wins / total) * 1000) / 10 : 0;
+    return {
+      ...s,
+      total: s.wins + s.losses + s.pushes,
+      winPct,
+      highlight: winPct >= 60 || (s.badge === 'AVOID' && winPct < 50),
+    };
+  }).filter(s => s.total > 0);
 }
 
 interface Summary {
@@ -77,52 +196,113 @@ const getLogoUrl = (abbr: string) => {
   return `https://a.espncdn.com/i/teamlogos/nba/500-dark/${abbr.toLowerCase()}.png`;
 };
 
-interface HighConvictionStats {
-  ats: { wins: number; losses: number; pushes: number; winPct: number; total: number };
-  ou: { wins: number; losses: number; pushes: number; winPct: number; total: number };
-  ml: { wins: number; losses: number; winPct: number; total: number };
+// Conviction stats based on spread size (from backtesting 1333 games)
+// Best filter: Small spreads (≤2 pts) = 57.2% win rate
+interface ConvictionStats {
+  smallSpread: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+  mediumSpread: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+  largeSpread: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+  overall: { wins: number; losses: number; pushes: number; winPct: number; total: number };
 }
 
-function computeHighConvictionStats(results: BacktestResult[]): HighConvictionStats {
-  let atsW = 0, atsL = 0, atsP = 0;
-  let ouW = 0, ouL = 0, ouP = 0;
-  let mlW = 0, mlL = 0;
+interface ConvictionLevelStats {
+  elite: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+  high: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+  moderate: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+  low: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+  overall: { wins: number; losses: number; pushes: number; winPct: number; total: number };
+}
+
+function computeConvictionStats(results: BacktestResult[]): ConvictionStats {
+  const smallSpread = { wins: 0, losses: 0, pushes: 0 };  // ≤2 pts
+  const mediumSpread = { wins: 0, losses: 0, pushes: 0 }; // 2-6 pts
+  const largeSpread = { wins: 0, losses: 0, pushes: 0 };  // >6 pts
+  const overall = { wins: 0, losses: 0, pushes: 0 };
 
   for (const r of results) {
-    // Calculate confidence based on edge (NBA thresholds)
-    const spreadEdge = r.vegasSpread !== undefined ? Math.abs(r.predictedSpread - r.vegasSpread) : 0;
-    const totalEdge = r.vegasTotal !== undefined ? Math.abs(r.predictedTotal - r.vegasTotal) : 0;
-    const mlEdge = Math.abs(r.homeWinProb - 0.5) * 100;
+    if (r.vegasSpread === undefined || r.vegasSpread === null || !r.atsResult) continue;
 
-    // High conviction ATS (edge >= 2.5 pts for NBA)
-    if (spreadEdge >= 2.5 && r.atsResult) {
-      if (r.atsResult === 'win') atsW++;
-      else if (r.atsResult === 'loss') atsL++;
-      else atsP++;
-    }
+    const absSpread = Math.abs(r.vegasSpread);
 
-    // High conviction O/U (edge >= 5 pts)
-    if (totalEdge >= 5 && r.ouVegasResult) {
-      if (r.ouVegasResult === 'win') ouW++;
-      else if (r.ouVegasResult === 'loss') ouL++;
-      else ouP++;
-    }
+    // Track overall
+    if (r.atsResult === 'win') overall.wins++;
+    else if (r.atsResult === 'loss') overall.losses++;
+    else overall.pushes++;
 
-    // High conviction ML (edge >= 15%)
-    if (mlEdge >= 15 && r.mlResult) {
-      if (r.mlResult === 'win') mlW++;
-      else mlL++;
+    // By spread size
+    if (absSpread <= 2) {
+      if (r.atsResult === 'win') smallSpread.wins++;
+      else if (r.atsResult === 'loss') smallSpread.losses++;
+      else smallSpread.pushes++;
+    } else if (absSpread <= 6) {
+      if (r.atsResult === 'win') mediumSpread.wins++;
+      else if (r.atsResult === 'loss') mediumSpread.losses++;
+      else mediumSpread.pushes++;
+    } else {
+      if (r.atsResult === 'win') largeSpread.wins++;
+      else if (r.atsResult === 'loss') largeSpread.losses++;
+      else largeSpread.pushes++;
     }
   }
 
-  const atsTotal = atsW + atsL;
-  const ouTotal = ouW + ouL;
-  const mlTotal = mlW + mlL;
+  const calcWinPct = (s: { wins: number; losses: number }) => {
+    const total = s.wins + s.losses;
+    return total > 0 ? Math.round((s.wins / total) * 1000) / 10 : 0;
+  };
 
   return {
-    ats: { wins: atsW, losses: atsL, pushes: atsP, winPct: atsTotal > 0 ? Math.round((atsW / atsTotal) * 1000) / 10 : 0, total: atsW + atsL + atsP },
-    ou: { wins: ouW, losses: ouL, pushes: ouP, winPct: ouTotal > 0 ? Math.round((ouW / ouTotal) * 1000) / 10 : 0, total: ouW + ouL + ouP },
-    ml: { wins: mlW, losses: mlL, winPct: mlTotal > 0 ? Math.round((mlW / mlTotal) * 1000) / 10 : 0, total: mlTotal },
+    smallSpread: { ...smallSpread, winPct: calcWinPct(smallSpread), total: smallSpread.wins + smallSpread.losses + smallSpread.pushes },
+    mediumSpread: { ...mediumSpread, winPct: calcWinPct(mediumSpread), total: mediumSpread.wins + mediumSpread.losses + mediumSpread.pushes },
+    largeSpread: { ...largeSpread, winPct: calcWinPct(largeSpread), total: largeSpread.wins + largeSpread.losses + largeSpread.pushes },
+    overall: { ...overall, winPct: calcWinPct(overall), total: overall.wins + overall.losses + overall.pushes },
+  };
+}
+
+function computeConvictionLevelStats(results: BacktestResult[]): ConvictionLevelStats {
+  const elite = { wins: 0, losses: 0, pushes: 0 };
+  const high = { wins: 0, losses: 0, pushes: 0 };
+  const moderate = { wins: 0, losses: 0, pushes: 0 };
+  const low = { wins: 0, losses: 0, pushes: 0 };
+  const overall = { wins: 0, losses: 0, pushes: 0 };
+
+  for (const r of results) {
+    if (!r.atsResult || !r.conviction?.level) continue;
+
+    if (r.atsResult === 'win') overall.wins++;
+    else if (r.atsResult === 'loss') overall.losses++;
+    else overall.pushes++;
+
+    const bucket = r.conviction.level;
+    if (bucket === 'elite') {
+      if (r.atsResult === 'win') elite.wins++;
+      else if (r.atsResult === 'loss') elite.losses++;
+      else elite.pushes++;
+    } else if (bucket === 'high') {
+      if (r.atsResult === 'win') high.wins++;
+      else if (r.atsResult === 'loss') high.losses++;
+      else high.pushes++;
+    } else if (bucket === 'moderate') {
+      if (r.atsResult === 'win') moderate.wins++;
+      else if (r.atsResult === 'loss') moderate.losses++;
+      else moderate.pushes++;
+    } else if (bucket === 'low') {
+      if (r.atsResult === 'win') low.wins++;
+      else if (r.atsResult === 'loss') low.losses++;
+      else low.pushes++;
+    }
+  }
+
+  const calcWinPct = (s: { wins: number; losses: number }) => {
+    const total = s.wins + s.losses;
+    return total > 0 ? Math.round((s.wins / total) * 1000) / 10 : 0;
+  };
+
+  return {
+    elite: { ...elite, winPct: calcWinPct(elite), total: elite.wins + elite.losses + elite.pushes },
+    high: { ...high, winPct: calcWinPct(high), total: high.wins + high.losses + high.pushes },
+    moderate: { ...moderate, winPct: calcWinPct(moderate), total: moderate.wins + moderate.losses + moderate.pushes },
+    low: { ...low, winPct: calcWinPct(low), total: low.wins + low.losses + low.pushes },
+    overall: { ...overall, winPct: calcWinPct(overall), total: overall.wins + overall.losses + overall.pushes },
   };
 }
 
@@ -313,6 +493,9 @@ export default function NBAResultsPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [vegasStats, setVegasStats] = useState<VegasStats | null>(null);
+  const [convictionStats, setConvictionStats] = useState<ConvictionStats | null>(null);
+  const [convictionLevelStats, setConvictionLevelStats] = useState<ConvictionLevelStats | null>(null);
+  const [situationStats, setSituationStats] = useState<SituationStats[] | null>(null);
   const [highConvStats, setHighConvStats] = useState<HighConvictionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -337,6 +520,9 @@ export default function NBAResultsPage() {
         if (backtestResults.length > 0) {
           setAnalysis(computeAnalysis(backtestResults));
           setVegasStats(computeVegasStats(backtestResults));
+          setConvictionStats(computeConvictionStats(backtestResults));
+          setConvictionLevelStats(computeConvictionLevelStats(backtestResults));
+          setSituationStats(computeSituationStats(backtestResults));
           setHighConvStats(computeHighConvictionStats(backtestResults));
         }
       } catch (error) {
@@ -402,38 +588,6 @@ export default function NBAResultsPage() {
       {/* Summary Cards */}
       {summary && (
         <div className="space-y-4">
-          {/* ATS vs Vegas */}
-          {vegasStats && vegasStats.ats.gamesWithOdds > 0 && (
-            <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-3 sm:p-4">
-              <h2 className="text-orange-800 font-bold text-xs sm:text-sm mb-2 sm:mb-3">ATS vs Vegas</h2>
-              <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                <div className="bg-white rounded-lg p-2.5 sm:p-4 border border-orange-200">
-                  <div className="text-gray-600 text-[10px] sm:text-sm font-medium mb-0.5 sm:mb-1">Spread</div>
-                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
-                    {vegasStats.ats.wins}-{vegasStats.ats.losses}
-                    {vegasStats.ats.pushes > 0 && <span className="text-gray-400 text-base sm:text-2xl">-{vegasStats.ats.pushes}</span>}
-                  </div>
-                  <div className={`text-base sm:text-xl font-mono font-bold ${vegasStats.ats.winPct > 52.4 ? 'text-green-600' : vegasStats.ats.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
-                    {vegasStats.ats.winPct}%
-                  </div>
-                  <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{vegasStats.ats.gamesWithOdds} games</div>
-                </div>
-
-                <div className="bg-white rounded-lg p-2.5 sm:p-4 border border-orange-200">
-                  <div className="text-gray-600 text-[10px] sm:text-sm font-medium mb-0.5 sm:mb-1">O/U</div>
-                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
-                    {vegasStats.ouVegas.wins}-{vegasStats.ouVegas.losses}
-                    {vegasStats.ouVegas.pushes > 0 && <span className="text-gray-400 text-base sm:text-2xl">-{vegasStats.ouVegas.pushes}</span>}
-                  </div>
-                  <div className={`text-base sm:text-xl font-mono font-bold ${vegasStats.ouVegas.winPct > 52.4 ? 'text-green-600' : vegasStats.ouVegas.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
-                    {vegasStats.ouVegas.winPct}%
-                  </div>
-                  <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{vegasStats.ouVegas.gamesWithOdds} games</div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* High Conviction Only */}
           {highConvStats && (highConvStats.ats.total > 0 || highConvStats.ml.total > 0 || highConvStats.ou.total > 0) && (
             <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-green-300 rounded-xl p-3 sm:p-4">

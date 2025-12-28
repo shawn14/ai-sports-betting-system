@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface Team {
   id: string;
@@ -64,23 +65,25 @@ export default function RankingsPage() {
           </thead>
           <tbody className="divide-y divide-gray-100">
             {teams.map((team, index) => (
-              <tr key={team.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={team.id} className="hover:bg-gray-50 transition-colors cursor-pointer">
                 <td className="px-4 py-3">
-                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                    index < 3 ? 'bg-green-600 text-white' :
-                    index < 10 ? 'bg-gray-200 text-gray-700' : 'text-gray-400'
-                  }`}>
-                    {index + 1}
-                  </span>
+                  <Link href={`/nfl/teams/${team.abbreviation.toLowerCase()}`} className="block">
+                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
+                      index < 3 ? 'bg-green-600 text-white' :
+                      index < 10 ? 'bg-gray-200 text-gray-700' : 'text-gray-400'
+                    }`}>
+                      {index + 1}
+                    </span>
+                  </Link>
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
+                  <Link href={`/nfl/teams/${team.abbreviation.toLowerCase()}`} className="flex items-center gap-3">
                     <img src={getLogoUrl(team.abbreviation)} alt="" className="w-8 h-8 object-contain" />
                     <div>
-                      <span className="font-bold text-gray-900">{team.abbreviation}</span>
+                      <span className="font-bold text-gray-900 hover:text-red-600">{team.abbreviation}</span>
                       <span className="text-gray-500 ml-2 hidden sm:inline">{team.name}</span>
                     </div>
-                  </div>
+                  </Link>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <span className="font-mono font-bold text-gray-900">{team.eloRating}</span>

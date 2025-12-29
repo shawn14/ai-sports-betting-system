@@ -9,7 +9,7 @@ This is a Next.js-based NFL/NBA betting prediction system that uses Elo ratings,
 ┌─────────────────────────────────────────────────────────────────────┐
 │                          External APIs                               │
 ├─────────────────────────────────────────────────────────────────────┤
-│  ESPN API  │  The Odds API  │  OpenWeather API  │  NFL.com Injuries  │
+│    ESPN API (teams, games, odds)    │  OpenWeather API  │  NFL.com Injuries  │
 └─────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
@@ -51,10 +51,9 @@ This is a Next.js-based NFL/NBA betting prediction system that uses Elo ratings,
    - Runs with max duration: 300 seconds (5 minutes)
 
 2. **Data Fetching** (Parallel from multiple APIs)
-   - ESPN: Team data, current season games (weeks 1-18)
-   - The Odds API: Vegas spreads, totals, moneylines
+   - ESPN: Team data, games, scores, Vegas odds (spreads, totals, moneylines)
    - OpenWeather: Weather conditions for outdoor stadiums
-   - ESPN Injuries: Player injury status by team
+   - NFL.com: Player injury status by team
 
 3. **In-Memory Processing**
    - Reads Firestore state for processed games, locked odds, caches
@@ -621,16 +620,15 @@ interface BacktestResult {
 - Returns: Player injuries by team
 - Used for: Injury impact analysis
 
-### The Odds API
+### ESPN Odds API (Free, no API key)
 
-**NFL Odds:** `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/`
-- Params: `regions=us`, `markets=spreads,totals,h2h`
-- Returns: Spreads, totals, moneylines from multiple bookmakers
+**NFL Odds:** `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/{eventId}/competitions/{eventId}/odds`
+**NBA Odds:** `https://sports.core.api.espn.com/v2/sports/basketball/leagues/nba/events/{eventId}/competitions/{eventId}/odds`
+**NHL Odds:** `https://sports.core.api.espn.com/v2/sports/hockey/leagues/nhl/events/{eventId}/competitions/{eventId}/odds`
+
+- Returns: Spread, total (over/under), moneylines from ESPN BET
 - Used for: Vegas consensus lines
-
-**API Key Required:** `NEXT_PUBLIC_ODDS_API_KEY`
-
-**Rate Limits:** Check API docs (typically limited requests per month)
+- No API key required
 
 ### OpenWeather API
 
@@ -726,7 +724,6 @@ https://a.espncdn.com/i/teamlogos/nfl/500-dark/${abbreviation}.png
 
 **Environment Variables Required:**
 ```bash
-NEXT_PUBLIC_ODDS_API_KEY=<your_odds_api_key>
 NEXT_PUBLIC_WEATHER_API_KEY=<your_openweather_key>
 CRON_SECRET=<your_cron_secret>
 BLOB_READ_WRITE_TOKEN=<vercel_blob_token>
@@ -829,7 +826,7 @@ DIVISIONS = {
 }
 ```
 
-### Team Name Variants (for Odds API matching)
+### Team Name Variants (for odds matching)
 ```typescript
 TEAM_NAME_VARIANTS = {
   'Arizona Cardinals': ['Cardinals', 'Arizona'],
@@ -853,7 +850,7 @@ isEloMismatch = abs(homeElo - awayElo) > 100;
 ## 14. Error Handling & Resilience
 
 ### API Failures
-- **Odds API fails**: Continue without Vegas lines, predictions still generated
+- **ESPN Odds fails**: Continue without Vegas lines, predictions still generated
 - **Weather API fails**: Continue without weather, no impact applied
 - **Injury API fails**: Continue without injury data, fall back to cached data
 - **ESPN API fails**: Cron job fails, previous blob data still available to frontend
@@ -934,10 +931,9 @@ src/
 │   │       ├── recalculate-with-cap/route.ts
 │   │       └── ... (other admin tools)
 ├── services/
-│   ├── espn.ts           # ESPN API client
-│   ├── odds.ts           # The Odds API client
+│   ├── espn.ts           # ESPN API client (teams, games, scores, odds)
 │   ├── weather.ts        # OpenWeather API client
-│   ├── injuries.ts       # ESPN Injuries API client
+│   ├── injuries.ts       # NFL.com Injuries scraper
 │   ├── elo.ts            # Elo calculations & predictions
 │   └── database.ts       # Firebase (deprecated)
 ├── types/
@@ -974,7 +970,7 @@ src/
 
 This NFL/NBA betting system is a **serverless prediction engine** that:
 
-1. **Fetches** data from ESPN, The Odds API, OpenWeather, and NFL.com injuries
+1. **Fetches** data from ESPN (teams, games, scores, odds), OpenWeather, and NFL.com injuries
 2. **Processes** games chronologically to maintain accurate Elo ratings
 3. **Predicts** spreads, totals, and moneylines using calibrated models
 4. **Backtests** on historical games to validate accuracy

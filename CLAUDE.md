@@ -21,7 +21,7 @@ See `ARCHITECTURE.md` for complete system documentation including:
 ### Primary Cron Job
 `src/app/api/cron/blob-sync-simple/route.ts`
 - Runs every 4 hours via Vercel Cron
-- Fetches data from ESPN, Odds API, OpenWeather, NFL.com
+- Fetches data from ESPN (teams, games, odds), OpenWeather, NFL.com (injuries)
 - Generates predictions and updates Vercel Blob storage
 - **Vegas Line Locking**: Odds lock 1 hour before game time
 
@@ -35,8 +35,7 @@ See `ARCHITECTURE.md` for complete system documentation including:
 - `src/services/injuries.ts` - NFL.com injury scraping (ESPN was corrupted)
 - `src/services/weather.ts` - OpenWeather API with stadium coordinates
 - `src/services/elo.ts` - Elo rating calculations
-- `src/services/espn.ts` - ESPN API for teams, games, scores
-- `src/services/odds.ts` - The Odds API for Vegas lines
+- `src/services/espn.ts` - ESPN API for teams, games, scores, odds
 
 ### Admin Endpoints
 - `/api/admin/backfill-weather` - Historical weather via Open-Meteo
@@ -67,8 +66,7 @@ ELO_CAP = 16;                  // Max ±8 pts per team (prevents unrealistic 40-
 ## Environment Variables
 
 ```bash
-NEXT_PUBLIC_ODDS_API_KEY    # The Odds API
-NEXT_PUBLIC_WEATHER_API_KEY # OpenWeather API
+NEXT_PUBLIC_WEATHER_API_KEY # OpenWeather API (only external API key needed)
 CRON_SECRET                 # Vercel Cron auth
 BLOB_READ_WRITE_TOKEN       # Vercel Blob storage
 ```
@@ -118,9 +116,13 @@ curl https://www.predictionmatrix.com/api/admin/recalculate-backtest
 
 ## Notes for Development
 
-1. **Vegas lines lock 1 hour before game** - stored `lockedAt` timestamp
-2. **Weather multiplier is 3** - optimized from historical simulation
-3. **NFL.com for injuries** - ESPN API was returning corrupted data
-4. **Avoid medium spreads (3.5-6.5)** - historically only 46.7% ATS
-5. **Indoor stadiums** - no weather impact applied
-6. **Live scoreboard** - polls ESPN every 60 seconds during games
+1. **Always use ESPN for all data** - teams, schedules, scores, and odds all come from ESPN's free API (no paid API keys needed)
+2. **Vegas lines lock 1 hour before game** - stored `lockedAt` timestamp
+3. **Weather multiplier is 3** - optimized from historical simulation
+4. **NFL.com for injuries** - ESPN API was returning corrupted data
+5. **Avoid medium spreads (3.5-6.5)** - historically only 46.7% ATS
+6. **Indoor stadiums** - no weather impact applied
+7. **Live scoreboard** - polls ESPN every 60 seconds during games
+8. **Always persist historical Vegas odds for every sport** - results/backtests compare predictions vs. stored odds and should never run without full historical odds coverage
+9. **Do not clear historical odds on reset** - NFL reset must preserve `historicalOdds` (same behavior as NBA) so backfilled odds are not wiped
+10. **NBA resets also preserve historical odds** - never clear `oddsLocks` on NBA reset to keep backtests stable while optimizing

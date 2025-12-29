@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { put, head } from '@vercel/blob';
-
-const ODDS_API_BASE = 'https://api.the-odds-api.com/v4';
+import { saveDocsBatch } from '@/services/firestore-admin-store';
+import { SportKey } from '@/services/firestore-types';
 
 interface HistoricalOdds {
   vegasSpread: number;
@@ -28,131 +28,33 @@ interface BlobState {
   };
 }
 
-// Team name variants for matching
-const TEAM_NAME_VARIANTS: Record<string, string[]> = {
-  'Arizona Cardinals': ['Cardinals', 'Arizona', 'ARI'],
-  'Atlanta Falcons': ['Falcons', 'Atlanta', 'ATL'],
-  'Baltimore Ravens': ['Ravens', 'Baltimore', 'BAL'],
-  'Buffalo Bills': ['Bills', 'Buffalo', 'BUF'],
-  'Carolina Panthers': ['Panthers', 'Carolina', 'CAR'],
-  'Chicago Bears': ['Bears', 'Chicago', 'CHI'],
-  'Cincinnati Bengals': ['Bengals', 'Cincinnati', 'CIN'],
-  'Cleveland Browns': ['Browns', 'Cleveland', 'CLE'],
-  'Dallas Cowboys': ['Cowboys', 'Dallas', 'DAL'],
-  'Denver Broncos': ['Broncos', 'Denver', 'DEN'],
-  'Detroit Lions': ['Lions', 'Detroit', 'DET'],
-  'Green Bay Packers': ['Packers', 'Green Bay', 'GB'],
-  'Houston Texans': ['Texans', 'Houston', 'HOU'],
-  'Indianapolis Colts': ['Colts', 'Indianapolis', 'IND'],
-  'Jacksonville Jaguars': ['Jaguars', 'Jacksonville', 'JAX'],
-  'Kansas City Chiefs': ['Chiefs', 'Kansas City', 'KC'],
-  'Las Vegas Raiders': ['Raiders', 'Las Vegas', 'LV'],
-  'Los Angeles Chargers': ['Chargers', 'LA Chargers', 'LAC'],
-  'Los Angeles Rams': ['Rams', 'LA Rams', 'LAR'],
-  'Miami Dolphins': ['Dolphins', 'Miami', 'MIA'],
-  'Minnesota Vikings': ['Vikings', 'Minnesota', 'MIN'],
-  'New England Patriots': ['Patriots', 'New England', 'NE'],
-  'New Orleans Saints': ['Saints', 'New Orleans', 'NO'],
-  'New York Giants': ['Giants', 'NY Giants', 'NYG'],
-  'New York Jets': ['Jets', 'NY Jets', 'NYJ'],
-  'Philadelphia Eagles': ['Eagles', 'Philadelphia', 'PHI'],
-  'Pittsburgh Steelers': ['Steelers', 'Pittsburgh', 'PIT'],
-  'San Francisco 49ers': ['49ers', 'San Francisco', 'SF'],
-  'Seattle Seahawks': ['Seahawks', 'Seattle', 'SEA'],
-  'Tampa Bay Buccaneers': ['Buccaneers', 'Tampa Bay', 'TB'],
-  'Tennessee Titans': ['Titans', 'Tennessee', 'TEN'],
-  'Washington Commanders': ['Commanders', 'Washington', 'WAS'],
-};
+const sport: SportKey = 'nfl';
 
-function matchesTeam(oddsTeamName: string, ourAbbr: string): boolean {
-  for (const [fullName, variants] of Object.entries(TEAM_NAME_VARIANTS)) {
-    if (oddsTeamName.includes(fullName) || fullName.includes(oddsTeamName)) {
-      if (variants.includes(ourAbbr)) return true;
+async function fetchESPNOdds(eventId: string): Promise<{ homeSpread: number; total: number } | null> {
+  try {
+    const url = `https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/events/${eventId}/competitions/${eventId}/odds`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      return null;
     }
-    // Also check if odds team name contains any variant
-    for (const variant of variants) {
-      if (oddsTeamName.includes(variant) && variants.includes(ourAbbr)) {
-        return true;
-      }
-    }
+    const data = await response.json();
+    const odds = data.items?.[0];
+    if (!odds) return null;
+
+    const homeSpread = odds.spread;
+    const total = odds.overUnder;
+    if (homeSpread === undefined || total === undefined) return null;
+
+    return { homeSpread, total };
+  } catch (error) {
+    return null;
   }
-  return false;
-}
-
-interface OddsAPIEvent {
-  id: string;
-  home_team: string;
-  away_team: string;
-  commence_time: string;
-  bookmakers: Array<{
-    key: string;
-    markets: Array<{
-      key: string;
-      outcomes: Array<{
-        name: string;
-        price: number;
-        point?: number;
-      }>;
-    }>;
-  }>;
-}
-
-async function fetchHistoricalOdds(date: string, apiKey: string): Promise<OddsAPIEvent[]> {
-  const url = `${ODDS_API_BASE}/historical/sports/americanfootball_nfl/odds/?apiKey=${apiKey}&regions=us&markets=spreads,totals&oddsFormat=american&date=${date}`;
-
-  const response = await fetch(url);
-  if (!response.ok) {
-    console.error(`Historical odds fetch failed for ${date}: ${response.status}`);
-    return [];
-  }
-
-  const data = await response.json();
-  return data.data || [];
-}
-
-function getConsensusFromBookmakers(event: OddsAPIEvent): { spread: number; total: number } | null {
-  const spreads: number[] = [];
-  const totals: number[] = [];
-
-  for (const bookmaker of event.bookmakers) {
-    const spreadMarket = bookmaker.markets.find(m => m.key === 'spreads');
-    const totalMarket = bookmaker.markets.find(m => m.key === 'totals');
-
-    if (spreadMarket) {
-      const homeSpread = spreadMarket.outcomes.find(o => o.name === event.home_team);
-      if (homeSpread?.point !== undefined) {
-        spreads.push(homeSpread.point);
-      }
-    }
-
-    if (totalMarket) {
-      const over = totalMarket.outcomes.find(o => o.name === 'Over');
-      if (over?.point !== undefined && over.point > 0) {
-        totals.push(over.point);
-      }
-    }
-  }
-
-  if (spreads.length === 0 || totals.length === 0) return null;
-
-  const avgSpread = spreads.reduce((a, b) => a + b, 0) / spreads.length;
-  const avgTotal = totals.reduce((a, b) => a + b, 0) / totals.length;
-
-  return {
-    spread: Math.round(avgSpread * 2) / 2,
-    total: Math.round(avgTotal * 2) / 2,
-  };
 }
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const weekParam = searchParams.get('week');
   const limitParam = searchParams.get('limit');
-
-  const apiKey = process.env.NEXT_PUBLIC_ODDS_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: 'Odds API key not configured' }, { status: 500 });
-  }
 
   const logs: string[] = [];
   const log = (msg: string) => {
@@ -193,61 +95,30 @@ export async function GET(request: Request) {
 
     log(`Need to fetch odds for ${gamesToFetch.length} games`);
 
-    // 3. Group games by date
-    const gamesByDate = new Map<string, typeof gamesToFetch>();
-    for (const game of gamesToFetch) {
-      const gameDate = new Date(game.gameTime);
-      // Use date at noon to capture games that day
-      const dateKey = `${gameDate.toISOString().split('T')[0]}T12:00:00Z`;
-
-      if (!gamesByDate.has(dateKey)) {
-        gamesByDate.set(dateKey, []);
-      }
-      gamesByDate.get(dateKey)!.push(game);
-    }
-
-    log(`Fetching odds for ${gamesByDate.size} unique dates`);
-
-    // 4. Fetch historical odds for each date
+    // 3. Fetch historical odds per game via ESPN (no API key)
     let fetchedCount = 0;
     let matchedCount = 0;
-    let apiCalls = 0;
 
-    for (const [date, dateGames] of gamesByDate) {
-      log(`Fetching odds for ${date} (${dateGames.length} games)...`);
+    for (const game of gamesToFetch) {
+      if (!game.gameId) continue;
+      const odds = await fetchESPNOdds(game.gameId);
+      fetchedCount++;
 
-      const events = await fetchHistoricalOdds(date, apiKey);
-      apiCalls++;
-      fetchedCount += events.length;
-
-      log(`  Got ${events.length} events from API`);
-
-      // Match events to our games
-      for (const game of dateGames) {
-        for (const event of events) {
-          const homeMatch = matchesTeam(event.home_team, game.homeTeam);
-          const awayMatch = matchesTeam(event.away_team, game.awayTeam);
-
-          if (homeMatch && awayMatch) {
-            const consensus = getConsensusFromBookmakers(event);
-            if (consensus) {
-              historicalOdds[game.gameId] = {
-                vegasSpread: consensus.spread,
-                vegasTotal: consensus.total,
-                capturedAt: new Date().toISOString(),
-              };
-              matchedCount++;
-              log(`  Matched: ${game.awayTeam} @ ${game.homeTeam} → Spread: ${consensus.spread}, Total: ${consensus.total}`);
-            }
-            break;
-          }
-        }
+      if (odds) {
+        historicalOdds[game.gameId] = {
+          vegasSpread: odds.homeSpread,
+          vegasTotal: odds.total,
+          capturedAt: new Date().toISOString(),
+        };
+        matchedCount++;
       }
 
-      // Rate limit - wait 1 second between API calls
-      if (gamesByDate.size > 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      if (fetchedCount % 25 === 0) {
+        log(`Processed ${fetchedCount}/${gamesToFetch.length} games...`);
       }
+
+      // Avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
 
     log(`Matched ${matchedCount} games with historical odds`);
@@ -267,6 +138,19 @@ export async function GET(request: Request) {
       allowOverwrite: true,
     });
 
+    if (matchedCount > 0) {
+      const oddsDocs = Object.entries(historicalOdds).map(([gameId, odds]) => ({
+        id: gameId,
+        data: {
+          ...odds,
+          gameId,
+          sport,
+          updatedAt: new Date().toISOString(),
+        },
+      }));
+      await saveDocsBatch(sport, 'oddsLocks', oddsDocs);
+    }
+
     log('Done!');
 
     return NextResponse.json({
@@ -274,8 +158,8 @@ export async function GET(request: Request) {
       stats: {
         totalGames: games.length,
         gamesNeededOdds: gamesToFetch.length,
-        apiCalls,
-        eventsFound: fetchedCount,
+        apiCalls: fetchedCount,
+        eventsFound: matchedCount,
         matchedGames: matchedCount,
         totalHistoricalOdds: Object.keys(historicalOdds).length,
       },

@@ -597,7 +597,9 @@ export default function NHLResultsPage() {
                     </div>
                   </td>
                   <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
-                    <div className="font-mono text-gray-900 text-[11px] sm:text-sm">{game.predictedAwayScore.toFixed(1)}-{game.predictedHomeScore.toFixed(1)}</div>
+                    <div className="font-mono text-gray-900 text-[11px] sm:text-sm">
+                      {game.predictedAwayScore?.toFixed(1) ?? '-'}-{game.predictedHomeScore?.toFixed(1) ?? '-'}
+                    </div>
                   </td>
                   <td className="px-2 sm:px-4 py-2 sm:py-3 text-center">
                     <div className="font-mono font-bold text-gray-900 text-[11px] sm:text-sm">{game.actualAwayScore}-{game.actualHomeScore}</div>

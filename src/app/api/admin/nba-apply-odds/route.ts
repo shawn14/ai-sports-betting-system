@@ -44,7 +44,8 @@ export async function GET() {
     let updated = 0;
     for (const result of results) {
       const odds = historicalOdds[result.gameId];
-      if (odds && result.vegasSpread === undefined) {
+      if (odds) {
+        // Always update odds and recalculate ATS result
         result.vegasSpread = odds.vegasSpread;
         result.vegasTotal = odds.vegasTotal;
 

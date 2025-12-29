@@ -523,40 +523,6 @@ export default function ResultsPage() {
       {/* Summary Cards */}
       {summary && (
         <div className="space-y-4">
-          {/* ATS vs Vegas - The Important Stats */}
-          {vegasStats && vegasStats.ats.gamesWithOdds > 0 && (
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-3 sm:p-4">
-              <h2 className="text-green-800 font-bold text-xs sm:text-sm mb-2 sm:mb-3">ATS vs Vegas</h2>
-              <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                {/* ATS vs Vegas Spread */}
-                <div className="bg-white rounded-lg p-2.5 sm:p-4 border border-green-200">
-                  <div className="text-gray-600 text-[10px] sm:text-sm font-medium mb-0.5 sm:mb-1">Spread</div>
-                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
-                    {vegasStats.ats.wins}-{vegasStats.ats.losses}
-                    {vegasStats.ats.pushes > 0 && <span className="text-gray-400 text-base sm:text-2xl">-{vegasStats.ats.pushes}</span>}
-                  </div>
-                  <div className={`text-base sm:text-xl font-mono font-bold ${vegasStats.ats.winPct > 52.4 ? 'text-green-600' : vegasStats.ats.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
-                    {vegasStats.ats.winPct}%
-                  </div>
-                  <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{vegasStats.ats.gamesWithOdds} games</div>
-                </div>
-
-                {/* O/U vs Vegas Total */}
-                <div className="bg-white rounded-lg p-2.5 sm:p-4 border border-green-200">
-                  <div className="text-gray-600 text-[10px] sm:text-sm font-medium mb-0.5 sm:mb-1">O/U</div>
-                  <div className="text-lg sm:text-2xl font-bold text-gray-900">
-                    {vegasStats.ouVegas.wins}-{vegasStats.ouVegas.losses}
-                    {vegasStats.ouVegas.pushes > 0 && <span className="text-gray-400 text-base sm:text-2xl">-{vegasStats.ouVegas.pushes}</span>}
-                  </div>
-                  <div className={`text-base sm:text-xl font-mono font-bold ${vegasStats.ouVegas.winPct > 52.4 ? 'text-green-600' : vegasStats.ouVegas.winPct < 47.6 ? 'text-red-500' : 'text-gray-500'}`}>
-                    {vegasStats.ouVegas.winPct}%
-                  </div>
-                  <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{vegasStats.ouVegas.gamesWithOdds} games</div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* High Conviction Only */}
           {highConvStats && (highConvStats.ats.total > 0 || highConvStats.ml.total > 0 || highConvStats.ou.total > 0) && (
             <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-green-300 rounded-xl p-3 sm:p-4">
@@ -603,54 +569,6 @@ export default function ResultsPage() {
                     <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">{highConvStats.ou.total} picks</div>
                   </div>
                 )}
-              </div>
-            </div>
-          )}
-
-          {/* 60%+ Situations Breakdown */}
-          {situationStats.length > 0 && (
-            <div className="bg-gradient-to-r from-amber-50 to-yellow-50 border border-amber-200 rounded-xl p-3 sm:p-4">
-              <h2 className="text-amber-800 font-bold text-xs sm:text-sm mb-2 sm:mb-3">By Situation</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                {situationStats.map((sit) => (
-                  <div
-                    key={sit.badge}
-                    className={`rounded-lg p-2 sm:p-3 border ${
-                      sit.badge === 'AVOID'
-                        ? 'bg-red-50 border-red-200'
-                        : sit.winPct >= 60
-                        ? 'bg-green-50 border-green-300'
-                        : 'bg-white border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1 sm:gap-2 mb-0.5 sm:mb-1">
-                      <span className={`text-[9px] sm:text-xs font-bold px-1 sm:px-1.5 py-0.5 rounded ${
-                        sit.badge === 'AVOID'
-                          ? 'bg-red-500 text-white'
-                          : sit.winPct >= 60
-                          ? 'bg-green-600 text-white'
-                          : 'bg-gray-400 text-white'
-                      }`}>
-                        {sit.badge}
-                      </span>
-                    </div>
-                    <div className="text-sm sm:text-lg font-bold text-gray-900">
-                      {sit.wins}-{sit.losses}
-                      {sit.pushes > 0 && <span className="text-gray-400 text-xs sm:text-sm">-{sit.pushes}</span>}
-                    </div>
-                    <div className={`text-sm sm:text-lg font-mono font-bold ${
-                      sit.badge === 'AVOID'
-                        ? 'text-red-600'
-                        : sit.winPct >= 60
-                        ? 'text-green-600'
-                        : sit.winPct >= 55
-                        ? 'text-amber-600'
-                        : 'text-gray-500'
-                    }`}>
-                      {sit.winPct}%
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           )}

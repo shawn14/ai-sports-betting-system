@@ -56,7 +56,7 @@ async function fetchESPNOdds(gameId: string): Promise<{ spread: number; total: n
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const limit = parseInt(searchParams.get('limit') || '50');
+  const limit = parseInt(searchParams.get('limit') || '200');
   const dryRun = searchParams.get('dryRun') === 'true';
 
   try {

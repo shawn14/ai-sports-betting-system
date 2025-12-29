@@ -774,16 +774,16 @@ export default function Dashboard() {
                 {/* Vegas line status */}
                 {hasVegas && (
                   <>
-                    <div className="px-3 sm:px-4 py-1 sm:py-1.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-[9px] sm:text-[10px]">
+                    <div className="px-3 sm:px-4 py-1 sm:py-1.5 bg-gray-50 border-b border-gray-100 flex items-center justify-between text-[10px] sm:text-xs">
                       <div className="flex flex-col">
                         <span className="text-gray-500">Vegas</span>
                         {lineOpeningSpread !== undefined && lineCurrentSpread !== undefined && (
-                          <span className="text-[9px] text-gray-400">
+                          <span className="text-[10px] sm:text-xs text-gray-400">
                             Spread: {formatSpread(lineOpeningSpread)} → {formatSpread(lineCurrentSpread)}
                           </span>
                         )}
                         {lineOpeningTotal !== undefined && lineCurrentTotal !== undefined && (
-                          <span className="text-[9px] text-gray-400">
+                          <span className="text-[10px] sm:text-xs text-gray-400">
                             Total: {Math.round(lineOpeningTotal * 2) / 2} → {Math.round(lineCurrentTotal * 2) / 2}
                           </span>
                         )}
@@ -802,7 +802,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     {spreadMove !== undefined && spreadMove !== 0 && (
-                      <div className="px-3 sm:px-4 pb-1 sm:pb-1.5 bg-gray-50 border-b border-gray-100 text-[9px] sm:text-[10px] text-gray-500">
+                      <div className="px-3 sm:px-4 pb-1 sm:pb-1.5 bg-gray-50 border-b border-gray-100 text-[10px] sm:text-xs text-gray-500">
                         Line moved {spreadMove > 0 ? '+' : '-'}{Math.abs(spreadMove)} toward {spreadMoveTeam}.
                       </div>
                     )}

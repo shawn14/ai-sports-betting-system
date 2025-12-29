@@ -200,7 +200,7 @@ export default function AboutPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Data Sources</h2>
           <ul className="text-sm space-y-2">
             <li><strong>Scores & Stats:</strong> ESPN API (real-time)</li>
-            <li><strong>Vegas Odds:</strong> The Odds API (spreads & totals)</li>
+            <li><strong>Vegas Odds:</strong> ESPN API (spreads & totals)</li>
             <li><strong>Weather:</strong> Open-Meteo API (game-time forecasts)</li>
             <li><strong>Injuries:</strong> NFL.com injury reports</li>
           </ul>

@@ -515,7 +515,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // Generate predictions for upcoming games
+    // Generate predictions for upcoming games (matching NBA format)
     const predictions: unknown[] = [];
     for (const game of upcomingGames) {
       if (!game.id || !game.homeTeamId || !game.awayTeamId) continue;
@@ -539,53 +539,76 @@ export async function GET(request: Request) {
       const vegasSpread = storedOdds?.vegasSpread;
       const vegasTotal = storedOdds?.vegasTotal;
 
-      const edgeSpread = vegasSpread !== undefined ? vegasSpread - predictedSpread : undefined;
-      const edgeTotal = vegasTotal !== undefined ? predictedTotal - vegasTotal : undefined;
+      const spreadEdge = vegasSpread !== undefined ? vegasSpread - predictedSpread : 0;
+      const totalEdge = vegasTotal !== undefined ? predictedTotal - vegasTotal : 0;
+      const mlEdge = Math.abs(homeWinProb - 0.5) * 100;
 
-      // High conviction: Spread Edge >= 1.5 (optimized from backtest - 73.2%)
+      // Confidence levels (matching NBA thresholds adjusted for NHL scale)
+      const absSpreadEdge = Math.abs(spreadEdge);
+      const absTotalEdge = Math.abs(totalEdge);
+      const atsConfidence: 'high' | 'medium' | 'low' =
+        absSpreadEdge >= 1.5 ? 'high' : absSpreadEdge >= 0.5 ? 'medium' : 'low';
+      const ouConfidence: 'high' | 'medium' | 'low' =
+        absTotalEdge >= 1.0 ? 'high' : absTotalEdge >= 0.5 ? 'medium' : 'low';
+      const mlConfidence: 'high' | 'medium' | 'low' =
+        mlEdge >= 15 ? 'high' : mlEdge >= 7 ? 'medium' : 'low';
+
       const eloGap = Math.abs(homeTeam.eloRating - awayTeam.eloRating);
-      const spreadEdge = vegasSpread !== undefined ? Math.abs(predictedSpread - vegasSpread) : 0;
-      const isHighConviction = spreadEdge >= 1.5 && vegasSpread !== undefined;
+      const isHighConviction = absSpreadEdge >= 1.5 && vegasSpread !== undefined;
 
+      // Match NBA structure exactly
       predictions.push({
-        gameId: game.id,
-        gameTime: game.gameTime,
-        venue: game.venue,
-        homeTeam: {
-          id: homeTeam.id,
-          name: homeTeam.name,
-          abbreviation: homeTeam.abbreviation,
-          eloRating: homeTeam.eloRating,
-          ppg: homeTeam.ppg,
-          ppgAllowed: homeTeam.ppgAllowed,
-        },
-        awayTeam: {
-          id: awayTeam.id,
-          name: awayTeam.name,
-          abbreviation: awayTeam.abbreviation,
-          eloRating: awayTeam.eloRating,
-          ppg: awayTeam.ppg,
-          ppgAllowed: awayTeam.ppgAllowed,
+        game: {
+          id: game.id,
+          homeTeamId: game.homeTeamId,
+          awayTeamId: game.awayTeamId,
+          gameTime: game.gameTime,
+          status: 'scheduled',
+          venue: game.venue,
+          season: currentSeason,
+          homeTeam: {
+            id: homeTeam.id,
+            name: homeTeam.name,
+            abbreviation: homeTeam.abbreviation,
+          },
+          awayTeam: {
+            id: awayTeam.id,
+            name: awayTeam.name,
+            abbreviation: awayTeam.abbreviation,
+          },
         },
         prediction: {
-          homeScore: predHome,
-          awayScore: predAway,
-          spread: predictedSpread,
-          total: predictedTotal,
-          homeWinProb: Math.round(homeWinProb * 1000) / 10,
+          gameId: game.id,
+          predictedHomeScore: predHome,
+          predictedAwayScore: predAway,
+          predictedSpread,
+          predictedTotal,
+          homeWinProbability: homeWinProb,
+          confidence: 0.5,
+          vegasSpread,
+          vegasTotal,
+          lineMovement: storedOdds ? {
+            openingSpread: storedOdds.openingSpread,
+            openingTotal: storedOdds.openingTotal,
+            lastSeenSpread: storedOdds.lastSeenSpread,
+            lastSeenTotal: storedOdds.lastSeenTotal,
+            lastUpdatedAt: storedOdds.lastUpdatedAt,
+          } : undefined,
+          spreadEdge: Math.round(spreadEdge * 10) / 10,
+          totalEdge: Math.round(totalEdge * 10) / 10,
+          atsConfidence,
+          ouConfidence,
+          mlConfidence,
+          isAtsBestBet: atsConfidence === 'high',
+          isOuBestBet: ouConfidence === 'high',
+          isMlBestBet: mlConfidence === 'high',
+          mlEdge: Math.round(mlEdge * 10) / 10,
+          eloGap,
+          isHighConviction,
+          homeElo: homeTeam.eloRating,
+          awayElo: awayTeam.eloRating,
           calc,
         },
-        vegas: vegasSpread !== undefined ? {
-          spread: vegasSpread,
-          total: vegasTotal,
-          lockedAt: storedOdds?.lockedAt,
-        } : undefined,
-        edge: {
-          spread: edgeSpread !== undefined ? Math.round(edgeSpread * 10) / 10 : undefined,
-          total: edgeTotal !== undefined ? Math.round(edgeTotal * 10) / 10 : undefined,
-        },
-        isHighConviction,
-        eloGap,
       });
     }
 
@@ -637,21 +660,18 @@ export async function GET(request: Request) {
 
     log(`Backtest: ATS ${backtestSummary.spread.winPct}% (${spreadWins}-${spreadLosses}-${spreadPushes})`);
 
-    // Get recent completed games for display
-    const recentGames = completedGames
-      .slice(-10)
-      .reverse()
-      .map((g: any) => ({
-        id: g.id,
-        gameTime: g.gameTime,
-        homeTeam: teamsMap.get(g.homeTeamId)?.abbreviation,
-        awayTeam: teamsMap.get(g.awayTeamId)?.abbreviation,
-        homeScore: g.homeScore,
-        awayScore: g.awayScore,
-        vegas: historicalOdds[g.id] ? {
-          spread: historicalOdds[g.id].vegasSpread,
-          total: historicalOdds[g.id].vegasTotal,
-        } : undefined,
+    // Get recent completed games for display (match NBA format exactly)
+    const recentGames = [...allResults]
+      .sort((a: any, b: any) => new Date(b.gameTime).getTime() - new Date(a.gameTime).getTime())
+      .slice(0, 10)
+      .map((r: any) => ({
+        id: r.gameId,
+        homeTeam: { abbreviation: r.homeTeam },
+        awayTeam: { abbreviation: r.awayTeam },
+        homeScore: r.actualHomeScore,
+        awayScore: r.actualAwayScore,
+        gameTime: r.gameTime,
+        status: 'final',
       }));
 
     // Save to Firestore

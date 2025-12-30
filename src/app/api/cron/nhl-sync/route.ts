@@ -17,7 +17,7 @@ const LEAGUE_AVG_GPG = 3.1;             // NHL average ~3.1 goals per team per g
 const ELO_TO_POINTS = 0.018;            // 100 Elo = 1.8 goals
 const HOME_ICE_ADVANTAGE = 0.25;        // NHL home ice ~0.25 goals
 const ELO_HOME_ADVANTAGE = 48;          // Same Elo bonus structure
-const SPREAD_REGRESSION = 0.4;          // 40% regression to mean
+const SPREAD_REGRESSION = 0.15;         // 15% regression to mean (was 40% - too aggressive)
 const ELO_CAP = 3;                      // Max ±1.5 goals per team
 
 function getSeasonStartDate(seasonYear: number): Date {
@@ -150,7 +150,7 @@ function predictScore(
   }
 
   const homeScore = baseHomeScore + eloAdj + HOME_ICE_ADVANTAGE / 2;
-  const awayScore = baseAwayScore - eloAdj + HOME_ICE_ADVANTAGE / 2;
+  const awayScore = baseAwayScore - eloAdj - HOME_ICE_ADVANTAGE / 2;  // Fixed: subtract from away (was adding)
 
   return {
     homeScore: Math.round(homeScore * 10) / 10,

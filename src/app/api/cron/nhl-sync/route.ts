@@ -482,6 +482,13 @@ export async function GET(request: Request) {
 
     log(`Processed ${newGames.length} new games, updated Elos`);
 
+    // HEALTH CHECK: Warn if completed games are missing odds
+    const allCompletedGameIds = [...processedGameIds];
+    const initialMissingOdds = allCompletedGameIds.filter(id => !historicalOdds[id]?.vegasSpread);
+    if (initialMissingOdds.length > 0) {
+      log(`⚠️ ${initialMissingOdds.length}/${allCompletedGameIds.length} completed games missing odds - will attempt backfill`);
+    }
+
     const now = new Date();
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
@@ -518,6 +525,15 @@ export async function GET(request: Request) {
     }
     if (backfilledCount > 0) {
       log(`Backfilled ${backfilledCount} completed games with ESPN odds`);
+    }
+
+    // Final odds coverage check
+    const finalMissingOdds = allCompletedGameIds.filter(id => !historicalOdds[id]?.vegasSpread);
+    if (finalMissingOdds.length > 0) {
+      const pct = Math.round((1 - finalMissingOdds.length / allCompletedGameIds.length) * 100);
+      log(`⚠️ WARNING: ${finalMissingOdds.length}/${allCompletedGameIds.length} games still missing odds after backfill (${pct}% coverage)`);
+    } else if (allCompletedGameIds.length > 0) {
+      log(`✅ All ${allCompletedGameIds.length} completed games have Vegas odds`);
     }
 
     // Fetch odds for upcoming games

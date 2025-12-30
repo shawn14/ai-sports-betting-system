@@ -452,6 +452,16 @@ export async function GET(request: Request) {
 
     log(`Processed ${newGames.length} new games. Spread: ${spreadWins}-${spreadLosses}`);
 
+    // HEALTH CHECK: Warn if completed games are missing odds
+    const allCompletedGameIds = [...processedGameIds];
+    const gamesMissingOdds = allCompletedGameIds.filter(id => !historicalOdds[id]?.vegasSpread);
+    if (gamesMissingOdds.length > 0) {
+      const pct = Math.round((1 - gamesMissingOdds.length / allCompletedGameIds.length) * 100);
+      log(`⚠️ WARNING: ${gamesMissingOdds.length}/${allCompletedGameIds.length} completed games missing Vegas odds (${pct}% coverage)`);
+    } else {
+      log(`✅ All ${allCompletedGameIds.length} completed games have Vegas odds`);
+    }
+
     // 6. Merge backtest results (new + existing)
     const coerceGameTime = (value: any) => {
       if (!value) return value;

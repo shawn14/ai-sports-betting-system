@@ -1280,7 +1280,12 @@ export async function GET(request: Request) {
           moneyline: { wins: hiMlW, losses: hiMlL, winPct: hiMlTotal > 0 ? Math.round((hiMlW / hiMlTotal) * 1000) / 10 : 0 },
           overUnder: { wins: hiOuW, losses: hiOuL, pushes: hiOuP, winPct: hiOuTotal > 0 ? Math.round((hiOuW / hiOuTotal) * 1000) / 10 : 0 },
         },
-        results: allBacktestResults,
+        results: allBacktestResults.filter((r: any) => {
+          // Only include current season games (season starts in October of previous year)
+          const gameDate = new Date(r.gameTime);
+          const seasonStart = new Date(currentSeason - 1, 9, 1); // October 1 of previous year
+          return gameDate >= seasonStart;
+        }),
       },
     };
 

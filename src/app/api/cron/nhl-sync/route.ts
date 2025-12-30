@@ -727,7 +727,12 @@ export async function GET(request: Request) {
       backtest: {
         summary: backtestSummary,
         highConvictionSummary,
-        results: allResults.slice(-500), // Last 500 games
+        results: allResults.filter((r: any) => {
+          // Only include current season games (season starts in October of previous year)
+          const gameDate = new Date(r.gameTime);
+          const seasonStart = new Date(currentSeason - 1, 9, 1); // October 1 of previous year
+          return gameDate >= seasonStart;
+        }),
       },
     };
 

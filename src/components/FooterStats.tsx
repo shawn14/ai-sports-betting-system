@@ -28,7 +28,8 @@ export default function FooterStats() {
 
     const loadStats = async () => {
       try {
-        const response = await fetch(url, { cache: 'no-cache' });
+        // Edge cache handles freshness via s-maxage + stale-while-revalidate
+        const response = await fetch(url);
         const data = await response.json();
         // Use high conviction stats (falls back to regular summary if not available yet)
         const summary = data?.backtest?.highConvictionSummary || data?.backtest?.summary;

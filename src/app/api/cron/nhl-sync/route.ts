@@ -90,37 +90,51 @@ interface BlobState {
   };
 }
 
-// Fetch odds from ESPN's FREE odds API (no API key needed!)
-async function fetchESPNOdds(eventId: string): Promise<{ homeSpread: number; total: number; homeML?: number; awayML?: number } | null> {
-  try {
-    const url = `https://sports.core.api.espn.com/v2/sports/hockey/leagues/nhl/events/${eventId}/competitions/${eventId}/odds`;
-    const response = await fetch(url);
+// Fetch odds from ESPN's FREE odds API (no API key needed!) - with retry logic
+async function fetchESPNOdds(eventId: string, retries = 2): Promise<{ homeSpread: number; total: number; homeML?: number; awayML?: number } | null> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const url = `https://sports.core.api.espn.com/v2/sports/hockey/leagues/nhl/events/${eventId}/competitions/${eventId}/odds`;
+      const response = await fetch(url, {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(5000), // 5 second timeout
+      });
 
-    if (!response.ok) {
+      if (!response.ok) {
+        if (attempt < retries) {
+          await new Promise(r => setTimeout(r, 200 * (attempt + 1))); // Exponential backoff
+          continue;
+        }
+        return null;
+      }
+
+      const data = await response.json();
+
+      // Get the first provider's odds (typically ESPN BET)
+      const odds = data.items?.[0];
+      if (!odds) return null;
+
+      const homeSpread = odds.spread;
+      const total = odds.overUnder;
+
+      if (homeSpread === undefined || total === undefined) return null;
+
+      return {
+        homeSpread,
+        total,
+        homeML: odds.homeTeamOdds?.moneyLine,
+        awayML: odds.awayTeamOdds?.moneyLine,
+      };
+    } catch (error) {
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 200 * (attempt + 1)));
+        continue;
+      }
+      // Silently fail after all retries
       return null;
     }
-
-    const data = await response.json();
-
-    // Get the first provider's odds (typically ESPN BET)
-    const odds = data.items?.[0];
-    if (!odds) return null;
-
-    const homeSpread = odds.spread;
-    const total = odds.overUnder;
-
-    if (homeSpread === undefined || total === undefined) return null;
-
-    return {
-      homeSpread,
-      total,
-      homeML: odds.homeTeamOdds?.moneyLine,
-      awayML: odds.awayTeamOdds?.moneyLine,
-    };
-  } catch (error) {
-    // Silently fail - odds just won't be available for this game
-    return null;
   }
+  return null;
 }
 
 function predictScore(
@@ -468,13 +482,45 @@ export async function GET(request: Request) {
 
     log(`Processed ${newGames.length} new games, updated Elos`);
 
-    // Fetch odds for upcoming games
-    const upcomingGames = (allGames as any[]).filter(g => g.status !== 'final');
-    log(`Fetching odds for ${upcomingGames.length} upcoming games...`);
-
     const now = new Date();
     const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
 
+    // HARDENED: Fetch odds for ALL games - both upcoming AND completed games missing odds
+    const upcomingGames = (allGames as any[]).filter(g => g.status !== 'final');
+    const completedGamesMissingOdds = completedGames.filter((g: any) =>
+      g.id && !historicalOdds[g.id]?.vegasSpread
+    );
+
+    log(`Fetching odds for ${upcomingGames.length} upcoming + ${completedGamesMissingOdds.length} completed games missing odds...`);
+
+    // Fetch odds for completed games that are missing them (ESPN retains historical odds)
+    let backfilledCount = 0;
+    for (const game of completedGamesMissingOdds) {
+      if (!game.id) continue;
+
+      const espnOdds = await fetchESPNOdds(game.id);
+      if (espnOdds) {
+        historicalOdds[game.id] = {
+          openingSpread: espnOdds.homeSpread,
+          openingTotal: espnOdds.total,
+          vegasSpread: espnOdds.homeSpread,
+          vegasTotal: espnOdds.total,
+          capturedAt: now.toISOString(),
+          lockedAt: now.toISOString(), // Already completed, so lock immediately
+        };
+        backfilledCount++;
+
+        // Small delay to avoid rate limiting
+        if (backfilledCount % 10 === 0) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+    }
+    if (backfilledCount > 0) {
+      log(`Backfilled ${backfilledCount} completed games with ESPN odds`);
+    }
+
+    // Fetch odds for upcoming games
     for (const game of upcomingGames) {
       if (!game.id) continue;
       const gameTime = new Date(game.gameTime);
@@ -541,17 +587,34 @@ export async function GET(request: Request) {
       const totalEdge = vegasTotal !== undefined ? predictedTotal - vegasTotal : 0;
       const mlEdge = Math.abs(homeWinProb - 0.5) * 100;
 
-      // Confidence levels (matching NBA thresholds adjusted for NHL scale)
+      // Confidence levels (adjusted for NHL's low-scoring nature)
+      // NHL games average ~6 total goals, so a 0.5 goal edge is significant
       const absSpreadEdge = Math.abs(spreadEdge);
       const absTotalEdge = Math.abs(totalEdge);
-      const atsConfidence: 'high' | 'medium' | 'low' =
-        absSpreadEdge >= 1.5 ? 'high' : absSpreadEdge >= 0.5 ? 'medium' : 'low';
-      const ouConfidence: 'high' | 'medium' | 'low' =
-        absTotalEdge >= 1.0 ? 'high' : absTotalEdge >= 0.5 ? 'medium' : 'low';
-      const mlConfidence: 'high' | 'medium' | 'low' =
-        mlEdge >= 15 ? 'high' : mlEdge >= 7 ? 'medium' : 'low';
-
       const eloGap = Math.abs(homeTeam.eloRating - awayTeam.eloRating);
+
+      // When Vegas odds are available, use spread edge; otherwise use Elo gap
+      let atsConfidence: 'high' | 'medium' | 'low';
+      if (vegasSpread !== undefined) {
+        atsConfidence = absSpreadEdge >= 0.5 ? 'high' : absSpreadEdge >= 0.2 ? 'medium' : 'low';
+      } else {
+        // No Vegas odds - use Elo gap (50+ = high, 25+ = medium)
+        atsConfidence = eloGap >= 50 ? 'high' : eloGap >= 25 ? 'medium' : 'low';
+      }
+
+      let ouConfidence: 'high' | 'medium' | 'low';
+      if (vegasTotal !== undefined) {
+        ouConfidence = absTotalEdge >= 0.5 ? 'high' : absTotalEdge >= 0.2 ? 'medium' : 'low';
+      } else {
+        // No Vegas total - use predicted total deviation from league avg (6.2)
+        const totalDev = Math.abs(predictedTotal - 6.2);
+        ouConfidence = totalDev >= 0.5 ? 'high' : totalDev >= 0.3 ? 'medium' : 'low';
+      }
+
+      const mlConfidence: 'high' | 'medium' | 'low' =
+        mlEdge >= 12 ? 'high' : mlEdge >= 5 ? 'medium' : 'low';
+
+      // Keep backtest high conviction at 1.5 (validated at 72.7% ATS)
       const isHighConviction = absSpreadEdge >= 1.5 && vegasSpread !== undefined;
 
       // Match NBA structure exactly
@@ -612,8 +675,10 @@ export async function GET(request: Request) {
 
     log(`Generated ${predictions.length} predictions`);
 
-    // Build backtest summary
+    // Build backtest summary (including high conviction for persistence)
     const totalGamesWithOdds = spreadWins + spreadLosses + spreadPushes;
+    const hcTotal = hcSpreadWins + hcSpreadLosses + hcSpreadPushes;
+
     const backtestSummary = {
       totalGames: totalGamesWithOdds,
       spread: {
@@ -633,9 +698,14 @@ export async function GET(request: Request) {
         pushes: ouPushes,
         winPct: ouWins + ouLosses > 0 ? Math.round((ouWins / (ouWins + ouLosses)) * 1000) / 10 : 0,
       },
+      // Include high conviction in saved state so it persists across runs
+      highConviction: {
+        spread: { wins: hcSpreadWins, losses: hcSpreadLosses, pushes: hcSpreadPushes },
+        moneyline: { wins: hcMlWins, losses: hcMlLosses },
+        overUnder: { wins: hcOuWins, losses: hcOuLosses, pushes: hcOuPushes },
+      },
     };
 
-    const hcTotal = hcSpreadWins + hcSpreadLosses + hcSpreadPushes;
     const highConvictionSummary = {
       spread: {
         wins: hcSpreadWins,

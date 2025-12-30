@@ -153,7 +153,8 @@ export default function NHLDashboard() {
 
   const fetchData = useCallback(async () => {
     try {
-      const response = await fetch(`/nhl-prediction-data.json?t=${Date.now()}`, { cache: 'no-cache' });
+      // Edge cache handles freshness via s-maxage + stale-while-revalidate
+      const response = await fetch('/nhl-prediction-data.json');
       const data = await response.json();
 
       if (data.error && !data.games?.length) {
@@ -228,15 +229,13 @@ export default function NHLDashboard() {
 
   useEffect(() => {
     const init = async () => {
-      const live = await fetchLiveScores();
-      const todayKey = new Date().toDateString();
-      const hasScoreboardGamesToday = live.some((game) =>
-        game.gameTime && new Date(game.gameTime).toDateString() === todayKey
-      );
+      // Load blob data first (fast, cached at edge)
       const result = await fetchData();
-      if (!result.hasData || (hasScoreboardGamesToday && !result.hasTodayGames)) {
+      if (!result.hasData) {
         await syncAll();
       }
+      // Fetch live scores in parallel (non-blocking)
+      fetchLiveScores();
     };
     init();
 
@@ -543,7 +542,8 @@ export default function NHLDashboard() {
                   ? awayLabel
                   : homeLabel;
 
-              const pickHomeSpread = ourSpread < displaySpread; // Pick home if we favor home more than Vegas
+              // Pick home if we favor home more than Vegas, or if no Vegas odds, pick based on predicted winner
+              const pickHomeSpread = hasVegas ? ourSpread < displaySpread : ourSpread < 0;
               const pickHomeML = homeWinProb > 0.5;
               const pickOver = hasVegas ? ourTotal > prediction.vegasTotal! : ourTotal > NHL_AVG_TOTAL;
 
@@ -711,7 +711,8 @@ export default function NHLDashboard() {
           const spreadForGrading = prediction.vegasSpread ?? ourSpread;
           const vegasTotal = prediction.vegasTotal ?? NHL_AVG_TOTAL;
 
-          const pickHomeSpread = ourSpread < spreadForGrading; // Pick home if we favor home more than Vegas
+          // Pick home if we favor home more than Vegas, or if no Vegas odds, pick based on predicted winner
+          const pickHomeSpread = hasVegas ? ourSpread < spreadForGrading : ourSpread < 0;
           const pickHomeML = homeWinProb > 0.5;
           const pickOver = hasVegas ? ourTotal > prediction.vegasTotal! : ourTotal > NHL_AVG_TOTAL;
 
@@ -837,7 +838,8 @@ export default function NHLDashboard() {
               const displayTotal = prediction.vegasTotal ?? ourTotal;
               const hasVegas = prediction.vegasSpread !== undefined;
 
-              const pickHomeSpread = ourSpread < displaySpread; // Pick home if we favor home more than Vegas
+              // Pick home if we favor home more than Vegas, or if no Vegas odds, pick based on predicted winner
+              const pickHomeSpread = hasVegas ? ourSpread < displaySpread : ourSpread < 0;
               const pickHomeML = homeWinProb > 0.5;
               const pickOver = hasVegas ? ourTotal > prediction.vegasTotal! : ourTotal > NHL_AVG_TOTAL;
 

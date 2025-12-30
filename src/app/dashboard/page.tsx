@@ -175,8 +175,8 @@ export default function Dashboard() {
 
   const fetchData = useCallback(async () => {
     try {
-      // Fetch all data from pre-computed blob (instant!)
-      const response = await fetch(`/prediction-data.json?t=${Date.now()}`, { cache: 'no-cache' });
+      // Edge cache handles freshness via s-maxage + stale-while-revalidate
+      const response = await fetch('/prediction-data.json');
       const data = await response.json();
 
       if (data.error && !data.games?.length) {

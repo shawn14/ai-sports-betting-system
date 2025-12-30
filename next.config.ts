@@ -21,6 +21,20 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async headers() {
+    return [
+      {
+        // Cache prediction data files at the edge for 5 minutes, revalidate in background
+        source: '/:path(prediction-data|nba-prediction-data|nhl-prediction-data|nba-pace-calibration).json',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 's-maxage=300, stale-while-revalidate=600',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

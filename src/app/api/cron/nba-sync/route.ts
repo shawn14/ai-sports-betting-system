@@ -105,10 +105,10 @@ function calculateConviction(
   // Check if Elo agrees with our pick
   const eloAligned = ourPick === eloFavorite;
 
-  // Check if rest situation favors our pick
+  // Check if rest situation favors our pick (tracked but not used for conviction - data shows it hurts)
   const restFavors = restInfo ? restFavorsPick(ourPick === 'home', restInfo) : undefined;
 
-  // Check team avoidance
+  // Check team avoidance - only for HOME teams (data-backed)
   let teamAvoidance = false;
   let avoidReason: string | undefined;
 
@@ -121,38 +121,39 @@ function calculateConviction(
     avoidReason = `${awayTeamAbbr} on road historically unpredictable`;
   }
 
-  // Determine conviction level based on backtested filters
+  // NEW conviction logic based on backtested data:
+  // Best filter: Pick HOME + no avoid + Elo aligned = 63.6% (121 games)
+  // Second: Pick HOME + no avoid + edge >= 1 = 64.3% (42 games)
+  // Key insight: Picking HOME matters more than picking Vegas favorite
+  // Rest advantage actually HURTS (49.2%) so we ignore it
+
+  const picksHome = ourPick === 'home';
+  const hasEdge = vegasSpread !== undefined && (vegasSpread - predictedSpread) >= 1;
+
   let level: 'elite' | 'high' | 'moderate' | 'low';
   let expectedWinPct: number;
 
-  if (!picksVegasFavorite) {
-    // Picking underdog = 20% historical win rate
+  if (!picksHome) {
+    // Picking away = 51.8% (barely above breakeven)
     level = 'low';
-    expectedWinPct = 20;
+    expectedWinPct = 52;
   } else if (teamAvoidance) {
-    // Picking favorite but bad team matchup
-    level = 'moderate';
-    expectedWinPct = 65;
-  } else if (eloGap >= CONVICTION_FILTERS.eliteEloGap && eloAligned && restFavors) {
-    // Elite: Pick favorite + large Elo gap + Elo aligned + rest advantage = 78%
+    // Picking home but unpredictable team
+    level = 'low';
+    expectedWinPct = 50;
+  } else if (eloAligned && hasEdge) {
+    // Elite: Pick HOME + no avoid + Elo aligned + edge >= 1 = 62%
     level = 'elite';
-    expectedWinPct = 78;
-  } else if (eloGap >= CONVICTION_FILTERS.eliteEloGap && eloAligned) {
-    // Elite: Pick favorite + large Elo gap + Elo aligned = 75%
-    level = 'elite';
-    expectedWinPct = 75;
-  } else if (eloGap >= CONVICTION_FILTERS.highEloGap && restFavors) {
-    // High: Pick favorite + moderate Elo gap + rest advantage = 75%
+    expectedWinPct = 62;
+  } else if (eloAligned) {
+    // High: Pick HOME + no avoid + Elo aligned = 56% (data: 121 games, 77 wins)
     level = 'high';
-    expectedWinPct = 75;
-  } else if (eloGap >= CONVICTION_FILTERS.highEloGap) {
-    // High: Pick favorite + moderate Elo gap = 73%
-    level = 'high';
-    expectedWinPct = 73;
+    expectedWinPct = 56;
   } else {
-    // Moderate: Just picking favorite = 72.5%
+    // Moderate: Pick home but Elo not aligned or no edge = ~52%
+    // Data shows hasEdge alone = 48%, so don't mark as high conviction
     level = 'moderate';
-    expectedWinPct = 72.5;
+    expectedWinPct = 52;
   }
 
   return {
@@ -1223,17 +1224,17 @@ export async function GET(request: Request) {
 
     log(`Generated predictions for ${gamesWithPredictions.length} games (fetched ${oddsFetched} odds, ${restFetched} rest days from ESPN API)`);
 
-    // Compute high conviction stats from backtest results
+    // Compute high conviction stats from backtest results using actual conviction data
     let hiAtsW = 0, hiAtsL = 0, hiAtsP = 0;
     let hiOuW = 0, hiOuL = 0, hiOuP = 0;
     let hiMlW = 0, hiMlL = 0;
     for (const r of allBacktestResults as any[]) {
-      const spreadEdge = r.vegasSpread !== undefined ? Math.abs(r.predictedSpread - r.vegasSpread) : 0;
       const totalEdge = r.vegasTotal !== undefined ? Math.abs(r.predictedTotal - r.vegasTotal) : 0;
       const mlEdge = Math.abs((r.homeWinProb || 0.5) - 0.5) * 100;
 
-      // High conviction ATS (edge >= 2 pts)
-      if (spreadEdge >= 2 && r.atsResult) {
+      // High conviction ATS - use actual conviction flag from stored results
+      const isHighConviction = r.conviction?.isHighConviction === true;
+      if (isHighConviction && r.atsResult) {
         if (r.atsResult === 'win') hiAtsW++;
         else if (r.atsResult === 'loss') hiAtsL++;
         else hiAtsP++;

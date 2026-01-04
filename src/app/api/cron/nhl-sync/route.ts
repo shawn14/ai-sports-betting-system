@@ -423,10 +423,11 @@ export async function GET(request: Request) {
         else ouPushes++;
       }
 
-      // High conviction: Spread Edge >= 1.5 (optimized from backtest - 73.2% vs 56.1% with Elo gap)
+      // High conviction: Spread Edge >= 1.5 AND avoid large Elo gaps (75.7% ATS)
+      // Large Elo gaps (>=100) perform at only 40.2% - Vegas prices in clear mismatches
       const eloGap = Math.abs(homeElo - awayElo);
       const spreadEdge = vegasSpread !== undefined ? Math.abs(predictedSpread - vegasSpread) : 0;
-      const isHighConviction = spreadEdge >= 1.5 && vegasSpread !== undefined;
+      const isHighConviction = spreadEdge >= 1.5 && vegasSpread !== undefined && eloGap < 100;
       if (isHighConviction && atsResult) {
         if (atsResult === 'win') hcSpreadWins++;
         else if (atsResult === 'loss') hcSpreadLosses++;
@@ -633,8 +634,9 @@ export async function GET(request: Request) {
       const mlConfidence: 'high' | 'medium' | 'low' =
         mlEdge >= 12 ? 'high' : mlEdge >= 5 ? 'medium' : 'low';
 
-      // Keep backtest high conviction at 1.5 (validated at 72.7% ATS)
-      const isHighConviction = absSpreadEdge >= 1.5 && vegasSpread !== undefined;
+      // High conviction: edge >= 1.5 AND avoid large Elo gaps (validated at 75.7% ATS)
+      // Large Elo gaps (>=100) perform at only 40.2% - Vegas already prices in clear mismatches
+      const isHighConviction = absSpreadEdge >= 1.5 && vegasSpread !== undefined && eloGap < 100;
 
       // Match NBA structure exactly
       predictions.push({

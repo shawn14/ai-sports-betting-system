@@ -772,9 +772,10 @@ export async function GET(request: Request) {
         : null;
 
       // Calculate ATS result vs Vegas
+      // Use adjustedPredictedSpread (includes rest adjustment) to match conviction calculation
       let atsResult: 'win' | 'loss' | 'push' | undefined;
       if (vegasSpread !== undefined) {
-        const pickHome = predictedSpread < vegasSpread;
+        const pickHome = adjustedPredictedSpread < vegasSpread;
         if (pickHome) {
           atsResult = actualSpread < vegasSpread ? 'win' : actualSpread > vegasSpread ? 'loss' : 'push';
         } else {
@@ -909,9 +910,12 @@ export async function GET(request: Request) {
       const vegasSpread = storedOdds?.vegasSpread ?? r.vegasSpread;
       const vegasTotal = storedOdds?.vegasTotal ?? r.vegasTotal;
 
-      let atsResult = r.atsResult;
-      if (!atsResult && vegasSpread !== undefined && r.actualSpread !== undefined) {
-        const pickHome = r.predictedSpread < vegasSpread;
+      // Always recalculate atsResult using rest-adjusted spread to match conviction calculation
+      let atsResult: 'win' | 'loss' | 'push' | undefined = undefined;
+      if (vegasSpread !== undefined && r.actualSpread !== undefined) {
+        const restAdjustment = r.restDays?.adjustment ?? 0;
+        const adjustedSpread = r.predictedSpread + restAdjustment;
+        const pickHome = adjustedSpread < vegasSpread;
         if (pickHome) {
           atsResult = r.actualSpread < vegasSpread ? 'win' : r.actualSpread > vegasSpread ? 'loss' : 'push';
         } else {

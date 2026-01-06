@@ -18,11 +18,15 @@ const robotoCondensed = Roboto_Condensed({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.predictionmatrix.com'),
-  title: "Prediction Matrix - NFL Picks",
-  description: "AI-powered NFL betting predictions using Elo ratings",
+  title: {
+    default: "Prediction Matrix - AI Sports Betting Predictions",
+    template: "%s | Prediction Matrix",
+  },
+  description: "AI-powered NFL, NBA & NHL betting predictions. Get daily picks, Elo rankings, ATS results, and expert analysis for smarter sports betting.",
+  keywords: ["sports betting", "NFL picks", "NBA picks", "NHL picks", "betting predictions", "Elo ratings", "ATS", "spread predictions", "sports analytics"],
   openGraph: {
-    title: "Prediction Matrix",
-    description: "AI Sports Predictions",
+    title: "Prediction Matrix - AI Sports Betting Predictions",
+    description: "AI-powered NFL, NBA & NHL betting predictions. Daily picks, Elo rankings, and ATS results.",
     url: "https://www.predictionmatrix.com",
     siteName: "Prediction Matrix",
     images: [
@@ -30,7 +34,7 @@ export const metadata: Metadata = {
         url: "https://www.predictionmatrix.com/api/og",
         width: 1200,
         height: 630,
-        alt: "Prediction Matrix - AI Sports Predictions",
+        alt: "Prediction Matrix - AI Sports Betting Predictions",
       },
     ],
     locale: "en_US",
@@ -38,9 +42,20 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Prediction Matrix",
-    description: "AI Sports Predictions",
+    title: "Prediction Matrix - AI Sports Betting Predictions",
+    description: "AI-powered NFL, NBA & NHL betting predictions. Daily picks, Elo rankings, and ATS results.",
     images: ["https://www.predictionmatrix.com/api/og"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 

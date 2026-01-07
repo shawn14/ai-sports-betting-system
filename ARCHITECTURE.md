@@ -82,22 +82,30 @@ This is a Next.js-based NFL/NBA/NHL betting prediction system that uses Elo rati
 
 ### Firebase Firestore Collections
 
-#### Active Collections (Used by Cron Jobs)
+The database has been cleaned up to only include active collections. All legacy/v2 collections have been removed.
 
 **`sports/{sport}`** - Main sport documents (nfl, nba, nhl)
 ```
 sports/
 ├── nfl/                          # NFL sport state
-│   ├── (document fields)         # lastSyncAt, lastBlobWriteAt, season, currentWeek, etc.
-│   ├── teams/                    # Subcollection: team data + Elo
-│   ├── games/                    # Subcollection: game data
-│   ├── oddsLocks/                # Subcollection: locked Vegas odds
+│   ├── (document fields)         # lastSyncAt, lastBlobWriteAt, season, currentWeek, backtestSummary
+│   ├── teams/                    # Subcollection: team data + Elo ratings
+│   ├── games/                    # Subcollection: game schedules and scores
+│   ├── oddsLocks/                # Subcollection: locked Vegas odds (1hr before game)
 │   ├── predictions/              # Subcollection: model predictions
 │   ├── results/                  # Subcollection: backtest results
 │   ├── weather/                  # Subcollection: weather cache (NFL only)
 │   └── injuries/                 # Subcollection: injury cache (NFL only)
-├── nba/                          # NBA sport state (same structure, no weather/injuries)
-└── nhl/                          # NHL sport state (same structure, no weather/injuries)
+├── nba/                          # NBA sport state
+│   ├── teams/
+│   ├── games/
+│   ├── oddsLocks/
+│   ├── predictions/
+│   └── results/
+└── nhl/                          # NHL sport state
+    ├── teams/
+    ├── oddsLocks/
+    └── results/
 ```
 
 **`users`** - User accounts (Firebase Auth integration)
@@ -111,30 +119,6 @@ users/{uid}/
 ├── currentPeriodEnd?: string     # Subscription end date
 └── priceId?: string              # Stripe price ID
 ```
-
-**`nbaConfig`** - NBA model configuration
-```
-nbaConfig/
-├── convictionStrategy/           # Conviction filter settings
-└── teamAdjustments/              # Team-specific adjustments
-```
-
-**`nbaStrategies`** - NBA optimization results
-```
-nbaStrategies/
-└── convictionFilters/            # Optimized filter parameters
-```
-
-#### Legacy Collections (May Be Unused)
-
-These v2 collections were used by older API routes but the main cron jobs now use `sports/{sport}/subcollection`:
-
-- `teams_v2` - Legacy team data
-- `games_v2` - Legacy game data
-- `odds_v2` - Legacy odds data
-- `predictions_v2` - Legacy predictions
-
-**Files still importing legacy collections:** `/api/predictions`, `/api/edges`, `/api/backtest/*`, `/api/games`, `/api/odds`, `/api/teams`, `/api/admin/calibrate`, `/api/admin/recalculate-elo`
 
 ### Firebase Firestore (Summary)
 

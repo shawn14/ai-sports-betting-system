@@ -162,8 +162,23 @@ export default function AboutPage() {
       <div className="space-y-8 text-gray-600">
         <p className="text-lg">
           Prediction Matrix is a transparent, data-driven sports prediction system covering NFL, NBA, and NHL.
-          Every prediction can be traced back to specific inputs and calculations - no black boxes.
+          Every prediction can be traced back to specific inputs and calculations - click any game card to see exactly how the numbers were generated.
         </p>
+
+        {/* Glass Box Feature */}
+        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">Full Calculation Transparency</h2>
+          <p className="text-sm mb-3">
+            Click any game card on the picks page to see the complete &quot;glass box&quot; breakdown:
+          </p>
+          <ul className="text-sm space-y-1.5 text-gray-600">
+            <li>• Team Elo ratings and how they translate to point spreads</li>
+            <li>• Offensive and defensive stats with regression adjustments</li>
+            <li>• Step-by-step score calculation with exact formulas</li>
+            <li>• Edge analysis showing our prediction vs Vegas lines</li>
+            <li>• Win probability calculations from Elo differential</li>
+          </ul>
+        </div>
 
         {/* Live Stats Section */}
         <div className="bg-white rounded-xl p-6 border border-gray-200">
@@ -281,7 +296,7 @@ export default function AboutPage() {
             <div className="flex gap-3">
               <span className="text-red-600 font-bold shrink-0">Step 2</span>
               <div>
-                <strong>Regression to Mean</strong> - Raw scoring stats are regressed toward league average.
+                <strong>Regression to Mean</strong> - Raw scoring stats are regressed 30% toward league average.
                 This prevents overreacting to small samples - a team that scored big early probably won&apos;t
                 maintain that pace all season.
               </div>
@@ -298,15 +313,57 @@ export default function AboutPage() {
               <span className="text-red-600 font-bold shrink-0">Step 4</span>
               <div>
                 <strong>Elo Adjustment</strong> - The Elo difference between teams adjusts the predicted scores,
-                calibrated per sport to reflect actual point differentials.
+                calibrated per sport (NFL: 100 Elo = 11 pts, NBA: 100 Elo = 4.25 pts, NHL: 100 Elo = 2 goals).
               </div>
             </div>
             <div className="flex gap-3">
               <span className="text-red-600 font-bold shrink-0">Step 5</span>
               <div>
-                <strong>Home Field/Ice Advantage</strong> - Home teams get a bonus calibrated from
-                historical data for each sport.
+                <strong>Home Advantage</strong> - Home teams get a calibrated bonus
+                (NFL: 3.25 pts, NBA: 3.5 pts, NHL: 0.3 goals).
               </div>
+            </div>
+            <div className="flex gap-3">
+              <span className="text-red-600 font-bold shrink-0">Step 6</span>
+              <div>
+                <strong>Spread Regression</strong> - Predicted spreads are shrunk 45% toward zero to reduce
+                overconfidence. A raw 14-point spread becomes ~7.7 points.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sport-Specific Models */}
+        <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Sport-Specific Models</h2>
+          <div className="grid md:grid-cols-3 gap-4 text-sm">
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="font-bold text-red-600 mb-2">NFL</div>
+              <ul className="space-y-1 text-gray-600 text-xs">
+                <li>• Weather impact on totals</li>
+                <li>• QB injury adjustments (-3 pts)</li>
+                <li>• Divisional game tracking</li>
+                <li>• Late season detection</li>
+                <li>• Elo mismatch analysis</li>
+              </ul>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="font-bold text-orange-600 mb-2">NBA</div>
+              <ul className="space-y-1 text-gray-600 text-xs">
+                <li>• Rest day advantages</li>
+                <li>• Back-to-back detection</li>
+                <li>• Spread-adjusted ATS</li>
+                <li>• Higher-scoring baseline (113 PPG)</li>
+              </ul>
+            </div>
+            <div className="bg-white rounded-lg p-4 border border-gray-200">
+              <div className="font-bold text-blue-600 mb-2">NHL</div>
+              <ul className="space-y-1 text-gray-600 text-xs">
+                <li>• Lower-scoring model (3.0 GPG)</li>
+                <li>• Puck line analysis</li>
+                <li>• Elo gap filtering</li>
+                <li>• Goal-based thresholds</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -316,20 +373,27 @@ export default function AboutPage() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">High Conviction Picks</h2>
           <p className="text-sm mb-4">
             Not all picks are created equal. High conviction picks are filtered based on criteria that
-            have historically produced the best results:
+            have historically produced the best results. These are the picks we&apos;re most confident in.
           </p>
-          <div className="text-sm space-y-2">
-            <div className="flex justify-between">
-              <span><strong>ATS/Spread:</strong></span>
-              <span className="text-gray-600">Model aligned with Vegas favorite + Elo confirmation</span>
+          <div className="text-sm space-y-3">
+            <div>
+              <div className="font-semibold text-gray-900 mb-1">ATS / Spread / Puck Line</div>
+              <ul className="text-xs text-gray-600 space-y-0.5">
+                <li>• <strong>NFL:</strong> 60%+ situation present (divisional, late season, large spread, Elo mismatch) AND not medium spread (3.5-6.5)</li>
+                <li>• <strong>NBA:</strong> Model agrees with Vegas on the favorite AND spread edge confirms direction</li>
+                <li>• <strong>NHL:</strong> Spread edge ≥0.75 goals AND Elo gap ≥80 points</li>
+              </ul>
             </div>
-            <div className="flex justify-between">
-              <span><strong>Moneyline:</strong></span>
-              <span className="text-gray-600">15%+ win probability edge over implied odds</span>
+            <div>
+              <div className="font-semibold text-gray-900 mb-1">Moneyline</div>
+              <p className="text-xs text-gray-600">15%+ win probability edge over implied 50/50 (all sports)</p>
             </div>
-            <div className="flex justify-between">
-              <span><strong>Over/Under:</strong></span>
-              <span className="text-gray-600">5+ point edge (NFL/NBA) or 1.5+ goal edge (NHL)</span>
+            <div>
+              <div className="font-semibold text-gray-900 mb-1">Over/Under</div>
+              <ul className="text-xs text-gray-600 space-y-0.5">
+                <li>• <strong>NFL/NBA:</strong> 5+ point edge vs Vegas total</li>
+                <li>• <strong>NHL:</strong> 1.5+ goal edge vs Vegas total</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -348,11 +412,15 @@ export default function AboutPage() {
         <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Data Sources</h2>
           <ul className="text-sm space-y-2">
-            <li><strong>Scores & Stats:</strong> ESPN API (real-time)</li>
-            <li><strong>Vegas Odds:</strong> ESPN API (spreads & totals)</li>
-            <li><strong>Weather (NFL):</strong> Open-Meteo API (game-time forecasts)</li>
-            <li><strong>Injuries (NFL):</strong> NFL.com injury reports</li>
+            <li><strong>Teams & Schedules:</strong> ESPN API (all sports)</li>
+            <li><strong>Scores & Results:</strong> ESPN Scoreboard API (real-time updates)</li>
+            <li><strong>Vegas Odds:</strong> ESPN Odds API (spreads, totals, moneylines - no API key needed)</li>
+            <li><strong>Weather (NFL):</strong> OpenWeather API (game-time forecasts for outdoor stadiums)</li>
+            <li><strong>Injuries (NFL):</strong> NFL.com injury reports (QB out = -3 pts)</li>
           </ul>
+          <p className="text-xs text-gray-400 mt-3">
+            Data syncs every 2 hours (NFL) or 30 minutes (NBA/NHL). Vegas lines lock 1 hour before game time.
+          </p>
         </div>
 
         <p className="text-sm text-gray-400 text-center pt-4">

@@ -569,8 +569,112 @@ export default function NBAResultsPage() {
     return <span className={`font-mono font-bold ${color}`}>{pct}%</span>;
   };
 
+  // Calculate recent performance (last 7 days)
+  const recentResults = results.filter(r => {
+    const gameDate = new Date(r.gameTime);
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    return gameDate >= sevenDaysAgo;
+  });
+
+  const recentATS = recentResults.reduce((acc, r) => {
+    if (r.atsResult === 'win') acc.wins++;
+    else if (r.atsResult === 'loss') acc.losses++;
+    return acc;
+  }, { wins: 0, losses: 0 });
+
+  // Calculate trust score (rolling 20 game ATS performance)
+  const last20 = results.slice(0, 20);
+  const last20ATS = last20.reduce((acc, r) => {
+    if (r.atsResult === 'win') acc.wins++;
+    else if (r.atsResult === 'loss') acc.losses++;
+    return acc;
+  }, { wins: 0, losses: 0 });
+  const trustScore = last20ATS.wins + last20ATS.losses > 0
+    ? Math.round((last20ATS.wins / (last20ATS.wins + last20ATS.losses)) * 100)
+    : 50;
+
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Recap Banner */}
+      {recentResults.length > 0 && (
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-4 sm:p-6 text-white">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-lg sm:text-xl font-bold mb-1">Last 7 Days</h2>
+              <p className="text-orange-100 text-sm">{recentResults.length} games analyzed</p>
+            </div>
+            <div className="flex items-center gap-6">
+              <div className="text-center">
+                <div className="text-3xl sm:text-4xl font-bold font-mono">{recentATS.wins}-{recentATS.losses}</div>
+                <div className="text-orange-200 text-xs font-medium">ATS RECORD</div>
+              </div>
+              {recentATS.wins + recentATS.losses > 0 && (
+                <div className="text-center">
+                  <div className={`text-3xl sm:text-4xl font-bold font-mono ${
+                    (recentATS.wins / (recentATS.wins + recentATS.losses)) >= 0.55 ? 'text-green-300' :
+                    (recentATS.wins / (recentATS.wins + recentATS.losses)) < 0.45 ? 'text-red-300' : 'text-white'
+                  }`}>
+                    {Math.round((recentATS.wins / (recentATS.wins + recentATS.losses)) * 100)}%
+                  </div>
+                  <div className="text-orange-200 text-xs font-medium">WIN RATE</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Trust Scoreboard */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold text-gray-900 text-sm sm:text-base">Model Trust Score</h3>
+          <span className="text-xs text-gray-500">Last 20 games</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  trustScore >= 55 ? 'bg-green-500' : trustScore >= 50 ? 'bg-blue-500' : 'bg-red-500'
+                }`}
+                style={{ width: `${trustScore}%` }}
+              />
+            </div>
+            <div className="flex justify-between mt-1 text-[10px] text-gray-400">
+              <span>0%</span>
+              <span>50%</span>
+              <span>100%</span>
+            </div>
+          </div>
+          <div className="text-center min-w-[60px]">
+            <div className={`text-2xl font-bold font-mono ${
+              trustScore >= 55 ? 'text-green-600' : trustScore >= 50 ? 'text-blue-600' : 'text-red-600'
+            }`}>
+              {trustScore}%
+            </div>
+            <div className={`text-[10px] font-bold ${
+              trustScore >= 55 ? 'text-green-600' : trustScore >= 50 ? 'text-blue-600' : 'text-red-600'
+            }`}>
+              {trustScore >= 60 ? 'HOT' : trustScore >= 55 ? 'WARM' : trustScore >= 50 ? 'NEUTRAL' : 'COLD'}
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-1 mt-3">
+          {last20.slice(0, 20).reverse().map((r, i) => (
+            <div
+              key={i}
+              className={`flex-1 h-2 rounded-sm ${
+                r.atsResult === 'win' ? 'bg-green-500' :
+                r.atsResult === 'loss' ? 'bg-red-500' : 'bg-gray-300'
+              }`}
+              title={`${r.awayTeam} @ ${r.homeTeam}: ${r.atsResult?.toUpperCase() || 'PUSH'}`}
+            />
+          ))}
+        </div>
+        <div className="text-[10px] text-gray-400 mt-1 text-center">Recent → Older</div>
+      </div>
+
       <div className="flex justify-between items-center border-b border-gray-200 pb-3 sm:pb-4">
         <div className="flex items-center gap-3">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">NBA Results</h1>

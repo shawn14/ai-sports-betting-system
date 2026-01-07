@@ -43,6 +43,14 @@ export default function NHLRankingsPage() {
     );
   }
 
+  // Define tiers for NHL (32 teams)
+  const tiers = [
+    { name: 'ELITE', range: [1, 5], color: 'bg-green-600', textColor: 'text-green-700', bgColor: 'bg-green-50', borderColor: 'border-green-200' },
+    { name: 'CONTENDERS', range: [6, 12], color: 'bg-blue-500', textColor: 'text-blue-700', bgColor: 'bg-blue-50', borderColor: 'border-blue-200' },
+    { name: 'BUBBLE', range: [13, 20], color: 'bg-gray-400', textColor: 'text-gray-600', bgColor: 'bg-gray-50', borderColor: 'border-gray-200' },
+    { name: 'REBUILDING', range: [21, 32], color: 'bg-red-400', textColor: 'text-red-600', bgColor: 'bg-red-50', borderColor: 'border-red-200' },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between border-b border-gray-200 pb-3">
@@ -53,48 +61,76 @@ export default function NHLRankingsPage() {
         <span className="text-sm text-gray-500">Based on Elo ratings</span>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-12">Rank</th>
-              <th className="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Team</th>
-              <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Elo</th>
-              <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">GF/G</th>
-              <th className="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">GA/G</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {teams.map((team, index) => (
-              <tr key={team.id} className="hover:bg-gray-50 transition-colors cursor-pointer">
-                <td className="px-4 py-3">
-                  <Link href={`/nhl/teams/${team.abbreviation.toLowerCase()}`} className="block">
-                    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                      index < 3 ? 'bg-blue-500 text-white' :
-                      index < 10 ? 'bg-gray-200 text-gray-700' : 'text-gray-400'
-                    }`}>
-                      {index + 1}
-                    </span>
-                  </Link>
-                </td>
-                <td className="px-4 py-3">
-                  <Link href={`/nhl/teams/${team.abbreviation.toLowerCase()}`} className="flex items-center gap-3">
-                    <img src={getLogoUrl(team.abbreviation)} alt="" className="w-8 h-8 object-contain" />
-                    <div>
-                      <span className="font-bold text-gray-900 hover:text-blue-500">{team.abbreviation}</span>
-                      <span className="text-gray-500 ml-2 hidden sm:inline">{team.name}</span>
-                    </div>
-                  </Link>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <span className="font-mono font-bold text-gray-900">{team.eloRating}</span>
-                </td>
-                <td className="px-4 py-3 text-right font-mono text-gray-600">{team.ppg?.toFixed(2) || '—'}</td>
-                <td className="px-4 py-3 text-right font-mono text-gray-600">{team.ppgAllowed?.toFixed(2) || '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* Tier Legend */}
+      <div className="flex flex-wrap gap-2">
+        {tiers.map(tier => (
+          <div key={tier.name} className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${tier.bgColor} border ${tier.borderColor}`}>
+            <div className={`w-2 h-2 rounded-full ${tier.color}`} />
+            <span className={`text-xs font-bold ${tier.textColor}`}>{tier.name}</span>
+            <span className="text-xs text-gray-400">#{tier.range[0]}-{tier.range[1]}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="space-y-4">
+        {tiers.map(tier => {
+          const tierTeams = teams.filter((_, i) => (i + 1) >= tier.range[0] && (i + 1) <= tier.range[1]);
+          if (tierTeams.length === 0) return null;
+
+          return (
+            <div key={tier.name} className={`bg-white rounded-2xl border ${tier.borderColor} shadow-sm overflow-hidden`}>
+              {/* Tier Header */}
+              <div className={`${tier.bgColor} px-4 py-2.5 border-b ${tier.borderColor} flex items-center gap-2`}>
+                <div className={`w-3 h-3 rounded-full ${tier.color}`} />
+                <span className={`font-bold text-sm ${tier.textColor}`}>{tier.name}</span>
+                <span className="text-xs text-gray-400 ml-auto">#{tier.range[0]}-{tier.range[1]}</span>
+              </div>
+
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-12">Rank</th>
+                    <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Team</th>
+                    <th className="px-4 py-2 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Elo</th>
+                    <th className="px-4 py-2 text-right text-xs font-bold text-gray-500 uppercase tracking-wider hidden sm:table-cell">GF/G</th>
+                    <th className="px-4 py-2 text-right text-xs font-bold text-gray-500 uppercase tracking-wider hidden sm:table-cell">GA/G</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {tierTeams.map((team) => {
+                    const index = teams.indexOf(team);
+                    const rank = index + 1;
+                    return (
+                      <tr key={team.id} className="hover:bg-gray-50 transition-colors cursor-pointer">
+                        <td className="px-4 py-3">
+                          <Link href={`/nhl/teams/${team.abbreviation.toLowerCase()}`} className="block">
+                            <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${tier.color} text-white`}>
+                              {rank}
+                            </span>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Link href={`/nhl/teams/${team.abbreviation.toLowerCase()}`} className="flex items-center gap-3">
+                            <img src={getLogoUrl(team.abbreviation)} alt="" className="w-8 h-8 object-contain" />
+                            <div>
+                              <span className="font-bold text-gray-900 hover:text-blue-500">{team.abbreviation}</span>
+                              <span className="text-gray-500 ml-2 hidden sm:inline">{team.name}</span>
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="font-mono font-bold text-gray-900">{team.eloRating}</span>
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-600 hidden sm:table-cell">{team.ppg?.toFixed(2) || '—'}</td>
+                        <td className="px-4 py-3 text-right font-mono text-gray-600 hidden sm:table-cell">{team.ppgAllowed?.toFixed(2) || '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

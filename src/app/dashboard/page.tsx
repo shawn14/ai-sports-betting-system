@@ -127,6 +127,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [showHighConvictionOnly, setShowHighConvictionOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<'time' | 'conviction'>('time');
   const scoreboardRef = useRef<HTMLDivElement>(null);
   const { user, isPremium } = useAuth();
 
@@ -571,6 +573,42 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* Filter Controls */}
+      {games.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <button
+            onClick={() => setShowHighConvictionOnly(!showHighConvictionOnly)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+              showHighConvictionOnly
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            <div className={`w-3 h-3 rounded-full ${showHighConvictionOnly ? 'bg-white' : 'bg-green-500'}`} />
+            High Conviction Only
+          </button>
+          <div className="flex items-center gap-1 text-sm">
+            <span className="text-gray-500">Sort:</span>
+            <button
+              onClick={() => setSortBy('time')}
+              className={`px-2.5 py-1 rounded-md font-medium transition ${
+                sortBy === 'time' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Time
+            </button>
+            <button
+              onClick={() => setSortBy('conviction')}
+              className={`px-2.5 py-1 rounded-md font-medium transition ${
+                sortBy === 'conviction' ? 'bg-red-600 text-white' : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              Conviction
+            </button>
+          </div>
+        </div>
+      )}
+
       {games.length === 0 ? (
         <div className="bg-white rounded-lg p-8 text-center text-gray-500 border border-gray-200">
           No upcoming games. Check back later.
@@ -581,7 +619,27 @@ export default function Dashboard() {
         <div className="grid gap-4 md:grid-cols-2">
           {[...games]
             .filter(({ game }) => game.status !== 'final')
-            .sort((a, b) => new Date(a.game.gameTime).getTime() - new Date(b.game.gameTime).getTime())
+            .filter(({ prediction }) => {
+              if (!showHighConvictionOnly) return true;
+              return prediction.atsConfidence === 'high' || prediction.mlConfidence === 'high' || prediction.ouConfidence === 'high';
+            })
+            .sort((a, b) => {
+              if (sortBy === 'conviction') {
+                const confOrder: Record<string, number> = { high: 3, medium: 2, low: 1 };
+                const aMax = Math.max(
+                  confOrder[a.prediction.atsConfidence || 'low'],
+                  confOrder[a.prediction.mlConfidence || 'low'],
+                  confOrder[a.prediction.ouConfidence || 'low']
+                );
+                const bMax = Math.max(
+                  confOrder[b.prediction.atsConfidence || 'low'],
+                  confOrder[b.prediction.mlConfidence || 'low'],
+                  confOrder[b.prediction.ouConfidence || 'low']
+                );
+                if (bMax !== aMax) return bMax - aMax;
+              }
+              return new Date(a.game.gameTime).getTime() - new Date(b.game.gameTime).getTime();
+            })
             .slice(0, isPremium ? undefined : 3)
             .map(({ game, prediction }) => {
             const away = game.awayTeam?.abbreviation || 'AWAY';
@@ -660,23 +718,26 @@ export default function Dashboard() {
             if (prediction.isSmallSpread) situations.push('CLOSE');
             if (prediction.isEloMismatch) situations.push('MISMATCH');
 
-            // Determine if this game has any strong picks
-            const hasStrongPick = mlConf === 'high' || ouConf === 'high' || atsConf === 'high';
+            // Determine primary pick (highest conviction, prefer Spread > ML > Total on ties)
+            const confOrder = { high: 3, medium: 2, low: 1 };
+            const pickOptions = [
+              { type: 'spread' as const, conf: atsConf, confVal: confOrder[atsConf] },
+              { type: 'ml' as const, conf: mlConf, confVal: confOrder[mlConf] },
+              { type: 'total' as const, conf: ouConf, confVal: confOrder[ouConf] },
+            ];
+            const primaryPick = pickOptions.reduce((best, curr) =>
+              curr.confVal > best.confVal ? curr : best
+            );
+            const secondaryPicks = pickOptions.filter(p => p.type !== primaryPick.type);
+
+            // Conviction rail color based on primary pick
+            const railColor = primaryPick.conf === 'high' ? 'bg-green-500' :
+                             primaryPick.conf === 'medium' ? 'bg-blue-500' : 'bg-gray-300';
 
             return (
-              <div key={game.id} className={`bg-white rounded-xl border shadow-sm overflow-hidden hover:shadow-md transition-shadow ${
-                hasStrongPick ? 'border-green-300' : 'border-gray-200'
-              }`}>
-                {/* Situation tags - only show if we have high confidence situations */}
-                {isPremium && situations.length > 0 && atsConf !== 'low' && (
-                  <div className="px-2 sm:px-3 py-1 sm:py-1.5 flex flex-wrap gap-1 border-b border-gray-100">
-                    {situations.map(s => (
-                      <span key={s} className="text-[8px] sm:text-[9px] font-medium text-gray-500 bg-gray-100 px-1 sm:px-1.5 py-0.5 rounded">
-                        {s}
-                      </span>
-                    ))}
-                  </div>
-                )}
+              <div key={game.id} className="relative bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md hover:border-gray-300 transition">
+                {/* Conviction rail */}
+                <div className={`absolute left-0 top-0 h-full w-1 rounded-l-2xl ${railColor}`} />
                 {/* Game header */}
                 <a href={`/game/${game.id}`} className="group block p-3 sm:p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                   <div className="flex justify-between items-center">
@@ -809,95 +870,113 @@ export default function Dashboard() {
                   </>
                 )}
 
-                {/* Picks grid - Clean color-coded picks */}
-                <div className="grid grid-cols-3 divide-x divide-gray-100">
-                  {/* Spread */}
-                  <div className="p-2 sm:p-3">
-                    <div className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2 text-center">
-                      Spread
-                    </div>
-                    <div className="relative">
-                      <div
-                        className={`flex flex-col items-center justify-center px-1.5 sm:px-2.5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold ${
-                          atsConf === 'low'
-                            ? 'bg-gray-100 text-gray-400'
-                            : atsConf === 'high'
-                              ? 'bg-green-600 text-white'
-                              : 'bg-blue-500 text-white'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1">
-                          <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
-                          <span className="text-[11px] sm:text-sm">{pickHomeSpread ? home : away}</span>
-                          <span className="font-mono text-[10px] sm:text-sm">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
+                {/* Primary Pick Section */}
+                <div className="p-3 sm:p-4">
+                  <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Model Pick</div>
+
+                  {/* Primary Pick Button */}
+                  <div className="relative">
+                    <div
+                      className={`flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-bold ${
+                        primaryPick.conf === 'high'
+                          ? 'bg-green-600 text-white'
+                          : primaryPick.conf === 'medium'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-500'
+                      }`}
+                    >
+                      {primaryPick.type === 'spread' ? (
+                        <div className="flex items-center gap-2">
+                          <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+                          <span>{pickHomeSpread ? home : away}</span>
+                          <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
                         </div>
-                      </div>
-                      {spreadResult && (
-                        <div className={`absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-xs text-white font-bold ${
-                          spreadResult === 'win' ? 'bg-green-500' : spreadResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
-                        }`}>
-                          {spreadResult === 'win' ? '✓' : spreadResult === 'loss' ? '✗' : '–'}
+                      ) : primaryPick.type === 'ml' ? (
+                        <div className="flex items-center gap-2">
+                          <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+                          <span>{pickHomeML ? home : away} ML</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span>{pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}</span>
                         </div>
                       )}
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        primaryPick.conf === 'high'
+                          ? 'bg-green-700 text-green-100'
+                          : primaryPick.conf === 'medium'
+                            ? 'bg-blue-600 text-blue-100'
+                            : 'bg-gray-200 text-gray-500'
+                      }`}>
+                        {primaryPick.type === 'spread' ? 'Spread' : primaryPick.type === 'ml' ? 'Moneyline' : 'Total'}
+                      </span>
                     </div>
+                    {/* Result badge for primary pick */}
+                    {primaryPick.type === 'spread' && spreadResult && (
+                      <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                        spreadResult === 'win' ? 'bg-green-500' : spreadResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
+                      }`}>
+                        {spreadResult === 'win' ? '✓' : spreadResult === 'loss' ? '✗' : '–'}
+                      </div>
+                    )}
+                    {primaryPick.type === 'ml' && mlResult && (
+                      <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                        mlResult === 'win' ? 'bg-green-500' : 'bg-red-500'
+                      }`}>
+                        {mlResult === 'win' ? '✓' : '✗'}
+                      </div>
+                    )}
+                    {primaryPick.type === 'total' && ouResult && (
+                      <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
+                        ouResult === 'win' ? 'bg-green-500' : ouResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
+                      }`}>
+                        {ouResult === 'win' ? '✓' : ouResult === 'loss' ? '✗' : '–'}
+                      </div>
+                    )}
                   </div>
 
-                  {/* Moneyline */}
-                  <div className="p-2 sm:p-3">
-                    <div className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2 text-center">
-                      ML
-                    </div>
-                    <div className="relative">
-                      <div
-                        className={`flex flex-col items-center justify-center px-1.5 sm:px-2.5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold ${
-                          mlConf === 'high'
-                            ? 'bg-green-600 text-white'
-                            : mlConf === 'medium'
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-100 text-gray-400'
-                        }`}
-                      >
-                        <div className="flex items-center gap-1">
-                          <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />
-                          <span className="text-[11px] sm:text-sm">{pickHomeML ? home : away}</span>
-                        </div>
-                      </div>
-                      {mlResult && (
-                        <div className={`absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-xs text-white font-bold ${
-                          mlResult === 'win' ? 'bg-green-500' : 'bg-red-500'
-                        }`}>
-                          {mlResult === 'win' ? '✓' : '✗'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  {/* Secondary Picks - Muted Pills */}
+                  {secondaryPicks.length > 0 && (
+                    <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                      <span className="text-[10px] text-gray-400 uppercase">Also:</span>
+                      <div className="flex gap-2 flex-wrap">
+                        {secondaryPicks.map((pick) => {
+                          const isSpread = pick.type === 'spread';
+                          const isML = pick.type === 'ml';
+                          const result = isSpread ? spreadResult : isML ? mlResult : ouResult;
 
-                  {/* Over/Under */}
-                  <div className="p-2 sm:p-3">
-                    <div className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 sm:mb-2 text-center">
-                      Total
-                    </div>
-                    <div className="relative">
-                      <div
-                        className={`px-1.5 sm:px-2.5 py-1.5 sm:py-2 rounded-lg text-[10px] sm:text-sm font-bold text-center ${
-                          ouConf === 'high'
-                            ? 'bg-green-600 text-white'
-                            : ouConf === 'medium'
-                              ? 'bg-blue-500 text-white'
-                              : 'bg-gray-100 text-gray-400'
-                        }`}
-                      >
-                        <div>{pickOver ? 'O' : 'U'} {Math.round(displayTotal * 2) / 2}</div>
+                          return (
+                            <div key={pick.type} className="relative">
+                              <div
+                                className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                                  pick.conf === 'high'
+                                    ? 'bg-green-100 text-green-700 border border-green-200'
+                                    : pick.conf === 'medium'
+                                      ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                      : 'bg-gray-50 text-gray-400 border border-gray-100'
+                                }`}
+                              >
+                                {isSpread ? (
+                                  <span>{pickHomeSpread ? home : away} {formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
+                                ) : isML ? (
+                                  <span>{pickHomeML ? home : away} ML</span>
+                                ) : (
+                                  <span>{pickOver ? 'O' : 'U'} {Math.round(displayTotal * 2) / 2}</span>
+                                )}
+                              </div>
+                              {result && (
+                                <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] text-white font-bold ${
+                                  result === 'win' ? 'bg-green-500' : result === 'loss' ? 'bg-red-500' : 'bg-gray-400'
+                                }`}>
+                                  {result === 'win' ? '✓' : result === 'loss' ? '✗' : '–'}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                      {ouResult && (
-                        <div className={`absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[10px] sm:text-xs text-white font-bold ${
-                          ouResult === 'win' ? 'bg-green-500' : ouResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
-                        }`}>
-                          {ouResult === 'win' ? '✓' : ouResult === 'loss' ? '✗' : '–'}
-                        </div>
-                      )}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             );
@@ -1084,33 +1163,50 @@ export default function Dashboard() {
                 actualTotal === vegasTotal ? 'push' :
                 (pickOver ? actualTotal > vegasTotal : actualTotal < vegasTotal) ? 'win' : 'loss';
 
+              // Determine primary pick for final games too
+              const confOrder = { high: 3, medium: 2, low: 1 };
+              const pickOptions = [
+                { type: 'spread' as const, conf: atsConf, confVal: confOrder[atsConf] },
+                { type: 'ml' as const, conf: mlConf, confVal: confOrder[mlConf] },
+                { type: 'total' as const, conf: ouConf, confVal: confOrder[ouConf] },
+              ];
+              const primaryPick = pickOptions.reduce((best, curr) =>
+                curr.confVal > best.confVal ? curr : best
+              );
+              const secondaryPicks = pickOptions.filter(p => p.type !== primaryPick.type);
+              const railColor = primaryPick.conf === 'high' ? 'bg-green-500' :
+                               primaryPick.conf === 'medium' ? 'bg-blue-500' : 'bg-gray-300';
+
               return (
-                <div key={game.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden opacity-90">
+                <div key={game.id} className="relative bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden opacity-90">
+                  {/* Conviction rail */}
+                  <div className={`absolute left-0 top-0 h-full w-1 rounded-l-2xl ${railColor}`} />
+
                   {/* Game header */}
-                  <a href={`/game/${game.id}`} className="group block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                  <a href={`/game/${game.id}`} className="group block p-3 sm:p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors">
                     <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <img src={getLogoUrl(away)} alt={away} className="w-10 h-10 object-contain" />
-                          <span className="font-bold text-gray-900">{away}</span>
+                      <div className="flex items-center gap-2 sm:gap-4">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <img src={getLogoUrl(away)} alt={away} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
+                          <span className="font-bold text-gray-900 text-sm sm:text-base">{away}</span>
                         </div>
-                        <span className="text-gray-400 text-sm">@</span>
-                        <div className="flex items-center gap-2">
-                          <img src={getLogoUrl(home)} alt={home} className="w-10 h-10 object-contain" />
-                          <span className="font-bold text-gray-900">{home}</span>
+                        <span className="text-gray-400 text-xs sm:text-sm">@</span>
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <img src={getLogoUrl(home)} alt={home} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
+                          <span className="font-bold text-gray-900 text-sm sm:text-base">{home}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div className="text-right">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-gray-400 font-mono">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</span>
-                            <span className="text-gray-300">→</span>
-                            <span className="font-mono text-lg font-bold text-gray-900">{awayScore}-{homeScore}</span>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <span className="text-[10px] sm:text-xs text-gray-400 font-mono">{Math.round(prediction.predictedAwayScore)}-{Math.round(prediction.predictedHomeScore)}</span>
+                            <span className="text-gray-300 text-xs">→</span>
+                            <span className="font-mono text-base sm:text-lg font-bold text-gray-900">{awayScore}-{homeScore}</span>
                           </div>
-                          <div className="text-xs font-semibold text-gray-500">FINAL</div>
+                          <div className="text-[10px] sm:text-xs font-semibold text-gray-500">FINAL</div>
                         </div>
                         <div className="flex items-center text-gray-400 group-hover:text-red-600 transition-colors">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </div>
@@ -1118,87 +1214,111 @@ export default function Dashboard() {
                     </div>
                   </a>
 
-                  {/* Picks grid with results */}
-                  <div className="grid grid-cols-3 divide-x divide-gray-100">
-                    {/* Spread */}
-                    <div className="p-3">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
-                        Spread
-                      </div>
-                      <div className="relative">
-                        <div
-                          className={`flex items-center justify-between px-2.5 py-2 rounded-lg text-sm font-bold ${
-                            atsConf === 'low'
-                              ? 'bg-gray-100 text-gray-400'
-                              : atsConf === 'high'
-                                ? 'bg-green-600 text-white'
-                                : 'bg-blue-500 text-white'
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 object-contain" />
+                  {/* Primary Pick Section */}
+                  <div className="p-3 sm:p-4">
+                    <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Model Pick</div>
+
+                    {/* Primary Pick Button */}
+                    <div className="relative">
+                      <div
+                        className={`flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-bold ${
+                          primaryPick.conf === 'high'
+                            ? 'bg-green-600 text-white'
+                            : primaryPick.conf === 'medium'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-gray-100 text-gray-500'
+                        }`}
+                      >
+                        {primaryPick.type === 'spread' ? (
+                          <div className="flex items-center gap-2">
+                            <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
                             <span>{pickHomeSpread ? home : away}</span>
+                            <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
                           </div>
-                          <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
-                        </div>
+                        ) : primaryPick.type === 'ml' ? (
+                          <div className="flex items-center gap-2">
+                            <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+                            <span>{pickHomeML ? home : away} ML</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span>{pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}</span>
+                          </div>
+                        )}
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          primaryPick.conf === 'high'
+                            ? 'bg-green-700 text-green-100'
+                            : primaryPick.conf === 'medium'
+                              ? 'bg-blue-600 text-blue-100'
+                              : 'bg-gray-200 text-gray-500'
+                        }`}>
+                          {primaryPick.type === 'spread' ? 'Spread' : primaryPick.type === 'ml' ? 'Moneyline' : 'Total'}
+                        </span>
+                      </div>
+                      {/* Result badge for primary pick */}
+                      {primaryPick.type === 'spread' && (
                         <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
                           spreadResult === 'win' ? 'bg-green-500' : spreadResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
                         }`}>
                           {spreadResult === 'win' ? '✓' : spreadResult === 'loss' ? '✗' : '–'}
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Moneyline */}
-                    <div className="p-3">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
-                        Moneyline
-                      </div>
-                      <div className="relative">
-                        <div
-                          className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg text-sm font-bold ${
-                            mlConf === 'high'
-                              ? 'bg-green-600 text-white'
-                              : mlConf === 'medium'
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-100 text-gray-400'
-                          }`}
-                        >
-                          <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 object-contain" />
-                          <span>{pickHomeML ? home : away}</span>
-                        </div>
+                      )}
+                      {primaryPick.type === 'ml' && (
                         <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
                           mlResult === 'win' ? 'bg-green-500' : 'bg-red-500'
                         }`}>
                           {mlResult === 'win' ? '✓' : '✗'}
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Over/Under */}
-                    <div className="p-3">
-                      <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 text-center">
-                        Total
-                      </div>
-                      <div className="relative">
-                        <div
-                          className={`px-2.5 py-2 rounded-lg text-sm font-bold text-center ${
-                            ouConf === 'high'
-                              ? 'bg-green-600 text-white'
-                              : ouConf === 'medium'
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-gray-100 text-gray-400'
-                          }`}
-                        >
-                          {pickOver ? 'OVER' : 'UNDER'} {Math.round(displayTotal * 2) / 2}
-                        </div>
+                      )}
+                      {primaryPick.type === 'total' && (
                         <div className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs text-white font-bold ${
                           ouResult === 'win' ? 'bg-green-500' : ouResult === 'loss' ? 'bg-red-500' : 'bg-gray-400'
                         }`}>
                           {ouResult === 'win' ? '✓' : ouResult === 'loss' ? '✗' : '–'}
                         </div>
-                      </div>
+                      )}
                     </div>
+
+                    {/* Secondary Picks - Muted Pills */}
+                    {secondaryPicks.length > 0 && (
+                      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+                        <span className="text-[10px] text-gray-400 uppercase">Also:</span>
+                        <div className="flex gap-2 flex-wrap">
+                          {secondaryPicks.map((pick) => {
+                            const isSpread = pick.type === 'spread';
+                            const isML = pick.type === 'ml';
+                            const result = isSpread ? spreadResult : isML ? mlResult : ouResult;
+
+                            return (
+                              <div key={pick.type} className="relative">
+                                <div
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                                    pick.conf === 'high'
+                                      ? 'bg-green-100 text-green-700 border border-green-200'
+                                      : pick.conf === 'medium'
+                                        ? 'bg-blue-50 text-blue-600 border border-blue-100'
+                                        : 'bg-gray-50 text-gray-400 border border-gray-100'
+                                  }`}
+                                >
+                                  {isSpread ? (
+                                    <span>{pickHomeSpread ? home : away} {formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
+                                  ) : isML ? (
+                                    <span>{pickHomeML ? home : away} ML</span>
+                                  ) : (
+                                    <span>{pickOver ? 'O' : 'U'} {Math.round(displayTotal * 2) / 2}</span>
+                                  )}
+                                </div>
+                                <div className={`absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] text-white font-bold ${
+                                  result === 'win' ? 'bg-green-500' : result === 'loss' ? 'bg-red-500' : 'bg-gray-400'
+                                }`}>
+                                  {result === 'win' ? '✓' : result === 'loss' ? '✗' : '–'}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

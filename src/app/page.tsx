@@ -99,6 +99,7 @@ export default function LandingPage() {
   }, []);
 
   const handleGoogleLogin = async () => {
+    if (!auth) return;
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
   };

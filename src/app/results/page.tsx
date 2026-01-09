@@ -107,29 +107,30 @@ function computeHighConvictionStats(results: BacktestResult[]): HighConvictionSt
   let mlW = 0, mlL = 0;
 
   for (const r of results) {
-    // Calculate confidence based on edge (same thresholds as sync)
+    // High conviction = same criteria for ALL bet types (ATS spread edge >= 2 pts)
     const spreadEdge = r.vegasSpread !== undefined ? Math.abs(r.predictedSpread - r.vegasSpread) : 0;
-    const totalEdge = r.vegasTotal !== undefined ? Math.abs(r.predictedTotal - r.vegasTotal) : 0;
-    const mlEdge = Math.abs(r.homeWinProb - 0.5) * 100;
+    const highConv = spreadEdge >= 2;
 
-    // High conviction ATS (edge >= 2 pts)
-    if (spreadEdge >= 2 && r.atsResult) {
-      if (r.atsResult === 'win') atsW++;
-      else if (r.atsResult === 'loss') atsL++;
-      else atsP++;
-    }
+    if (highConv) {
+      // ATS result
+      if (r.atsResult) {
+        if (r.atsResult === 'win') atsW++;
+        else if (r.atsResult === 'loss') atsL++;
+        else atsP++;
+      }
 
-    // High conviction O/U (edge >= 5 pts)
-    if (totalEdge >= 5 && r.ouVegasResult) {
-      if (r.ouVegasResult === 'win') ouW++;
-      else if (r.ouVegasResult === 'loss') ouL++;
-      else ouP++;
-    }
+      // O/U result (same high conviction games)
+      if (r.ouVegasResult) {
+        if (r.ouVegasResult === 'win') ouW++;
+        else if (r.ouVegasResult === 'loss') ouL++;
+        else ouP++;
+      }
 
-    // High conviction ML (edge >= 15%)
-    if (mlEdge >= 15 && r.mlResult) {
-      if (r.mlResult === 'win') mlW++;
-      else mlL++;
+      // ML result (same high conviction games)
+      if (r.mlResult) {
+        if (r.mlResult === 'win') mlW++;
+        else mlL++;
+      }
     }
   }
 

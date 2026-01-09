@@ -70,7 +70,7 @@ export default function AccountMenu({ className = '' }: { className?: string }) 
             type="button"
             role="menuitem"
             className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
-            onClick={() => signOut(auth)}
+            onClick={() => auth && signOut(auth)}
           >
             Log out
           </button>

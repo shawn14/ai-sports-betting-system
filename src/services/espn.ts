@@ -417,3 +417,85 @@ export async function fetchAllCompletedNHLGames(seasonYear?: number): Promise<Pa
     .filter(g => g.status === 'final')
     .sort((a, b) => new Date(a.gameTime!).getTime() - new Date(b.gameTime!).getTime());
 }
+
+// ==================== COLLEGE BASKETBALL ====================
+
+const ESPN_CBB_URL = 'https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball';
+const ESPN_CBB_STANDINGS_URL = 'https://site.api.espn.com/apis/v2/sports/basketball/mens-college-basketball/standings';
+const COLLEGE_LEAGUE_AVG_PPG = 72; // NCAA average ~72 PPG
+
+export async function fetchCollegeBasketballTeams(): Promise<any[]> {
+  try {
+    const response = await fetch(`${ESPN_CBB_URL}/teams`);
+    const data = await response.json();
+
+    // Also fetch standings for PPG stats
+    const standingsRes = await fetch(ESPN_CBB_STANDINGS_URL);
+    const standingsData = await standingsRes.json();
+
+    // Build map of team stats from standings
+    const teamStats = new Map<string, { ppg: number; ppgAllowed: number; conference?: string }>();
+    for (const conf of standingsData.children || []) {
+      const conferenceName = conf.name || conf.abbreviation;
+      for (const entry of conf.standings?.entries || []) {
+        const teamId = entry.team?.id;
+        if (!teamId) continue;
+        const stats: Record<string, number> = {};
+        for (const s of entry.stats || []) {
+          if (s.value !== undefined) {
+            stats[s.name] = s.value;
+          }
+        }
+        const gamesPlayed = (stats.wins || 0) + (stats.losses || 0);
+        if (gamesPlayed > 0) {
+          teamStats.set(teamId, {
+            ppg: stats.avgPointsFor || stats.pointsFor / gamesPlayed || COLLEGE_LEAGUE_AVG_PPG,
+            ppgAllowed: stats.avgPointsAgainst || stats.pointsAgainst / gamesPlayed || COLLEGE_LEAGUE_AVG_PPG,
+            conference: conferenceName,
+          });
+        }
+      }
+    }
+
+    const teams: any[] = [];
+    for (const teamWrapper of data.sports?.[0]?.leagues?.[0]?.teams || []) {
+      const team = teamWrapper.team;
+      if (!team) continue;
+
+      const stats = teamStats.get(team.id);
+
+      teams.push({
+        id: team.id,
+        name: team.displayName || team.name,
+        abbreviation: team.abbreviation || team.shortDisplayName,
+        ppg: stats?.ppg || COLLEGE_LEAGUE_AVG_PPG,
+        ppgAllowed: stats?.ppgAllowed || COLLEGE_LEAGUE_AVG_PPG,
+        conference: stats?.conference,
+      });
+    }
+
+    return teams;
+  } catch (error) {
+    console.error('Failed to fetch college basketball teams:', error);
+    return [];
+  }
+}
+
+export async function fetchESPNCollegeBasketballOdds(eventId: string): Promise<{ homeSpread?: number; total?: number } | null> {
+  try {
+    const url = `https://sports.core.api.espn.com/v2/sports/basketball/leagues/mens-college-basketball/events/${eventId}/competitions/${eventId}/odds`;
+    const response = await fetch(url);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const oddsItem = data.items?.[0];
+    if (!oddsItem) return null;
+
+    return {
+      homeSpread: oddsItem.spread,
+      total: oddsItem.overUnder,
+    };
+  } catch (error) {
+    return null;
+  }
+}

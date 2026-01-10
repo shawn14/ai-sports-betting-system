@@ -800,6 +800,8 @@ export async function GET(request: Request) {
       gamesWithPredictions.push({
         game: {
           id: game.id,
+          homeTeamId: homeTeam.id,
+          awayTeamId: awayTeam.id,
           home: homeTeam.name,
           away: awayTeam.name,
           homeAbbr: homeTeam.abbreviation,

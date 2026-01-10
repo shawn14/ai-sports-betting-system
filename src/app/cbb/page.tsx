@@ -16,8 +16,12 @@ interface Team {
 
 interface Game {
   id: string;
-  homeTeamId: string;
-  awayTeamId: string;
+  homeTeamId?: string;
+  awayTeamId?: string;
+  home?: string;
+  away?: string;
+  homeAbbr?: string;
+  awayAbbr?: string;
   homeTeam?: Team;
   awayTeam?: Team;
   homeScore?: number;
@@ -262,8 +266,12 @@ export default function CBBDashboard() {
     return rounded.toString();
   };
 
-  const getLogoUrl = (abbr: string) => {
-    return `https://a.espncdn.com/i/teamlogos/ncaa/500/${abbr.toLowerCase()}.png`;
+  const getLogoUrl = (teamId: string | undefined) => {
+    if (!teamId) {
+      // Fallback to a default logo or return empty string
+      return `https://a.espncdn.com/i/teamlogos/ncaa/500/default.png`;
+    }
+    return `https://a.espncdn.com/i/teamlogos/ncaa/500/${teamId}.png`;
   };
 
   if (loading || syncing) {
@@ -573,10 +581,12 @@ export default function CBBDashboard() {
             })
             .slice(0, isPremium ? undefined : 3)
             .map(({ game, prediction }) => {
-              const away = game.awayTeam?.abbreviation || 'AWAY';
-              const home = game.homeTeam?.abbreviation || 'HOME';
-              const awayLabel = game.awayTeam?.name || away;
-              const homeLabel = game.homeTeam?.name || home;
+              const away = game.awayAbbr || 'AWAY';
+              const home = game.homeAbbr || 'HOME';
+              const awayLabel = game.away || away;
+              const homeLabel = game.home || home;
+              const awayId = game.awayTeamId || '';
+              const homeId = game.homeTeamId || '';
               const ourSpread = prediction.predictedSpread;
               const ourTotal = prediction.predictedTotal;
               const homeWinProb = prediction.homeWinProbability;
@@ -636,12 +646,12 @@ export default function CBBDashboard() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2 sm:gap-4">
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          <img src={getLogoUrl(away)} alt={away} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
+                          <img src={getLogoUrl(awayId)} alt={away} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
                           <span className="font-bold text-gray-900 text-sm sm:text-base">{away}</span>
                         </div>
                         <span className="text-gray-400 text-xs sm:text-sm">@</span>
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          <img src={getLogoUrl(home)} alt={home} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
+                          <img src={getLogoUrl(homeId)} alt={home} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
                           <span className="font-bold text-gray-900 text-sm sm:text-base">{home}</span>
                         </div>
                       </div>
@@ -716,13 +726,13 @@ export default function CBBDashboard() {
                       >
                         {primaryPick.type === 'spread' ? (
                           <div className="flex items-center gap-2">
-                            <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+                            <img src={getLogoUrl(pickHomeSpread ? homeId : awayId)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
                             <span>{pickHomeSpread ? home : away}</span>
                             <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
                           </div>
                         ) : primaryPick.type === 'ml' ? (
                           <div className="flex items-center gap-2">
-                            <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+                            <img src={getLogoUrl(pickHomeML ? homeId : awayId)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
                             <span>{pickHomeML ? home : away} ML</span>
                           </div>
                         ) : (
@@ -920,8 +930,10 @@ export default function CBBDashboard() {
             .filter(({ game }) => game.status === 'final')
             .sort((a, b) => new Date(b.game.gameTime).getTime() - new Date(a.game.gameTime).getTime())
             .map(({ game, prediction }) => {
-              const away = game.awayTeam?.abbreviation || 'AWAY';
-              const home = game.homeTeam?.abbreviation || 'HOME';
+              const away = game.awayAbbr || 'AWAY';
+              const home = game.homeAbbr || 'HOME';
+              const awayId = game.awayTeamId || '';
+              const homeId = game.homeTeamId || '';
               const awayScore = game.awayScore ?? 0;
               const homeScore = game.homeScore ?? 0;
               const ourSpread = prediction.predictedSpread;
@@ -985,12 +997,12 @@ export default function CBBDashboard() {
                     <div className="flex justify-between items-center">
                       <div className="flex items-center gap-2 sm:gap-4">
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          <img src={getLogoUrl(away)} alt={away} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
+                          <img src={getLogoUrl(awayId)} alt={away} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
                           <span className="font-bold text-gray-900 text-sm sm:text-base">{away}</span>
                         </div>
                         <span className="text-gray-400 text-xs sm:text-sm">@</span>
                         <div className="flex items-center gap-1.5 sm:gap-2">
-                          <img src={getLogoUrl(home)} alt={home} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
+                          <img src={getLogoUrl(homeId)} alt={home} className="w-7 h-7 sm:w-10 sm:h-10 object-contain" />
                           <span className="font-bold text-gray-900 text-sm sm:text-base">{home}</span>
                         </div>
                       </div>
@@ -1031,13 +1043,13 @@ export default function CBBDashboard() {
                       >
                         {primaryPick.type === 'spread' ? (
                           <div className="flex items-center gap-2">
-                            <img src={getLogoUrl(pickHomeSpread ? home : away)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+                            <img src={getLogoUrl(pickHomeSpread ? homeId : awayId)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
                             <span>{pickHomeSpread ? home : away}</span>
                             <span className="font-mono">{formatSpread(pickHomeSpread ? displaySpread : -displaySpread)}</span>
                           </div>
                         ) : primaryPick.type === 'ml' ? (
                           <div className="flex items-center gap-2">
-                            <img src={getLogoUrl(pickHomeML ? home : away)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
+                            <img src={getLogoUrl(pickHomeML ? homeId : awayId)} alt="" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
                             <span>{pickHomeML ? home : away} ML</span>
                           </div>
                         ) : (

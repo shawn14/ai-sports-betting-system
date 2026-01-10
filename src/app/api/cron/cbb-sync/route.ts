@@ -14,9 +14,9 @@ import { fetchCollegeBasketballOdds, getConsensusOdds } from '@/services/odds';
 import { fetchCollegeBasketballTeams, fetchESPNCollegeBasketballOdds } from '@/services/espn';
 import { CBB_LEAGUE_AVG_PPG, INITIAL_ELO_BY_TIER, getConferenceTier } from '@/types/cbb';
 
-// CBB Constants (starting with NBA parameters, can optimize later)
+// CBB Constants (optimized via /api/admin/cbb-optimize-params)
 const LEAGUE_AVG_PPG = CBB_LEAGUE_AVG_PPG;
-const ELO_TO_POINTS = 0.06;
+const ELO_TO_POINTS = 0.08;  // Optimized from 0.06 → 54.4% ATS (was 52.7%)
 const HOME_COURT_ADVANTAGE = 4.5;
 const ELO_HOME_ADVANTAGE = 48;
 const SPREAD_REGRESSION = 0.4;

@@ -73,12 +73,16 @@ function getMinutesElapsed(period: number, clock: string): number | null {
   return REG_MINUTES + (otIndex - 1) * OT_MINUTES + elapsedInOt;
 }
 
-// Track high/low projections for each game
+// Track high/low projections and max edges for each game
 interface ProjectionRange {
   high: number;
   low: number;
   highTime: number; // timestamp when high was recorded
   lowTime: number;  // timestamp when low was recorded
+  maxOuEdge: number | null;
+  maxOuEdgeTime: number | null;
+  maxSpreadEdge: number | null;
+  maxSpreadEdgeTime: number | null;
 }
 
 export default function NBALiveTrackerPage() {
@@ -89,6 +93,7 @@ export default function NBALiveTrackerPage() {
   const [tick, setTick] = useState(0); // Force re-renders for live updates
   const [vegasOdds, setVegasOdds] = useState<Record<string, { total?: number; spread?: number }>>({});
   const [liveOddsInput, setLiveOddsInput] = useState<Record<string, string>>({});
+  const [liveSpreadInput, setLiveSpreadInput] = useState<Record<string, string>>({});
 
   // Track high/low projections per game (persists across renders)
   const projectionRangesRef = useRef<Record<string, ProjectionRange>>({});
@@ -97,7 +102,7 @@ export default function NBALiveTrackerPage() {
   const isFetchingRef = useRef(false);
 
   // Helper to update projection range for a game
-  const updateProjectionRange = useCallback((gameId: string, projectedTotal: number) => {
+  const updateProjectionRange = useCallback((gameId: string, projectedTotal: number, ouEdge?: number | null, spreadEdge?: number | null) => {
     const now = Date.now();
     const existing = projectionRangesRef.current[gameId];
 
@@ -108,23 +113,41 @@ export default function NBALiveTrackerPage() {
         low: projectedTotal,
         highTime: now,
         lowTime: now,
+        maxOuEdge: ouEdge ?? null,
+        maxOuEdgeTime: ouEdge !== null && ouEdge !== undefined ? now : null,
+        maxSpreadEdge: spreadEdge ?? null,
+        maxSpreadEdgeTime: spreadEdge !== null && spreadEdge !== undefined ? now : null,
       };
     } else {
+      let updated = { ...existing };
+
       // Update high/low if needed
       if (projectedTotal > existing.high) {
-        projectionRangesRef.current[gameId] = {
-          ...existing,
-          high: projectedTotal,
-          highTime: now,
-        };
+        updated.high = projectedTotal;
+        updated.highTime = now;
       }
       if (projectedTotal < existing.low) {
-        projectionRangesRef.current[gameId] = {
-          ...existing,
-          low: projectedTotal,
-          lowTime: now,
-        };
+        updated.low = projectedTotal;
+        updated.lowTime = now;
       }
+
+      // Update max O/U edge (track absolute max)
+      if (ouEdge !== null && ouEdge !== undefined) {
+        if (existing.maxOuEdge === null || Math.abs(ouEdge) > Math.abs(existing.maxOuEdge)) {
+          updated.maxOuEdge = ouEdge;
+          updated.maxOuEdgeTime = now;
+        }
+      }
+
+      // Update max spread edge (track absolute max)
+      if (spreadEdge !== null && spreadEdge !== undefined) {
+        if (existing.maxSpreadEdge === null || Math.abs(spreadEdge) > Math.abs(existing.maxSpreadEdge)) {
+          updated.maxSpreadEdge = spreadEdge;
+          updated.maxSpreadEdgeTime = now;
+        }
+      }
+
+      projectionRangesRef.current[gameId] = updated;
     }
   }, []);
 
@@ -344,20 +367,32 @@ export default function NBALiveTrackerPage() {
             // Calculate per-game seconds since snapshot
             const gameSinceUpdate = Math.floor((Date.now() - game.snapshotTime) / 1000);
 
-            // Update high/low tracking for this game's projection
-            if (rawProjectedTotal !== null) {
-              updateProjectionRange(game.id, rawProjectedTotal);
-            }
-            const projectionRange = getProjectionRange(game.id);
-
             // Get Vegas O/U from our blob storage (pre-game line)
             const gameVegas = vegasOdds[game.id];
             const pregameTotal = gameVegas?.total;
+            const pregameSpread = gameVegas?.spread;
 
             // Get user-entered live O/U
             const liveOddsValue = liveOddsInput[game.id];
             const liveTotal = liveOddsValue ? parseFloat(liveOddsValue) : null;
             const hasLiveOdds = liveTotal !== null && !isNaN(liveTotal);
+
+            // Get user-entered live spread (positive = home favored)
+            const liveSpreadValue = liveSpreadInput[game.id];
+            const liveSpread = liveSpreadValue ? parseFloat(liveSpreadValue) : null;
+            const hasLiveSpread = liveSpread !== null && !isNaN(liveSpread);
+
+            // Calculate projected spread (home margin)
+            // Using calibrated projection if available, otherwise raw
+            const projectedHomeScore = projectedHome ?? (calibratedProjectedTotal !== null && totalPoints > 0
+              ? calibratedProjectedTotal * (game.homeScore / totalPoints)
+              : null);
+            const projectedAwayScore = projectedAway ?? (calibratedProjectedTotal !== null && totalPoints > 0
+              ? calibratedProjectedTotal * (game.awayScore / totalPoints)
+              : null);
+            const projectedSpread = projectedHomeScore !== null && projectedAwayScore !== null
+              ? projectedAwayScore - projectedHomeScore // negative = home favored
+              : null;
 
             // Calculate edges
             const pregameEdge = pregameTotal !== undefined && rawProjectedTotal !== null
@@ -366,6 +401,15 @@ export default function NBALiveTrackerPage() {
             const liveEdge = hasLiveOdds && rawProjectedTotal !== null
               ? rawProjectedTotal - liveTotal
               : null;
+            const liveSpreadEdge = hasLiveSpread && projectedSpread !== null
+              ? liveSpread - projectedSpread
+              : null;
+
+            // Update high/low tracking for this game's projection (including edges)
+            if (rawProjectedTotal !== null) {
+              updateProjectionRange(game.id, rawProjectedTotal, liveEdge, liveSpreadEdge);
+            }
+            const projectionRange = getProjectionRange(game.id);
 
             return (
               <div
@@ -379,15 +423,20 @@ export default function NBALiveTrackerPage() {
                     <div className="font-semibold text-gray-900 text-sm sm:text-base">
                       {game.away} @ {game.home}
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <div className="text-xs text-gray-500 mt-0.5 flex flex-wrap gap-x-3">
                       {pregameTotal !== undefined && (
                         <span>
-                          Open: <span className="font-medium text-gray-600">{pregameTotal}</span>
-                          {pregameEdge !== null && (
-                            <span className={`ml-1 ${pregameEdge > 0 ? 'text-green-600' : pregameEdge < 0 ? 'text-red-600' : 'text-gray-500'}`}>
-                              ({pregameEdge > 0 ? '+' : ''}{pregameEdge.toFixed(1)})
-                            </span>
-                          )}
+                          O/U: <span className="font-medium text-gray-600">{pregameTotal}</span>
+                        </span>
+                      )}
+                      {pregameSpread !== undefined && (
+                        <span>
+                          Sprd: <span className="font-medium text-gray-600">{pregameSpread > 0 ? '+' : ''}{pregameSpread}</span>
+                        </span>
+                      )}
+                      {projectedSpread !== null && (
+                        <span>
+                          Proj: <span className="font-medium text-gray-600">{projectedSpread > 0 ? '+' : ''}{projectedSpread.toFixed(1)}</span>
                         </span>
                       )}
                     </div>
@@ -402,35 +451,75 @@ export default function NBALiveTrackerPage() {
                   </div>
                 </div>
 
-                {/* Live O/U Input */}
-                <div className="mt-2 flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
-                  <label className="text-xs text-gray-500 whitespace-nowrap">Live O/U:</label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    placeholder="e.g. 219.5"
-                    value={liveOddsInput[game.id] || ''}
-                    onChange={(e) => setLiveOddsInput(prev => ({ ...prev, [game.id]: e.target.value }))}
-                    className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent tabular-nums"
-                  />
-                  {hasLiveOdds && liveEdge !== null && (
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-lg font-bold ${
-                      Math.abs(liveEdge) >= 5
-                        ? liveEdge > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                        : Math.abs(liveEdge) >= 3
-                        ? liveEdge > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}>
-                      <span className="text-sm tabular-nums">
-                        {liveEdge > 0 ? 'OVER' : 'UNDER'} {Math.abs(liveEdge).toFixed(1)}
-                      </span>
-                      {Math.abs(liveEdge) >= 5 && (
-                        <span className="text-xs font-medium animate-pulse">
-                          🔥 BIG EDGE
+                {/* Live O/U and Spread Inputs */}
+                <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {/* Live O/U Input */}
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <label className="text-xs text-gray-500 whitespace-nowrap">Live O/U:</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      placeholder="219.5"
+                      value={liveOddsInput[game.id] || ''}
+                      onChange={(e) => setLiveOddsInput(prev => ({ ...prev, [game.id]: e.target.value }))}
+                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent tabular-nums"
+                    />
+                    {hasLiveOdds && liveEdge !== null && (
+                      <div className={`flex items-center gap-1 px-2 py-1 rounded font-bold text-xs ${
+                        Math.abs(liveEdge) >= 5
+                          ? liveEdge > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          : Math.abs(liveEdge) >= 3
+                          ? liveEdge > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        <span className="tabular-nums">
+                          {liveEdge > 0 ? 'O' : 'U'} {Math.abs(liveEdge).toFixed(1)}
                         </span>
-                      )}
-                    </div>
-                  )}
+                        {Math.abs(liveEdge) >= 5 && <span className="animate-pulse">🔥</span>}
+                      </div>
+                    )}
+                    {projectionRange?.maxOuEdge !== null && projectionRange?.maxOuEdge !== undefined && (
+                      <div className="text-[10px] text-gray-400 whitespace-nowrap">
+                        Max: <span className={`font-medium ${projectionRange.maxOuEdge > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {projectionRange.maxOuEdge > 0 ? '+' : ''}{projectionRange.maxOuEdge.toFixed(1)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Live Spread Input */}
+                  <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
+                    <label className="text-xs text-gray-500 whitespace-nowrap">Live Sprd:</label>
+                    <input
+                      type="number"
+                      step="0.5"
+                      placeholder="-3.5"
+                      value={liveSpreadInput[game.id] || ''}
+                      onChange={(e) => setLiveSpreadInput(prev => ({ ...prev, [game.id]: e.target.value }))}
+                      className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent tabular-nums"
+                    />
+                    {hasLiveSpread && liveSpreadEdge !== null && (
+                      <div className={`flex items-center gap-1 px-2 py-1 rounded font-bold text-xs ${
+                        Math.abs(liveSpreadEdge) >= 3
+                          ? liveSpreadEdge > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                          : Math.abs(liveSpreadEdge) >= 1.5
+                          ? liveSpreadEdge > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        <span className="tabular-nums">
+                          {liveSpreadEdge > 0 ? 'HOME' : 'AWAY'} {Math.abs(liveSpreadEdge).toFixed(1)}
+                        </span>
+                        {Math.abs(liveSpreadEdge) >= 3 && <span className="animate-pulse">🔥</span>}
+                      </div>
+                    )}
+                    {projectionRange?.maxSpreadEdge !== null && projectionRange?.maxSpreadEdge !== undefined && (
+                      <div className="text-[10px] text-gray-400 whitespace-nowrap">
+                        Max: <span className={`font-medium ${projectionRange.maxSpreadEdge > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {projectionRange.maxSpreadEdge > 0 ? '+' : ''}{projectionRange.maxSpreadEdge.toFixed(1)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 sm:gap-3 mt-3">

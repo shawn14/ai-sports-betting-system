@@ -142,8 +142,11 @@ interface Analysis {
   insights: string[];
 }
 
-const getLogoUrl = (abbr: string) => {
-  return `https://a.espncdn.com/i/teamlogos/ncaa/500/${abbr.toLowerCase()}.png`;
+const getLogoUrl = (teamId: string | undefined) => {
+  if (!teamId) {
+    return `https://a.espncdn.com/i/teamlogos/ncaa/500/default.png`;
+  }
+  return `https://a.espncdn.com/i/teamlogos/ncaa/500/${teamId}.png`;
 };
 
 function computeVegasStats(results: BacktestResult[]): VegasStats {
@@ -363,7 +366,6 @@ export default function CBBResultsPage() {
   const [loading, setLoading] = useState(true);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [viewMode, setViewMode] = useState<'conviction' | 'overall'>('conviction');
-  const [showAdjustment, setShowAdjustment] = useState(false);
 
   useEffect(() => {
     const fetchResults = async () => {
@@ -531,44 +533,6 @@ export default function CBBResultsPage() {
         </div>
       </div>
 
-      {/* AI Adjustment Notice */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-2">
-            <svg className="w-4 h-4 text-blue-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-blue-900">Model Adjustment (Jan 2026)</span>
-                <button
-                  onClick={() => setShowAdjustment(!showAdjustment)}
-                  className="text-xs text-blue-600 hover:text-blue-700 underline"
-                >
-                  {showAdjustment ? 'Hide details' : 'Read more'}
-                </button>
-              </div>
-              {showAdjustment && (
-                <div className="mt-2 text-xs text-blue-800 space-y-2">
-                  <p className="font-medium">Our AI detected and corrected a systematic bias:</p>
-                  <div className="bg-white bg-opacity-60 rounded p-2 space-y-1">
-                    <p><strong>Issue:</strong> Last 15 games went 4-11 ATS (26.7%). Analysis showed we were massively underestimating home court advantage.</p>
-                    <p><strong>Finding:</strong> When picking away teams, home teams won by an average of ~11 points MORE than predicted. Examples:</p>
-                    <ul className="list-disc ml-4 space-y-0.5">
-                      <li>PHX@MEM: Predicted PHX by 6.5, MEM won by 19 (25.5pt swing)</li>
-                      <li>MIA@MIN: Predicted MIN by 3, MIN won by 28 (25pt miss)</li>
-                      <li>WSH@PHI: Predicted PHI by 7.5, PHI won by 21 (13.5pt miss)</li>
-                    </ul>
-                    <p><strong>Root Cause:</strong> HOME_COURT_ADVANTAGE was set to 2.0 points. Industry standard is 3.5-4.5 points. Our data suggests 4-5 points needed.</p>
-                    <p><strong>Adjustment:</strong> Increased HOME_COURT_ADVANTAGE from 2.0 to 4.5 points. This should eliminate the systematic bias favoring away teams and improve ATS performance.</p>
-                    <p className="text-blue-600 font-medium">Model will continue learning and adjusting in real-time as new games complete.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Performance Section */}
       {highConvStats && vegasStats && (
@@ -910,8 +874,8 @@ export default function CBBResultsPage() {
                 <tr key={game.gameId} className="hover:bg-gray-50">
                   <td className="px-2 sm:px-4 py-2 sm:py-3">
                     <div className="flex items-center gap-1 sm:gap-2">
-                      <img src={getLogoUrl(game.awayTeam)} alt="" className="w-4 h-4 sm:w-6 sm:h-6" />
-                      <img src={getLogoUrl(game.homeTeam)} alt="" className="w-4 h-4 sm:w-6 sm:h-6" />
+                      <img src={getLogoUrl(game.awayTeamId)} alt="" className="w-4 h-4 sm:w-6 sm:h-6" />
+                      <img src={getLogoUrl(game.homeTeamId)} alt="" className="w-4 h-4 sm:w-6 sm:h-6" />
                       <div>
                         <div className="font-semibold text-gray-900 text-[11px] sm:text-sm">{game.awayTeam}@{game.homeTeam}</div>
                         <div className="text-[9px] sm:text-xs text-gray-500">

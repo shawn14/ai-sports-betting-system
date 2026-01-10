@@ -73,11 +73,13 @@ function computeHighConvictionStats(results: BacktestResult[]): HighConvictionSt
     const ouConfidence = (r as any).ouConfidence;
 
     // High conviction ATS (elite or high)
+    // Use atsResult (vs Vegas) if available, otherwise use spreadResult (model accuracy)
     const isHighConvictionATS = atsConfidence === 'elite' || atsConfidence === 'high';
-    if (isHighConvictionATS && r.atsResult) {
-      if (r.atsResult === 'win') atsW++;
-      else if (r.atsResult === 'loss') atsL++;
-      else atsP++;
+    if (isHighConvictionATS) {
+      const result = r.atsResult || (r as any).spreadResult;
+      if (result === 'win') atsW++;
+      else if (result === 'loss') atsL++;
+      else if (result === 'push') atsP++;
     }
 
     // High conviction ML
@@ -88,11 +90,13 @@ function computeHighConvictionStats(results: BacktestResult[]): HighConvictionSt
     }
 
     // High conviction O/U
+    // Use ouVegasResult if available, otherwise use ouResult
     const isHighConvictionOU = ouConfidence === 'high';
-    if (isHighConvictionOU && r.ouVegasResult) {
-      if (r.ouVegasResult === 'win') ouW++;
-      else if (r.ouVegasResult === 'loss') ouL++;
-      else ouP++;
+    if (isHighConvictionOU) {
+      const result = r.ouVegasResult || (r as any).ouResult;
+      if (result === 'win') ouW++;
+      else if (result === 'loss') ouL++;
+      else if (result === 'push') ouP++;
     }
   }
 

@@ -389,16 +389,15 @@ export async function GET(request: Request) {
       const awayTeam = teamsMap.get(game.awayTeamId);
       if (!homeTeam || !awayTeam) continue;
 
-      const { homeElo: newHomeElo, awayElo: newAwayElo } = updateEloAfterGame(
-        homeTeam.eloRating,
-        awayTeam.eloRating,
+      const { homeNewElo, awayNewElo } = updateEloAfterGame(
+        { id: game.homeTeamId, eloRating: homeTeam.eloRating } as Team,
+        { id: game.awayTeamId, eloRating: awayTeam.eloRating } as Team,
         game.homeScore,
-        game.awayScore,
-        ELO_HOME_ADVANTAGE
+        game.awayScore
       );
 
-      homeTeam.eloRating = newHomeElo;
-      awayTeam.eloRating = newAwayElo;
+      homeTeam.eloRating = homeNewElo;
+      awayTeam.eloRating = awayNewElo;
       processedGameIds.add(game.id);
     }
 

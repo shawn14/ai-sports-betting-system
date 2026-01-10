@@ -743,7 +743,7 @@ export async function GET(request: Request) {
     await setSportState(sport, {
       season: currentSeason,
       processedGameIds: Array.from(processedGameIds),
-      lastUpdated: new Date().toISOString(),
+      lastSyncAt: new Date().toISOString(),
     });
 
     await saveDocsBatch(sport, 'teams', teams);

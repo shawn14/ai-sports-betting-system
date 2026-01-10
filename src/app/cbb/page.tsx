@@ -34,6 +34,8 @@ interface LiveGame {
   id: string;
   away: string;
   home: string;
+  awayId: string;
+  homeId: string;
   awayScore: number;
   homeScore: number;
   quarter: number;
@@ -140,6 +142,8 @@ export default function CBBDashboard() {
           id: event.id,
           away: awayTeam?.team?.abbreviation || 'AWAY',
           home: homeTeam?.team?.abbreviation || 'HOME',
+          awayId: awayTeam?.team?.id || '',
+          homeId: homeTeam?.team?.id || '',
           awayScore: parseInt(awayTeam?.score || '0'),
           homeScore: parseInt(homeTeam?.score || '0'),
           quarter: event.status?.period || 0,
@@ -447,7 +451,7 @@ export default function CBBDashboard() {
                     isLive ? (awayWinning ? 'text-gray-900 font-semibold' : 'text-gray-600') : 'text-gray-700'
                   }`}>
                     <div className="flex items-center gap-1.5">
-                      <img src={getLogoUrl(game.away)} alt={game.away} className="w-4 h-4 object-contain" />
+                      <img src={getLogoUrl(game.awayId)} alt={game.away} className="w-4 h-4 object-contain" />
                       <span>{game.away}</span>
                     </div>
                     <span className="font-mono font-medium">{isLive || isFinal ? game.awayScore : ''}</span>
@@ -457,7 +461,7 @@ export default function CBBDashboard() {
                     isLive ? (homeWinning ? 'text-gray-900 font-semibold' : 'text-gray-600') : 'text-gray-700'
                   }`}>
                     <div className="flex items-center gap-1.5">
-                      <img src={getLogoUrl(game.home)} alt={game.home} className="w-4 h-4 object-contain" />
+                      <img src={getLogoUrl(game.homeId)} alt={game.home} className="w-4 h-4 object-contain" />
                       <span>{game.home}</span>
                     </div>
                     <span className="font-mono font-medium">{isLive || isFinal ? game.homeScore : ''}</span>

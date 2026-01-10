@@ -702,9 +702,11 @@ export async function GET(request: Request) {
       } else if (oddsAreLocked) {
         vegasSpread = existingOdds.vegasSpread;
         vegasTotal = existingOdds.vegasTotal;
-      } else if (game.status !== 'final') {
+      } else {
+        // Try to fetch ESPN odds for ALL games (upcoming and completed)
+        // ESPN may still have odds cached for recently completed games
         const espnOdds = await fetchESPNCollegeBasketballOdds(game.id);
-        if (espnOdds) {
+        if (espnOdds && (espnOdds.homeSpread !== undefined || espnOdds.total !== undefined)) {
           vegasSpread = espnOdds.homeSpread;
           vegasTotal = espnOdds.total;
           oddsFetched++;

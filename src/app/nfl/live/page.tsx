@@ -239,7 +239,7 @@ export default function NFLLiveTrackerPage() {
                       {liveTotal ? liveTotal.toFixed(1) : '--'}
                     </div>
                     <div className="text-[9px] text-blue-500">
-                      {liveOdds?.overOdds && liveOdds.overOdds !== -110 ? `O: ${liveOdds.overOdds > 0 ? '+' : ''}${liveOdds.overOdds}` : ''}
+                      {liveOdds?.consensusOverOdds && liveOdds.consensusOverOdds !== -110 ? `O: ${liveOdds.consensusOverOdds > 0 ? '+' : ''}${liveOdds.consensusOverOdds}` : ''}
                     </div>
                   </div>
                   <div className={`rounded-lg p-2 text-center border ${

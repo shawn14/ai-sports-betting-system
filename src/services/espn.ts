@@ -426,7 +426,7 @@ const COLLEGE_LEAGUE_AVG_PPG = 72; // NCAA average ~72 PPG
 
 export async function fetchCollegeBasketballTeams(): Promise<any[]> {
   try {
-    const response = await fetch(`${ESPN_CBB_URL}/teams`);
+    const response = await fetch(`${ESPN_CBB_URL}/teams?limit=400`);
     const data = await response.json();
 
     // Also fetch standings for PPG stats

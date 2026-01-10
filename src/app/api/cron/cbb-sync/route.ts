@@ -885,19 +885,23 @@ export async function GET(request: Request) {
 
     for (const r of allBacktestResults as any[]) {
       // High conviction ATS - use atsConfidence field (elite or high)
+      // Use atsResult (vs Vegas) if available, otherwise use spreadResult (model accuracy)
       const isHighConvictionATS = r.atsConfidence === 'elite' || r.atsConfidence === 'high';
-      if (isHighConvictionATS && r.atsResult) {
-        if (r.atsResult === 'win') hiAtsW++;
-        else if (r.atsResult === 'loss') hiAtsL++;
-        else hiAtsP++;
+      if (isHighConvictionATS) {
+        const result = r.atsResult || r.spreadResult;
+        if (result === 'win') hiAtsW++;
+        else if (result === 'loss') hiAtsL++;
+        else if (result === 'push') hiAtsP++;
       }
 
       // High conviction O/U - use ouConfidence field
+      // Use ouVegasResult if available, otherwise use ouResult
       const isHighConvictionOU = r.ouConfidence === 'high';
-      if (isHighConvictionOU && r.ouVegasResult) {
-        if (r.ouVegasResult === 'win') hiOuW++;
-        else if (r.ouVegasResult === 'loss') hiOuL++;
-        else hiOuP++;
+      if (isHighConvictionOU) {
+        const result = r.ouVegasResult || r.ouResult;
+        if (result === 'win') hiOuW++;
+        else if (result === 'loss') hiOuL++;
+        else if (result === 'push') hiOuP++;
       }
 
       // High conviction ML - use mlConfidence field

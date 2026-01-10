@@ -10,7 +10,7 @@ interface LiveGame {
   home: string;
   awayScore: number;
   homeScore: number;
-  period: number;
+  quarter: number;
   clock: string;
   status: 'live' | 'final' | 'scheduled';
   gameTime?: string;
@@ -31,12 +31,13 @@ interface GamePrediction {
 }
 
 const REG_MINUTES = 60;
-const PERIOD_MINUTES = 20;
-const OT_MINUTES = 5;
+const QUARTER_MINUTES = 15;
+const OT_MINUTES = 10;
 
 function parseClock(clock: string): { minutes: number; seconds: number } | null {
   if (!clock) return null;
 
+  // Handle "MM:SS" format (e.g., "8:39")
   const colonMatch = clock.match(/(\d+):(\d+)/);
   if (colonMatch) {
     const minutes = Number.parseInt(colonMatch[1], 10);
@@ -45,6 +46,7 @@ function parseClock(clock: string): { minutes: number; seconds: number } | null 
     return { minutes, seconds };
   }
 
+  // Handle seconds-only format (e.g., "37.1" when under 1 minute)
   const secondsMatch = clock.match(/^(\d+(?:\.\d+)?)$/);
   if (secondsMatch) {
     const totalSeconds = Number.parseFloat(secondsMatch[1]);
@@ -55,20 +57,21 @@ function parseClock(clock: string): { minutes: number; seconds: number } | null 
   return null;
 }
 
-function getMinutesElapsed(period: number, clock: string): number | null {
+function getMinutesElapsed(quarter: number, clock: string): number | null {
   const parsed = parseClock(clock);
-  if (!parsed || period < 1) return null;
+  if (!parsed || quarter < 1) return null;
   const timeRemaining = parsed.minutes + parsed.seconds / 60;
-  if (period <= 3) {
-    const elapsedInPeriod = Math.max(0, PERIOD_MINUTES - timeRemaining);
-    return (period - 1) * PERIOD_MINUTES + elapsedInPeriod;
+  if (quarter <= 4) {
+    const elapsedInQuarter = Math.max(0, QUARTER_MINUTES - timeRemaining);
+    return (quarter - 1) * QUARTER_MINUTES + elapsedInQuarter;
   }
-  const otIndex = period - 3;
+  // Overtime
+  const otIndex = quarter - 4;
   const elapsedInOt = Math.max(0, OT_MINUTES - timeRemaining);
   return REG_MINUTES + (otIndex - 1) * OT_MINUTES + elapsedInOt;
 }
 
-export default function NHLLiveTrackerPage() {
+export default function NFLLiveTrackerPage() {
   const { user } = useAuth();
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,7 +82,7 @@ export default function NHLLiveTrackerPage() {
 
     const fetchLiveScores = async () => {
       try {
-        const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard');
+        const response = await fetch('https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard');
         const data = await response.json();
 
         const games: LiveGame[] = data.events?.map((event: any) => {
@@ -97,7 +100,7 @@ export default function NHLLiveTrackerPage() {
             home: homeTeam?.team?.abbreviation || 'HOME',
             awayScore: Number.parseInt(awayTeam?.score || '0', 10),
             homeScore: Number.parseInt(homeTeam?.score || '0', 10),
-            period: event.status?.period || 0,
+            quarter: event.status?.period || 0,
             clock: event.status?.displayClock || '',
             status,
             gameTime: event.date,
@@ -125,7 +128,7 @@ export default function NHLLiveTrackerPage() {
   useEffect(() => {
     const loadPredictions = async () => {
       try {
-        const response = await fetch('/nhl-prediction-data.json', { cache: 'no-cache' });
+        const response = await fetch('/prediction-matrix-data.json', { cache: 'no-cache' });
         const data = await response.json();
         if (data?.games) {
           const predMap = new Map<string, GamePrediction>();
@@ -146,6 +149,7 @@ export default function NHLLiveTrackerPage() {
     };
 
     loadPredictions();
+    // Refresh predictions every 30 seconds to get updated live odds
     const interval = setInterval(loadPredictions, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -159,7 +163,7 @@ export default function NHLLiveTrackerPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-4">
         <div className="flex items-center justify-between border-b border-gray-200 pb-3">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">NHL Live Pace Tracker</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">NFL Live Pace Tracker</h1>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
               Live pace projection vs market odds - compare model estimates with real-time betting lines.
             </p>
@@ -171,17 +175,18 @@ export default function NHLLiveTrackerPage() {
 
         {sortedGames.length === 0 && !loading && (
           <div className="bg-white border border-gray-200 rounded-xl p-6 text-center text-sm text-gray-500">
-            No live NHL games right now.
+            No live NFL games right now.
           </div>
         )}
 
         <div className="grid gap-3 sm:gap-4">
           {sortedGames.map(game => {
-            const totalGoals = game.homeScore + game.awayScore;
-            const minutesElapsed = getMinutesElapsed(game.period, game.clock);
-            const goalRate = minutesElapsed ? totalGoals / minutesElapsed : null;
-            const projectedTotal = goalRate ? goalRate * REG_MINUTES : null;
+            const totalPoints = game.homeScore + game.awayScore;
+            const minutesElapsed = getMinutesElapsed(game.quarter, game.clock);
+            const runRate = minutesElapsed ? totalPoints / minutesElapsed : null;
+            const projectedTotal = runRate ? runRate * REG_MINUTES : null;
 
+            // Get live odds for this game
             const gamePrediction = predictions.get(game.id);
             const liveOdds = gamePrediction?.liveOdds;
             const liveTotal = liveOdds?.consensusTotal;
@@ -199,7 +204,7 @@ export default function NHLLiveTrackerPage() {
                     {game.away} @ {game.home}
                   </div>
                   <div className="text-xs text-gray-500">
-                    P{game.period} {game.clock}
+                    Q{game.quarter} {game.clock}
                   </div>
                 </div>
 
@@ -217,9 +222,9 @@ export default function NHLLiveTrackerPage() {
                     </div>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-2 text-center">
-                    <div className="text-[10px] uppercase text-gray-400">Goal Rate</div>
+                    <div className="text-[10px] uppercase text-gray-400">Run Rate</div>
                     <div className="text-sm sm:text-base font-bold text-gray-900">
-                      {goalRate !== null ? goalRate.toFixed(2) : '--'}
+                      {runRate !== null ? runRate.toFixed(2) : '--'}
                     </div>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-2 text-center">
@@ -238,21 +243,21 @@ export default function NHLLiveTrackerPage() {
                     </div>
                   </div>
                   <div className={`rounded-lg p-2 text-center border ${
-                    modelVsMarket !== null && Math.abs(modelVsMarket) >= 0.5
+                    modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
                       ? modelVsMarket > 0
                         ? 'bg-green-50 border-green-200'
                         : 'bg-red-50 border-red-200'
                       : 'bg-gray-50 border-gray-200'
                   }`}>
                     <div className={`text-[10px] uppercase font-semibold ${
-                      modelVsMarket !== null && Math.abs(modelVsMarket) >= 0.5
+                      modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
                         ? modelVsMarket > 0
                           ? 'text-green-600'
                           : 'text-red-600'
                         : 'text-gray-400'
                     }`}>Difference</div>
                     <div className={`text-sm sm:text-base font-bold ${
-                      modelVsMarket !== null && Math.abs(modelVsMarket) >= 0.5
+                      modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
                         ? modelVsMarket > 0
                           ? 'text-green-900'
                           : 'text-red-900'
@@ -261,13 +266,13 @@ export default function NHLLiveTrackerPage() {
                       {modelVsMarket !== null ? `${modelVsMarket > 0 ? '+' : ''}${modelVsMarket.toFixed(1)}` : '--'}
                     </div>
                     <div className={`text-[9px] ${
-                      modelVsMarket !== null && Math.abs(modelVsMarket) >= 0.5
+                      modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
                         ? modelVsMarket > 0
                           ? 'text-green-500'
                           : 'text-red-500'
                         : 'text-gray-400'
                     }`}>
-                      {modelVsMarket !== null && Math.abs(modelVsMarket) >= 0.5
+                      {modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
                         ? modelVsMarket > 0
                           ? 'Model OVER'
                           : 'Model UNDER'
@@ -277,8 +282,8 @@ export default function NHLLiveTrackerPage() {
                   <div className="bg-gray-50 rounded-lg p-2 text-center">
                     <div className="text-[10px] uppercase text-gray-400">Proj Final</div>
                     <div className="text-sm sm:text-base font-bold text-gray-900">
-                      {projectedTotal !== null && totalGoals > 0
-                        ? `${(projectedTotal * (game.awayScore / totalGoals)).toFixed(0)}-${(projectedTotal * (game.homeScore / totalGoals)).toFixed(0)}`
+                      {projectedTotal !== null && totalPoints > 0
+                        ? `${(projectedTotal * (game.awayScore / totalPoints)).toFixed(0)}-${(projectedTotal * (game.homeScore / totalPoints)).toFixed(0)}`
                         : '--'}
                     </div>
                     <div className="text-[9px] text-gray-400">Pace projection</div>

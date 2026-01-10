@@ -16,6 +16,20 @@ interface LiveGame {
   gameTime?: string;
 }
 
+interface LiveOdds {
+  consensusTotal?: number;
+  consensusOverOdds?: number;
+  consensusUnderOdds?: number;
+  bookmakers?: { name: string; total: number; overOdds: number; underOdds: number }[];
+  lastUpdated?: string;
+}
+
+interface GamePrediction {
+  gameId: string;
+  predictedTotal: number;
+  liveOdds?: LiveOdds;
+}
+
 interface CalibrationData {
   seasonYear: number;
   leagueAvgQuarter: number[];
@@ -68,6 +82,7 @@ export default function NBALiveTrackerPage() {
   const [liveGames, setLiveGames] = useState<LiveGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [calibration, setCalibration] = useState<CalibrationData | null>(null);
+  const [predictions, setPredictions] = useState<Map<string, GamePrediction>>(new Map());
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
@@ -133,6 +148,35 @@ export default function NBALiveTrackerPage() {
     loadCalibration();
   }, []);
 
+  useEffect(() => {
+    const loadPredictions = async () => {
+      try {
+        const response = await fetch('/nba-prediction-data.json', { cache: 'no-cache' });
+        const data = await response.json();
+        if (data?.games) {
+          const predMap = new Map<string, GamePrediction>();
+          for (const gameEntry of data.games) {
+            if (gameEntry.game?.id && gameEntry.prediction) {
+              predMap.set(gameEntry.game.id, {
+                gameId: gameEntry.game.id,
+                predictedTotal: gameEntry.prediction.predictedTotal || 0,
+                liveOdds: gameEntry.prediction.liveOdds,
+              });
+            }
+          }
+          setPredictions(predMap);
+        }
+      } catch (error) {
+        console.error('Failed to load predictions:', error);
+      }
+    };
+
+    loadPredictions();
+    // Refresh predictions every 30 seconds to get updated live odds
+    const interval = setInterval(loadPredictions, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const sortedGames = useMemo(() => {
     return [...liveGames].sort((a, b) => a.home.localeCompare(b.home));
   }, [liveGames]);
@@ -144,7 +188,7 @@ export default function NBALiveTrackerPage() {
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900">NBA Live Pace Tracker</h1>
             <p className="text-xs sm:text-sm text-gray-500 mt-1">
-              Live run rate vs Vegas total (48-minute projection).
+              Live pace projection vs market odds - compare model estimates with real-time betting lines.
             </p>
           </div>
           <div className="text-xs text-gray-400">
@@ -167,6 +211,14 @@ export default function NBALiveTrackerPage() {
             let calibratedProjectedTotal = rawProjectedTotal;
             let projectedHome: number | null = null;
             let projectedAway: number | null = null;
+
+            // Get live odds for this game
+            const gamePrediction = predictions.get(game.id);
+            const liveOdds = gamePrediction?.liveOdds;
+            const liveTotal = liveOdds?.consensusTotal;
+            const modelVsMarket = calibratedProjectedTotal && liveTotal
+              ? calibratedProjectedTotal - liveTotal
+              : null;
 
             if (calibration && minutesElapsed !== null && game.period <= 4) {
               const homeAvg = calibration.teamAvgQuarter[game.home];
@@ -212,7 +264,7 @@ export default function NBALiveTrackerPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 sm:gap-3 mt-3">
+                <div className="grid grid-cols-2 sm:grid-cols-8 gap-2 sm:gap-3 mt-3">
                   <div className="bg-gray-50 rounded-lg p-2 text-center">
                     <div className="text-[10px] uppercase text-gray-400">Score</div>
                     <div className="text-sm sm:text-base font-bold text-gray-900">
@@ -241,6 +293,52 @@ export default function NBALiveTrackerPage() {
                     <div className="text-[10px] uppercase text-gray-400">Calibrated</div>
                     <div className="text-sm sm:text-base font-bold text-gray-900">
                       {calibratedProjectedTotal !== null ? calibratedProjectedTotal.toFixed(1) : '--'}
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-2 text-center border border-blue-200">
+                    <div className="text-[10px] uppercase text-blue-600 font-semibold">Live O/U</div>
+                    <div className="text-sm sm:text-base font-bold text-blue-900">
+                      {liveTotal ? liveTotal.toFixed(1) : '--'}
+                    </div>
+                    <div className="text-[9px] text-blue-500">
+                      {liveOdds?.overOdds && liveOdds.overOdds !== -110 ? `O: ${liveOdds.overOdds > 0 ? '+' : ''}${liveOdds.overOdds}` : ''}
+                    </div>
+                  </div>
+                  <div className={`rounded-lg p-2 text-center border ${
+                    modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
+                      ? modelVsMarket > 0
+                        ? 'bg-green-50 border-green-200'
+                        : 'bg-red-50 border-red-200'
+                      : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <div className={`text-[10px] uppercase font-semibold ${
+                      modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
+                        ? modelVsMarket > 0
+                          ? 'text-green-600'
+                          : 'text-red-600'
+                        : 'text-gray-400'
+                    }`}>Difference</div>
+                    <div className={`text-sm sm:text-base font-bold ${
+                      modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
+                        ? modelVsMarket > 0
+                          ? 'text-green-900'
+                          : 'text-red-900'
+                        : 'text-gray-900'
+                    }`}>
+                      {modelVsMarket !== null ? `${modelVsMarket > 0 ? '+' : ''}${modelVsMarket.toFixed(1)}` : '--'}
+                    </div>
+                    <div className={`text-[9px] ${
+                      modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
+                        ? modelVsMarket > 0
+                          ? 'text-green-500'
+                          : 'text-red-500'
+                        : 'text-gray-400'
+                    }`}>
+                      {modelVsMarket !== null && Math.abs(modelVsMarket) >= 3
+                        ? modelVsMarket > 0
+                          ? 'Model OVER'
+                          : 'Model UNDER'
+                        : 'No edge'}
                     </div>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-2 text-center">

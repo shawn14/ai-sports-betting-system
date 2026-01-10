@@ -102,6 +102,130 @@ export async function fetchOddsForGame(homeTeam: string, awayTeam: string): Prom
   return [];
 }
 
+export async function fetchNBAOdds(): Promise<Map<string, Partial<Odds>[]>> {
+  const apiKey = process.env.NEXT_PUBLIC_ODDS_API_KEY;
+  if (!apiKey) throw new Error('Odds API key not configured');
+
+  // Add timestamp to bust any caching
+  const timestamp = Date.now();
+  const url = `${ODDS_API_BASE}/sports/basketball_nba/odds/?apiKey=${apiKey}&regions=us&markets=spreads,totals,h2h&oddsFormat=american&_t=${timestamp}`;
+
+  const response = await fetch(url, {
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-cache' }
+  });
+  if (!response.ok) {
+    throw new Error(`Odds API error: ${response.statusText}`);
+  }
+
+  const data: OddsAPIEvent[] = await response.json();
+  const oddsMap = new Map<string, Partial<Odds>[]>();
+
+  for (const event of data) {
+    const gameKey = `${event.home_team}_${event.away_team}_${event.commence_time}`;
+    const oddsForGame: Partial<Odds>[] = [];
+
+    for (const bookmaker of event.bookmakers) {
+      const spreads = bookmaker.markets.find(m => m.key === 'spreads');
+      const totals = bookmaker.markets.find(m => m.key === 'totals');
+      const moneyline = bookmaker.markets.find(m => m.key === 'h2h');
+
+      if (!spreads && !totals && !moneyline) continue;
+
+      const homeSpreadOutcome = spreads?.outcomes.find(o => o.name === event.home_team);
+      const awaySpreadOutcome = spreads?.outcomes.find(o => o.name === event.away_team);
+      const overOutcome = totals?.outcomes.find(o => o.name === 'Over');
+      const underOutcome = totals?.outcomes.find(o => o.name === 'Under');
+      const homeMLOutcome = moneyline?.outcomes.find(o => o.name === event.home_team);
+      const awayMLOutcome = moneyline?.outcomes.find(o => o.name === event.away_team);
+
+      const totalValue = overOutcome?.point || 0;
+
+      oddsForGame.push({
+        bookmaker: bookmaker.title,
+        homeSpread: homeSpreadOutcome?.point || 0,
+        awaySpread: awaySpreadOutcome?.point || 0,
+        homeSpreadOdds: homeSpreadOutcome?.price || -110,
+        awaySpreadOdds: awaySpreadOutcome?.price || -110,
+        total: totalValue,
+        overOdds: overOutcome?.price || -110,
+        underOdds: underOutcome?.price || -110,
+        homeMoneyline: homeMLOutcome?.price || 0,
+        awayMoneyline: awayMLOutcome?.price || 0,
+        timestamp: new Date(),
+      });
+    }
+
+    if (oddsForGame.length > 0) {
+      oddsMap.set(gameKey, oddsForGame);
+    }
+  }
+
+  return oddsMap;
+}
+
+export async function fetchNHLOdds(): Promise<Map<string, Partial<Odds>[]>> {
+  const apiKey = process.env.NEXT_PUBLIC_ODDS_API_KEY;
+  if (!apiKey) throw new Error('Odds API key not configured');
+
+  // Add timestamp to bust any caching
+  const timestamp = Date.now();
+  const url = `${ODDS_API_BASE}/sports/icehockey_nhl/odds/?apiKey=${apiKey}&regions=us&markets=spreads,totals,h2h&oddsFormat=american&_t=${timestamp}`;
+
+  const response = await fetch(url, {
+    cache: 'no-store',
+    headers: { 'Cache-Control': 'no-cache' }
+  });
+  if (!response.ok) {
+    throw new Error(`Odds API error: ${response.statusText}`);
+  }
+
+  const data: OddsAPIEvent[] = await response.json();
+  const oddsMap = new Map<string, Partial<Odds>[]>();
+
+  for (const event of data) {
+    const gameKey = `${event.home_team}_${event.away_team}_${event.commence_time}`;
+    const oddsForGame: Partial<Odds>[] = [];
+
+    for (const bookmaker of event.bookmakers) {
+      const spreads = bookmaker.markets.find(m => m.key === 'spreads');
+      const totals = bookmaker.markets.find(m => m.key === 'totals');
+      const moneyline = bookmaker.markets.find(m => m.key === 'h2h');
+
+      if (!spreads && !totals && !moneyline) continue;
+
+      const homeSpreadOutcome = spreads?.outcomes.find(o => o.name === event.home_team);
+      const awaySpreadOutcome = spreads?.outcomes.find(o => o.name === event.away_team);
+      const overOutcome = totals?.outcomes.find(o => o.name === 'Over');
+      const underOutcome = totals?.outcomes.find(o => o.name === 'Under');
+      const homeMLOutcome = moneyline?.outcomes.find(o => o.name === event.home_team);
+      const awayMLOutcome = moneyline?.outcomes.find(o => o.name === event.away_team);
+
+      const totalValue = overOutcome?.point || 0;
+
+      oddsForGame.push({
+        bookmaker: bookmaker.title,
+        homeSpread: homeSpreadOutcome?.point || 0,
+        awaySpread: awaySpreadOutcome?.point || 0,
+        homeSpreadOdds: homeSpreadOutcome?.price || -110,
+        awaySpreadOdds: awaySpreadOutcome?.price || -110,
+        total: totalValue,
+        overOdds: overOutcome?.price || -110,
+        underOdds: underOutcome?.price || -110,
+        homeMoneyline: homeMLOutcome?.price || 0,
+        awayMoneyline: awayMLOutcome?.price || 0,
+        timestamp: new Date(),
+      });
+    }
+
+    if (oddsForGame.length > 0) {
+      oddsMap.set(gameKey, oddsForGame);
+    }
+  }
+
+  return oddsMap;
+}
+
 export function getConsensusOdds(oddsArray: Partial<Odds>[]): Partial<Odds> | null {
   if (oddsArray.length === 0) return null;
 
@@ -118,6 +242,16 @@ export function getConsensusOdds(oddsArray: Partial<Odds>[]): Partial<Odds> | nu
   const avgHomeML = oddsArray.reduce((sum, o) => sum + (o.homeMoneyline || 0), 0) / oddsArray.length;
   const avgAwayML = oddsArray.reduce((sum, o) => sum + (o.awayMoneyline || 0), 0) / oddsArray.length;
 
+  // Calculate average over/under odds
+  const validOverOdds = oddsArray.filter(o => o.overOdds !== undefined && o.overOdds !== 0);
+  const validUnderOdds = oddsArray.filter(o => o.underOdds !== undefined && o.underOdds !== 0);
+  const avgOverOdds = validOverOdds.length > 0
+    ? Math.round(validOverOdds.reduce((sum, o) => sum + (o.overOdds || -110), 0) / validOverOdds.length)
+    : -110;
+  const avgUnderOdds = validUnderOdds.length > 0
+    ? Math.round(validUnderOdds.reduce((sum, o) => sum + (o.underOdds || -110), 0) / validUnderOdds.length)
+    : -110;
+
   return {
     bookmaker: 'consensus',
     homeSpread: Math.round(avgHomeSpread * 2) / 2, // Round to nearest 0.5
@@ -125,8 +259,8 @@ export function getConsensusOdds(oddsArray: Partial<Odds>[]): Partial<Odds> | nu
     homeSpreadOdds: -110,
     awaySpreadOdds: -110,
     total: Math.round(avgTotal * 2) / 2,
-    overOdds: -110,
-    underOdds: -110,
+    overOdds: avgOverOdds,
+    underOdds: avgUnderOdds,
     homeMoneyline: Math.round(avgHomeML),
     awayMoneyline: Math.round(avgAwayML),
     timestamp: new Date(),

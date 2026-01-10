@@ -25,7 +25,7 @@ export default function NavBar() {
   // Determine base paths based on current section
   const rankingsPath = isNHL ? '/nhl/rankings' : isNBA ? '/nba/rankings' : '/rankings';
   const resultsPath = isNHL ? '/nhl/results' : isNBA ? '/nba/results' : '/results';
-  const livePath = isNHL ? '/nhl/live' : '/nba/live';
+  const livePath = isNHL ? '/nhl/live' : isNBA ? '/nba/live' : '/nfl/live';
   const nflHomePath = user ? '/dashboard' : '/';
 
   // Active link styling
@@ -36,6 +36,7 @@ export default function NavBar() {
     if (path === '/nba/live') return pathname === '/nba/live';
     if (path === '/nhl') return pathname === '/nhl';
     if (path === '/nhl/live') return pathname === '/nhl/live';
+    if (path === '/nfl/live') return pathname === '/nfl/live';
     return pathname?.startsWith(path);
   };
 
@@ -136,11 +137,9 @@ export default function NavBar() {
                   <a href="/nhl" className={getLinkClass('/nhl', 'nhl')}>
                     NHL
                   </a>
-                  {(isNBA || isNHL) && (
-                    <a href={livePath} className={getLinkClass(livePath, currentSport)}>
-                      Live
-                    </a>
-                  )}
+                  <a href={livePath} className={getLinkClass(livePath, currentSport)}>
+                    Live
+                  </a>
                   <a href={rankingsPath} className={getLinkClass(rankingsPath, currentSport)}>
                     Rankings
                   </a>
@@ -196,11 +195,9 @@ export default function NavBar() {
               <a href="/nhl" className={getMobileLinkClass('/nhl', 'nhl')}>
                 NHL
               </a>
-              {(isNBA || isNHL) && (
-                <a href={livePath} className={getMobileLinkClass(livePath, currentSport)}>
-                  Live
-                </a>
-              )}
+              <a href={livePath} className={getMobileLinkClass(livePath, currentSport)}>
+                Live
+              </a>
               <a href={rankingsPath} className={getMobileLinkClass(rankingsPath, currentSport)}>
                 Rankings
               </a>

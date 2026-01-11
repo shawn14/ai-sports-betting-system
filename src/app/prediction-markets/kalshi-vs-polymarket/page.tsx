@@ -1,15 +1,15 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Kalshi vs Polymarket - Prediction Market Comparison',
-  description: 'Compare Kalshi and Polymarket prediction markets. See the key differences in regulation, accessibility, market types, and accuracy between these leading platforms.',
-  keywords: ['Kalshi vs Polymarket', 'prediction market comparison', 'Kalshi review', 'Polymarket review', 'best prediction market', 'Kalshi or Polymarket'],
+  title: 'Kalshi vs Polymarket vs Robinhood - Prediction Market Comparison',
+  description: 'Compare Kalshi, Polymarket, and Robinhood prediction markets. See the key differences in regulation, accessibility, market types, and fees between these leading platforms.',
+  keywords: ['Kalshi vs Polymarket', 'Robinhood prediction markets', 'prediction market comparison', 'Kalshi review', 'Polymarket review', 'Robinhood event contracts', 'best prediction market'],
   alternates: {
     canonical: 'https://www.predictionmatrix.com/prediction-markets/kalshi-vs-polymarket',
   },
   openGraph: {
-    title: 'Kalshi vs Polymarket Comparison | Prediction Matrix',
-    description: 'Compare Kalshi and Polymarket prediction markets. Key differences in regulation, accessibility, and market types.',
+    title: 'Kalshi vs Polymarket vs Robinhood | Prediction Matrix',
+    description: 'Compare Kalshi, Polymarket, and Robinhood prediction markets. Key differences in regulation, accessibility, and market types.',
     url: 'https://www.predictionmatrix.com/prediction-markets/kalshi-vs-polymarket',
     siteName: 'Prediction Matrix',
     type: 'article',
@@ -19,26 +19,30 @@ export const metadata: Metadata = {
         url: 'https://www.predictionmatrix.com/api/og',
         width: 1200,
         height: 630,
-        alt: 'Kalshi vs Polymarket Comparison | Prediction Matrix',
+        alt: 'Kalshi vs Polymarket vs Robinhood | Prediction Matrix',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kalshi vs Polymarket Comparison | Prediction Matrix',
-    description: 'Compare Kalshi and Polymarket prediction markets. Key differences explained.',
+    title: 'Kalshi vs Polymarket vs Robinhood | Prediction Matrix',
+    description: 'Compare Kalshi, Polymarket, and Robinhood prediction markets. Key differences explained.',
     images: ['https://www.predictionmatrix.com/api/og'],
   },
 };
 
 const faqs = [
   {
-    q: 'Is Kalshi or Polymarket better?',
-    a: "Neither is objectively better. Kalshi is US-regulated and focuses on economic events, while Polymarket is crypto-based with global access and faster-moving political markets. Choose based on your location and interests.",
+    q: 'Which prediction market is best: Kalshi, Polymarket, or Robinhood?',
+    a: "None is objectively best. Kalshi focuses on economic events, Polymarket on politics and current events, and Robinhood on sports. Choose based on what you want to trade and your location.",
   },
   {
     q: 'Is Kalshi legal in the US?',
     a: 'Yes. Kalshi is regulated by the CFTC (Commodity Futures Trading Commission) and operates legally in the United States.',
+  },
+  {
+    q: 'Is Robinhood prediction markets legal?',
+    a: 'Yes. Robinhood offers event contracts through Robinhood Derivatives, which is regulated by the CFTC. Available to US users (except Maryland and Nevada for sports).',
   },
   {
     q: 'Can US users access Polymarket?',
@@ -46,7 +50,11 @@ const faqs = [
   },
   {
     q: 'Which prediction market is more accurate?',
-    a: 'Accuracy depends on the market type. Kalshi excels in structured economic outcomes, while Polymarket is often faster on breaking political news. Smart users watch both.',
+    a: 'Accuracy depends on the market type. Kalshi excels in economic data, Polymarket in politics, and Robinhood in sports. Smart users watch multiple platforms.',
+  },
+  {
+    q: 'What are Robinhood event contracts?',
+    a: 'Event contracts are prediction market trades on Robinhood. You buy Yes or No on outcomes (sports, economics) with prices reflecting probability. $0.60 = 60% chance.',
   },
 ];
 
@@ -91,8 +99,8 @@ const breadcrumbJsonLd = {
 const comparisonJsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Article',
-  headline: 'Kalshi vs Polymarket - Prediction Market Comparison',
-  description: 'A detailed comparison of Kalshi and Polymarket prediction markets, covering regulation, accessibility, market types, and accuracy.',
+  headline: 'Kalshi vs Polymarket vs Robinhood - Prediction Market Comparison',
+  description: 'A detailed comparison of Kalshi, Polymarket, and Robinhood prediction markets, covering regulation, accessibility, market types, fees, and accuracy.',
   author: {
     '@type': 'Organization',
     name: 'Prediction Matrix',
@@ -129,9 +137,9 @@ export default function KalshiVsPolymarketPage() {
           </a>
         </div>
 
-        <h1>Kalshi vs Polymarket</h1>
+        <h1>Kalshi vs Polymarket vs Robinhood</h1>
         <p className="text-xl text-gray-600 font-medium">
-          Two Prediction Markets. Very Different Approaches.
+          Three Prediction Markets. Three Different Approaches.
         </p>
 
         <p>
@@ -139,8 +147,8 @@ export default function KalshiVsPolymarketPage() {
           But how they do it matters a lot.
         </p>
         <p>
-          Here's a clear breakdown of <strong>Kalshi</strong> vs <strong>Polymarket</strong>,
-          without hype or tribal nonsense.
+          Here's a clear breakdown of <strong>Kalshi</strong>, <strong>Polymarket</strong>, and{' '}
+          <strong>Robinhood</strong>—without hype or tribal nonsense.
         </p>
 
         <hr className="my-8" />
@@ -182,57 +190,90 @@ export default function KalshiVsPolymarketPage() {
 
         <hr className="my-8" />
 
+        <h2>What Is Robinhood?</h2>
+        <p>
+          Robinhood offers <strong>event contracts</strong>—prediction markets built into their
+          popular brokerage app.
+        </p>
+        <p>Key traits:</p>
+        <ul>
+          <li>US-regulated (CFTC via Robinhood Derivatives)</li>
+          <li>Heavy focus on sports: NFL, college football, basketball</li>
+          <li>Integrated into existing brokerage with millions of users</li>
+          <li>Low fees ($0.01 per contract)</li>
+          <li>Massive trading volume (billions of contracts monthly)</li>
+        </ul>
+        <p>
+          Robinhood feels like sports betting meets Wall Street—familiar interface, serious scale.
+        </p>
+
+        <hr className="my-8" />
+
         <h2>Key Differences at a Glance</h2>
         <div className="overflow-x-auto not-prose my-6">
           <table className="min-w-full border border-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900 border-b">
+                <th className="px-3 py-3 text-left font-semibold text-gray-900 border-b">
                   Feature
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900 border-b">
+                <th className="px-3 py-3 text-left font-semibold text-gray-900 border-b">
                   Kalshi
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-gray-900 border-b">
+                <th className="px-3 py-3 text-left font-semibold text-gray-900 border-b">
                   Polymarket
+                </th>
+                <th className="px-3 py-3 text-left font-semibold text-gray-900 border-b">
+                  Robinhood
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               <tr>
-                <td className="px-4 py-3 font-medium text-gray-900">Regulation</td>
-                <td className="px-4 py-3 text-gray-600">US regulated (CFTC)</td>
-                <td className="px-4 py-3 text-gray-600">Crypto-based</td>
+                <td className="px-3 py-3 font-medium text-gray-900">Regulation</td>
+                <td className="px-3 py-3 text-gray-600">US (CFTC)</td>
+                <td className="px-3 py-3 text-gray-600">Crypto-based</td>
+                <td className="px-3 py-3 text-gray-600">US (CFTC)</td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-medium text-gray-900">Accessibility</td>
-                <td className="px-4 py-3 text-gray-600">US-focused</td>
-                <td className="px-4 py-3 text-gray-600">Global</td>
+                <td className="px-3 py-3 font-medium text-gray-900">Accessibility</td>
+                <td className="px-3 py-3 text-gray-600">US-focused</td>
+                <td className="px-3 py-3 text-gray-600">Global</td>
+                <td className="px-3 py-3 text-gray-600">US only</td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-medium text-gray-900">Market Style</td>
-                <td className="px-4 py-3 text-gray-600">Structured, economic</td>
-                <td className="px-4 py-3 text-gray-600">Fast, narrative-driven</td>
+                <td className="px-3 py-3 font-medium text-gray-900">Focus</td>
+                <td className="px-3 py-3 text-gray-600">Economics, data</td>
+                <td className="px-3 py-3 text-gray-600">Politics, tech</td>
+                <td className="px-3 py-3 text-gray-600">Sports</td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-medium text-gray-900">User Base</td>
-                <td className="px-4 py-3 text-gray-600">Financial & macro traders</td>
-                <td className="px-4 py-3 text-gray-600">Crypto, politics, tech</td>
+                <td className="px-3 py-3 font-medium text-gray-900">User Base</td>
+                <td className="px-3 py-3 text-gray-600">Macro traders</td>
+                <td className="px-3 py-3 text-gray-600">Crypto natives</td>
+                <td className="px-3 py-3 text-gray-600">Retail investors</td>
               </tr>
               <tr>
-                <td className="px-4 py-3 font-medium text-gray-900">Speed</td>
-                <td className="px-4 py-3 text-gray-600">Methodical</td>
-                <td className="px-4 py-3 text-gray-600">Extremely fast</td>
+                <td className="px-3 py-3 font-medium text-gray-900">Fees</td>
+                <td className="px-3 py-3 text-gray-600">Varies</td>
+                <td className="px-3 py-3 text-gray-600">Gas + platform</td>
+                <td className="px-3 py-3 text-gray-600">$0.01/contract</td>
+              </tr>
+              <tr>
+                <td className="px-3 py-3 font-medium text-gray-900">Volume</td>
+                <td className="px-3 py-3 text-gray-600">Growing</td>
+                <td className="px-3 py-3 text-gray-600">High</td>
+                <td className="px-3 py-3 text-gray-600">Massive (billions)</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <p>Neither is "better." They solve different problems.</p>
+        <p>None is "better." They solve different problems for different users.</p>
 
         <hr className="my-8" />
 
         <h2>Which One Is More Accurate?</h2>
-        <p>It depends on the market.</p>
+        <p>It depends on the market type.</p>
         <ul>
           <li>
             <strong>Kalshi</strong> shines in structured, well-defined outcomes (inflation, rates,
@@ -242,9 +283,13 @@ export default function KalshiVsPolymarketPage() {
             <strong>Polymarket</strong> excels when information moves fast (politics, breaking
             news, tech developments)
           </li>
+          <li>
+            <strong>Robinhood</strong> dominates sports with massive liquidity and real-time
+            player props
+          </li>
         </ul>
         <p>
-          Smart users often watch <em>both</em>.
+          Smart users watch <em>all three</em>—each platform attracts different information.
         </p>
 
         <hr className="my-8" />
@@ -269,6 +314,7 @@ export default function KalshiVsPolymarketPage() {
           <ul className="text-gray-600 space-y-2 mb-4 list-disc list-inside">
             <li>Kalshi market monitoring</li>
             <li>Polymarket probability tracking</li>
+            <li>Robinhood event contracts</li>
             <li>Cross-market comparison tools</li>
           </ul>
           <p className="text-gray-700 font-medium">

@@ -24,6 +24,9 @@ export const metadata: Metadata = {
   },
   description: "AI-powered NFL, NBA & NHL betting predictions. Get daily picks, Elo rankings, ATS results, and expert analysis for smarter sports betting.",
   keywords: ["sports betting", "NFL picks", "NBA picks", "NHL picks", "betting predictions", "Elo ratings", "ATS", "spread predictions", "sports analytics"],
+  alternates: {
+    canonical: 'https://www.predictionmatrix.com',
+  },
   openGraph: {
     title: "Prediction Matrix - AI Sports Betting Predictions",
     description: "AI-powered NFL, NBA & NHL betting predictions. Daily picks, Elo rankings, and ATS results.",
@@ -59,6 +62,45 @@ export const metadata: Metadata = {
   },
 };
 
+// JSON-LD structured data for SEO
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://www.predictionmatrix.com/#organization',
+      name: 'Prediction Matrix',
+      url: 'https://www.predictionmatrix.com',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://www.predictionmatrix.com/api/og',
+        width: 1200,
+        height: 630,
+      },
+      description: 'AI-powered sports betting predictions for NFL, NBA, NHL, and College Basketball.',
+      sameAs: [],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://www.predictionmatrix.com/#website',
+      url: 'https://www.predictionmatrix.com',
+      name: 'Prediction Matrix',
+      description: 'AI-powered NFL, NBA & NHL betting predictions with Elo ratings and ATS results.',
+      publisher: {
+        '@id': 'https://www.predictionmatrix.com/#organization',
+      },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: 'https://www.predictionmatrix.com/rankings?q={search_term_string}',
+        },
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -66,6 +108,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body
         className={`${inter.variable} ${robotoCondensed.variable} antialiased font-sans`}
         style={{ fontFamily: 'var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif' }}

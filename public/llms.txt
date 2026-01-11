@@ -1,0 +1,44 @@
+# Prediction Matrix - AI Sports Betting Predictions
+# https://www.predictionmatrix.com
+
+## About
+Prediction Matrix provides AI-powered sports betting predictions for NFL, NBA, NHL, and College Basketball.
+Our model uses Elo ratings, team statistics, weather data, and injury reports to generate spread, moneyline, and over/under predictions.
+
+## Content Overview
+- Daily betting predictions with spread picks, moneyline odds, and totals
+- Team power rankings based on Elo ratings
+- Historical pick accuracy and ATS (against the spread) results
+- Game-by-game prediction breakdowns with calculation transparency
+
+## Key Pages
+- / - Homepage with today's picks across all sports
+- /dashboard - NFL betting dashboard
+- /nba - NBA betting predictions
+- /nhl - NHL betting predictions
+- /cbb - College basketball predictions
+- /rankings - NFL power rankings
+- /nba/rankings - NBA power rankings
+- /nhl/rankings - NHL power rankings
+- /results - NFL historical results and accuracy
+- /nba/results - NBA historical results
+- /nhl/results - NHL historical results
+- /about - Model methodology and transparency
+
+## Data Freshness
+- Predictions updated every 4 hours during active seasons
+- Vegas odds locked 1 hour before game time
+- Power rankings recalculated after each game
+
+## AI Crawling Guidelines
+User-Agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account
+
+## Contact
+Website: https://www.predictionmatrix.com
+
+## Sitemap
+https://www.predictionmatrix.com/sitemap.xml

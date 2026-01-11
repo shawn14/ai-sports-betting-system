@@ -109,6 +109,25 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'monthly',
       priority: 0.6,
     },
+    // Prediction Markets content
+    {
+      url: `${baseUrl}/prediction-markets`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/prediction-markets/kalshi-vs-polymarket`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/prediction-markets/how-to-read-probabilities`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
     // CBB (College Basketball) pages
     {
       url: `${baseUrl}/cbb`,

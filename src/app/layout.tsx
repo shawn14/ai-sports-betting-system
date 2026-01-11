@@ -137,6 +137,7 @@ export default function RootLayout({
                   <div className="flex items-center gap-4">
                     <a href="/about" className="hover:text-gray-600">About</a>
                     <a href="/faq" className="hover:text-gray-600">FAQ</a>
+                    <a href="/prediction-markets" className="hover:text-gray-600">Prediction Markets</a>
                     <a href="/terms" className="hover:text-gray-600">Terms</a>
                     <a href="/privacy" className="hover:text-gray-600">Privacy</a>
                   </div>

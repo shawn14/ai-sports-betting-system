@@ -57,6 +57,10 @@ const faqs = [
     a: 'Polymarket is crypto-based with global access, popular for politics and current events. Kalshi is US-regulated, focused on economic data and designed like a financial exchange.',
   },
   {
+    q: 'Does Robinhood have prediction markets?',
+    a: 'Yes. Robinhood offers event contracts through Robinhood Derivatives, regulated by the CFTC. They focus heavily on sports (NFL, college football, basketball) and have traded billions of contracts.',
+  },
+  {
     q: 'How accurate are prediction markets?',
     a: 'Historically very accurate. They consistently beat polls, expert forecasts, and traditional models because they aggregate diverse information and reward being right.',
   },
@@ -144,7 +148,7 @@ export default function PredictionMarketsPage() {
           Instead of experts arguing on TV or polls guessing sentiment, prediction markets let real people put real money behind what they think will happen. The prices that emerge act like live probabilities—updating instantly as new information comes in.
         </p>
         <p>
-          If you've heard names like <strong>Polymarket</strong> or <strong>Kalshi</strong>, this page will explain what's actually going on under the hood—and why prediction markets are becoming a serious tool for forecasting everything from elections to economic data.
+          If you've heard names like <strong>Polymarket</strong>, <strong>Kalshi</strong>, or <strong>Robinhood</strong>, this page will explain what's actually going on under the hood—and why prediction markets are becoming a serious tool for forecasting everything from elections to sports outcomes.
         </p>
 
         <hr className="my-8" />
@@ -252,10 +256,19 @@ export default function PredictionMarketsPage() {
 
         <h3>Kalshi</h3>
         <ul>
-          <li>Regulated in the United States</li>
+          <li>Regulated in the United States (CFTC)</li>
           <li>Focused on economic data and real-world events</li>
           <li>Designed to feel more like a financial exchange</li>
           <li>Strong compliance and transparency</li>
+        </ul>
+
+        <h3>Robinhood</h3>
+        <ul>
+          <li>US-regulated event contracts (CFTC via Robinhood Derivatives)</li>
+          <li>Integrated into existing brokerage app</li>
+          <li>Heavy focus on sports: NFL, college football, basketball</li>
+          <li>Low fees ($0.01 per contract)</li>
+          <li>Massive scale: billions of contracts traded monthly</li>
         </ul>
 
         <h3>PredictIt</h3>
@@ -373,6 +386,7 @@ export default function PredictionMarketsPage() {
           <ul className="text-gray-600 space-y-2 mb-4 list-disc list-inside">
             <li>Kalshi market tracking</li>
             <li>Polymarket odds monitoring</li>
+            <li>Robinhood event contracts</li>
             <li>Cross-market probability comparisons</li>
             <li>Historical accuracy analysis</li>
           </ul>

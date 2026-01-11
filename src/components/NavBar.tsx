@@ -160,6 +160,9 @@ export default function NavBar() {
                   <a href={resultsPath} className={getLinkClass(resultsPath, currentSport)}>
                     Results
                   </a>
+                  <a href="/prediction-markets" className={getLinkClass('/prediction-markets', currentSport)}>
+                    Markets
+                  </a>
                 </div>
               )}
             </div>
@@ -220,6 +223,9 @@ export default function NavBar() {
               </a>
               <a href={resultsPath} className={getMobileLinkClass(resultsPath, currentSport)}>
                 Results
+              </a>
+              <a href="/prediction-markets" className={getMobileLinkClass('/prediction-markets', currentSport)}>
+                Markets
               </a>
             </div>
           )}
